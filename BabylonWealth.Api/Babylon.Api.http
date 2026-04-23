@@ -1,0 +1,6 @@
+@Babylon.Api_HostAddress = http://localhost:5231
+
+GET {{Babylon.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
