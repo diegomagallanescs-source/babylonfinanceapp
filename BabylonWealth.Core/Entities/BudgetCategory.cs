@@ -2,11 +2,14 @@
 
 public class BudgetCategory : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public string Name { get; private set; } = string.Empty;
     public decimal TargetPercentage { get; private set; }
     public string Color { get; private set; } = "#C9A84C";
     public int DisplayOrder { get; private set; }
+    public Guid? BankId { get; set; }
+    public Bank? Bank { get; set; }
 
     private BudgetCategory() { }
 

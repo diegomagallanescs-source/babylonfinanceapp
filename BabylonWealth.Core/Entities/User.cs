@@ -2,6 +2,7 @@
 
 public class User : BaseEntity<Guid>
 {
+    public string? FirstName { get; set; }
     public string Email { get; private set; } = string.Empty;
     public string PasswordHash { get; private set; } = string.Empty;
     public string? ProfilePhotoUrl { get; private set; }

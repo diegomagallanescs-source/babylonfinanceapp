@@ -13,8 +13,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\" />
     <Folder Include="Middleware\" />
     <Folder Include="BackgroundServices\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BabylonWealth.Core\BabylonWealth.Core.csproj" />
+    <ProjectReference Include="..\BabylonWealth.Infrastructure\BabylonWealth.Infrastructure.csproj" />
+    <ProjectReference Include="..\BabylonWealth.Services\BabylonWealth.Services.csproj" />
   </ItemGroup>
 
 </Project>

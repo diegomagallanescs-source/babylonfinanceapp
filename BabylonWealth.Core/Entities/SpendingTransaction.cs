@@ -2,12 +2,19 @@
 
 public class SpendingTransaction : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+
     public Guid? AccountId { get; private set; }
     public Guid CategoryId { get; private set; }
     public decimal Amount { get; private set; }
     public string Description { get; private set; } = string.Empty;
     public DateTime TransactionDate { get; private set; }
+    public Guid BudgetCategoryId { get; set; }
+    public BudgetCategory BudgetCategory { get; set; } = null!;
+    public Guid? BankAccountId { get; set; }
+    public BankAccount? BankAccount { get; set; }
+
 
     private SpendingTransaction() { }
 

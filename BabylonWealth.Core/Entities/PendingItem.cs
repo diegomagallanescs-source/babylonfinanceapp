@@ -4,7 +4,8 @@ namespace BabylonWealth.Core.Entities;
 
 public class PendingItem : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public string Description { get; private set; } = string.Empty;
     public string? Counterparty { get; private set; }
     public decimal Amount { get; private set; }

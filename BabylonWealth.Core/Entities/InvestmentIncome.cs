@@ -4,7 +4,8 @@ namespace BabylonWealth.Core.Entities;
 
 public class InvestmentIncome : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public string SourceName { get; private set; } = string.Empty;
     public InvestmentIncomeType Type { get; private set; }
     public decimal Amount { get; private set; }

@@ -4,8 +4,10 @@ namespace BabylonWealth.Core.Entities;
 
 public class CreditCard : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
-    public Guid BankId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    public Guid? BankId { get; set; }
+    public Bank? Bank { get; set; }
     public string CustomLabel { get; private set; } = string.Empty;
     public decimal Balance { get; private set; }
     public decimal CreditLimit { get; private set; }

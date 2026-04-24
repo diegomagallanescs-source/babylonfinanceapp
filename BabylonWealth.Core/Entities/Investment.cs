@@ -4,8 +4,10 @@ namespace BabylonWealth.Core.Entities;
 
 public class Investment : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
-    public Guid BankId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    public Guid? BankId { get; set; }
+    public Bank? Bank { get; set; }
     public string CustomLabel { get; private set; } = string.Empty;
     public decimal CurrentValue { get; private set; }
     public string? Ticker { get; private set; }

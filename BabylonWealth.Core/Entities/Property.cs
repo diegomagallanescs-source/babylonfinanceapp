@@ -4,7 +4,8 @@ namespace BabylonWealth.Core.Entities;
 
 public class Property : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public string Address { get; private set; } = string.Empty;
     public decimal PurchasePrice { get; private set; }
     public decimal CurrentEstimatedValue { get; private set; }
@@ -14,6 +15,7 @@ public class Property : BaseEntity<Guid>
     public decimal MonthlyRent { get; private set; }
     public decimal MonthlyExpenses { get; private set; }
     public DateTime? LastValueUpdateDate { get; private set; }
+    public DateTime? LastValueUpdatedAt { get; set; }
 
     public decimal Equity => CurrentEstimatedValue - LoanBalance;
 
