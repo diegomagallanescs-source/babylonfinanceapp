@@ -1,6 +1,8 @@
 using System.Text;
+using BabylonWealth.Core.Interfaces.Repositories;
 using BabylonWealth.Infrastructure.Identity;
 using BabylonWealth.Infrastructure.Persistence;
+using BabylonWealth.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +79,21 @@ public static class InfrastructureExtensions
         services.AddScoped<JwtService>();
 
         // ── Repositories ──────────────────────────────────────────
-        // (Day 6 — registered here as implemented)
+        // Scoped = one instance per HTTP request. The DI container builds the full
+        // object graph automatically: Controller → IXRepository → XRepository → BabylonDbContext.
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IBankRepository, BankRepository>();
+        services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
+        services.AddScoped<ICreditCardRepository, CreditCardRepository>();
+        services.AddScoped<IIncomeRepository, IncomeRepository>();
+        services.AddScoped<IInvestmentRepository, InvestmentRepository>();
+        services.AddScoped<IInvestmentIncomeRepository, InvestmentIncomeRepository>();
+        services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<INetWorthRepository, NetWorthRepository>();
+        services.AddScoped<IAnnotationRepository, AnnotationRepository>();
+        services.AddScoped<IPendingItemRepository, PendingItemRepository>();
+        services.AddScoped<IPropertyRepository, PropertyRepository>();
+        services.AddScoped<ISpendingRepository, SpendingRepository>();
 
         return services;
     }
