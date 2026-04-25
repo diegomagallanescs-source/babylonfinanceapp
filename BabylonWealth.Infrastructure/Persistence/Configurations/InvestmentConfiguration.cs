@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,7 +26,7 @@ public class InvestmentConfiguration : IEntityTypeConfiguration<Investment>
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        builder.HasOne(i => i.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(i => i.UserId)
             .OnDelete(DeleteBehavior.Cascade);

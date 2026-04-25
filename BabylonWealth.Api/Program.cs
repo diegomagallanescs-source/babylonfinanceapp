@@ -1,4 +1,5 @@
 using BabylonWealth.Infrastructure.Extensions;
+using Microsoft.OpenApi.Models;
 
 namespace Babylon.Api
 {
@@ -10,7 +11,36 @@ namespace Babylon.Api
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Babylon Wealth API", Version = "v1" });
+
+                // Add the JWT lock button to Swagger UI
+                var scheme = new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Paste your JWT here (without the 'Bearer ' prefix)."
+                };
+                options.AddSecurityDefinition("Bearer", scheme);
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
             builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
@@ -22,6 +52,7 @@ namespace Babylon.Api
             }
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
             app.Run();

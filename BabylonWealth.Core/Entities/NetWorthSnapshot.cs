@@ -3,7 +3,6 @@
 public class NetWorthSnapshot : BaseEntity<Guid>
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
     public DateTime SnapshotDate { get; private set; }
     public decimal LiquidNetWorth { get; private set; }
     public decimal TotalNetWorth { get; private set; }

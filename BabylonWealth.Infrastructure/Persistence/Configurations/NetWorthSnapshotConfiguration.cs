@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -37,7 +38,7 @@ public class NetWorthSnapshotConfiguration : IEntityTypeConfiguration<NetWorthSn
         // Index on UserId + SnapshotDate — history queries always filter by both
         builder.HasIndex(n => new { n.UserId, n.SnapshotDate });
 
-        builder.HasOne(n => n.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);

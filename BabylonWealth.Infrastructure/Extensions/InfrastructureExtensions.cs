@@ -1,15 +1,15 @@
-﻿using BabylonWealth.Infrastructure.Persistence;
+using System.Text;
+using BabylonWealth.Infrastructure.Identity;
+using BabylonWealth.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BabylonWealth.Infrastructure.Extensions;
 
-/// <summary>
-/// Registers everything the Infrastructure layer provides into the DI container.
-/// Called once from Program.cs — the API project never references EF Core or Npgsql directly.
-/// All that complexity stays inside Infrastructure.
-/// </summary>
 public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(
@@ -27,11 +27,57 @@ public static class InfrastructureExtensions
         services.AddDbContext<BabylonDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        // ── ASP.NET Core Identity ─────────────────────────────────
+        // AddIdentity registers: UserManager, SignInManager, RoleManager + password hashing.
+        // Tokens and lockout policies are configured here — Identity handles all the security
+        // complexity so we don't have to: bcrypt, lockout, password complexity, etc.
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequiredLength = 8;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+
+            options.User.RequireUniqueEmail = true;
+
+            // Disable lockout for now — can enable in production
+            options.Lockout.AllowedForNewUsers = false;
+        })
+        .AddEntityFrameworkStores<BabylonDbContext>()
+        .AddDefaultTokenProviders();
+
+        // ── JWT Bearer Authentication ─────────────────────────────
+        // JWT is stateless: the token itself is proof of identity.
+        // The server never stores session state — it just validates the signature.
+        var secretKey = configuration["Jwt:SecretKey"]
+            ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
+
+        services
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(secretKey))
+                };
+            });
+
+        // ── Services ──────────────────────────────────────────────
+        services.AddScoped<JwtService>();
+
         // ── Repositories ──────────────────────────────────────────
-        // Registered as Scoped: one instance per HTTP request.
-        // The controller gets the same repository instance as the service it calls —
-        // they share the same DbContext and therefore the same transaction.
-        // (Repositories will be added here in Day 6 as they're implemented)
+        // (Day 6 — registered here as implemented)
 
         return services;
     }

@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -26,7 +27,7 @@ public class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
             .HasMaxLength(50);
 
         // Relationship: many accounts → one user
-        builder.HasOne(a => a.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);

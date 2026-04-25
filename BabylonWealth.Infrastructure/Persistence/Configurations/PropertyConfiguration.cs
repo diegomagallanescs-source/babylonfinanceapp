@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -38,11 +39,10 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasMaxLength(50);
 
         // Tracks when the user last updated the estimated value
-        // Used by IPropertyRepository.GetStaleValuationsAsync
         builder.Property(p => p.LastValueUpdatedAt)
             .IsRequired(false);
 
-        builder.HasOne(p => p.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);

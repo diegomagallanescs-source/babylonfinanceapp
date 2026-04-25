@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,7 +28,7 @@ public class InvestmentIncomeConfiguration : IEntityTypeConfiguration<Investment
         // Composite index on UserId + ReceivedDate powers the monthly aggregation queries
         builder.HasIndex(i => new { i.UserId, i.ReceivedDate });
 
-        builder.HasOne(i => i.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(i => i.UserId)
             .OnDelete(DeleteBehavior.Cascade);

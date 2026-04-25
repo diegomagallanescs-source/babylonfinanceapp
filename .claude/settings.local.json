@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(sln|md\\)$\")",
+      "Bash(dotnet add *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet run *)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"arkad@babylon.com\",\"password\":\"Richest1\",\"firstName\":\"Arkad\"}')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"arkad@babylon.com\",\"password\":\"Richest1\"}')",
+      "Bash(pkill -f \"BabylonWealth.Api\")",
+      "PowerShell(Stop-Process -Id 24452 -Force -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

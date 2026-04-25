@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,7 +21,7 @@ public class SpendingTransactionConfiguration : IEntityTypeConfiguration<Spendin
         // Composite index — GetByMonthAsync is the hottest query on this table
         builder.HasIndex(s => new { s.UserId, s.TransactionDate });
 
-        builder.HasOne(s => s.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);

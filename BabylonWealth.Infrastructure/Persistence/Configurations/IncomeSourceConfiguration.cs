@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -26,7 +27,7 @@ public class IncomeSourceConfiguration : IEntityTypeConfiguration<IncomeSource>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.HasOne(i => i.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(i => i.UserId)
             .OnDelete(DeleteBehavior.Cascade);

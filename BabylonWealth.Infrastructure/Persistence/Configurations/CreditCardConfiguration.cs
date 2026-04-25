@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,7 +33,7 @@ public class CreditCardConfiguration : IEntityTypeConfiguration<CreditCard>
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        builder.HasOne(c => c.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);

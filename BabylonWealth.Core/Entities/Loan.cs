@@ -5,7 +5,6 @@ namespace BabylonWealth.Core.Entities;
 public class Loan : BaseEntity<Guid>
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
     public string CustomLabel { get; private set; } = string.Empty;
     public string? LenderName { get; private set; }
     public decimal Balance { get; private set; }

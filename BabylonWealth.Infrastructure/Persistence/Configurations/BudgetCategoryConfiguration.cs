@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,7 +25,7 @@ public class BudgetCategoryConfiguration : IEntityTypeConfiguration<BudgetCatego
         builder.Property(b => b.DisplayOrder)
             .IsRequired();
 
-        builder.HasOne(b => b.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(b => b.UserId)
             .OnDelete(DeleteBehavior.Cascade);

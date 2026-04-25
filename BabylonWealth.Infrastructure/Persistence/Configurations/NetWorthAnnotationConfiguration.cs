@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,7 +25,7 @@ public class NetWorthAnnotationConfiguration : IEntityTypeConfiguration<NetWorth
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
-        builder.HasOne(a => a.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);

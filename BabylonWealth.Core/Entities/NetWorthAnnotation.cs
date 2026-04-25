@@ -3,7 +3,6 @@
 public class NetWorthAnnotation : BaseEntity<Guid>
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
     public DateTime AnnotationDate { get; private set; }
     public string Text { get; private set; } = string.Empty;
     public string? Category { get; private set; }

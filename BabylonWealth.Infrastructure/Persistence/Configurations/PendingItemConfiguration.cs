@@ -1,4 +1,5 @@
 using BabylonWealth.Core.Entities;
+using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,7 +33,7 @@ public class PendingItemConfiguration : IEntityTypeConfiguration<PendingItem>
 
         builder.HasIndex(p => new { p.UserId, p.Status });
 
-        builder.HasOne(p => p.User)
+        builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
