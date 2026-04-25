@@ -1,11 +1,12 @@
 using BabylonWealth.Infrastructure.Extensions;
+using BabylonWealth.Infrastructure.Seeders;
 using Microsoft.OpenApi.Models;
 
 namespace Babylon.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,8 @@ namespace Babylon.Api
             builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
+
+            await BankSeeder.SeedAsync(app.Services);
 
             if (app.Environment.IsDevelopment())
             {
