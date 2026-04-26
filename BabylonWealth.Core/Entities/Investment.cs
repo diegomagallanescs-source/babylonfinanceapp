@@ -29,9 +29,13 @@ public class Investment : BaseEntity<Guid>
         };
     }
 
-    public void UpdateValue(decimal value)
+    public void Update(Guid bankId, string customLabel, decimal currentValue, InvestmentType investmentType, string? ticker)
     {
-        CurrentValue = value;
+        BankId = bankId;
+        CustomLabel = customLabel;
+        CurrentValue = currentValue;
+        InvestmentType = investmentType;
+        Ticker = ticker;
         Touch();
     }
 }

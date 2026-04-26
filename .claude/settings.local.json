@@ -26,7 +26,8 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5231/swagger/v1/swagger.json)",
       "Bash(taskkill /PID 12468 /F)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\"; dotnet build BabylonWealth.sln 2>&1 | Where-Object { $_ -match \"error\" })"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\"; dotnet build BabylonWealth.sln 2>&1 | Where-Object { $_ -match \"error\" })",
+      "PowerShell(Get-Process -Name \"BabylonWealth.Api\" -ErrorAction SilentlyContinue | Stop-Process -Force; Get-Process -Name \"dotnet\" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq \"\" } | Stop-Process -Force)"
     ]
   }
 }
