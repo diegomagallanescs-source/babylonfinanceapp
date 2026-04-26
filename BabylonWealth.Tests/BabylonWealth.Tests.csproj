@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Helpers\" />
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\BabylonWealth.Core\BabylonWealth.Core.csproj" />
+    <ProjectReference Include="..\BabylonWealth.Services\BabylonWealth.Services.csproj" />
   </ItemGroup>
 
 </Project>

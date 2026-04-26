@@ -1,5 +1,6 @@
 using BabylonWealth.Core.DTOs.Requests;
 using BabylonWealth.Core.DTOs.Responses;
+using BabylonWealth.Core.Interfaces.Services;
 using BabylonWealth.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,15 +14,18 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly JwtService _jwtService;
+    private readonly IBudgetCategoryService _budgetCategoryService;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        JwtService jwtService)
+        JwtService jwtService,
+        IBudgetCategoryService budgetCategoryService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtService = jwtService;
+        _budgetCategoryService = budgetCategoryService;
     }
 
     [HttpPost("register")]
@@ -43,6 +47,8 @@ public class AuthController : ControllerBase
             var errors = result.Errors.Select(e => e.Description);
             return BadRequest(new { errors });
         }
+
+        await _budgetCategoryService.SeedDefaultCategoriesAsync(user.Id);
 
         var (token, expiresAt) = _jwtService.GenerateToken(user);
 
