@@ -23,7 +23,7 @@ public class AnnotationRepository : BaseRepository<NetWorthAnnotation, Guid>, IA
             .FirstOrDefaultAsync(a => a.UserId == userId && a.SnapshotId == snapshotId);
     }
 
-    public async Task<NetWorthAnnotation> UpsertAsync(Guid userId, DateTime annotationDate, string text, Guid? snapshotId = null)
+    public async Task<NetWorthAnnotation> UpsertAsync(Guid userId, DateTime annotationDate, string text, string? category = null, Guid? snapshotId = null)
     {
         var existing = await _dbSet
             .FirstOrDefaultAsync(a => a.UserId == userId &&
@@ -31,12 +31,12 @@ public class AnnotationRepository : BaseRepository<NetWorthAnnotation, Guid>, IA
 
         if (existing is not null)
         {
-            existing.UpdateText(text);
+            existing.Update(text, category);
             await _context.SaveChangesAsync();
             return existing;
         }
 
-        var annotation = NetWorthAnnotation.Create(userId, annotationDate, text, snapshotId: snapshotId);
+        var annotation = NetWorthAnnotation.Create(userId, annotationDate, text, category, snapshotId);
         _dbSet.Add(annotation);
         await _context.SaveChangesAsync();
         return annotation;

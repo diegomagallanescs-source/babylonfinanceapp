@@ -14,6 +14,7 @@ public static class ServicesExtensions
         services.AddScoped<IPendingItemService, PendingItemService>();
         services.AddScoped<INetWorthService, NetWorthService>();
         services.AddScoped<ISnapshotService, SnapshotService>();
+        services.AddScoped<IAnnotationService, AnnotationService>();
         return services;
     }
 }

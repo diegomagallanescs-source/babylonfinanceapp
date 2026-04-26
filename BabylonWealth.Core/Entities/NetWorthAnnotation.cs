@@ -24,9 +24,10 @@ public class NetWorthAnnotation : BaseEntity<Guid>
         };
     }
 
-    public void UpdateText(string text)
+    public void Update(string text, string? category)
     {
         Text = text;
+        Category = category;
         Touch();
     }
 }

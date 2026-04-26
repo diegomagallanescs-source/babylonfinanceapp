@@ -17,5 +17,5 @@ public interface IAnnotationRepository : IBaseRepository<NetWorthAnnotation, Gui
     /// Upsert: if an annotation already exists on this date, update it.
     /// If not, create a new one. Prevents duplicate annotations on the same date.
     /// </summary>
-    Task<NetWorthAnnotation> UpsertAsync(Guid userId, DateTime annotationDate, string text, Guid? snapshotId = null);
+    Task<NetWorthAnnotation> UpsertAsync(Guid userId, DateTime annotationDate, string text, string? category = null, Guid? snapshotId = null);
 }
