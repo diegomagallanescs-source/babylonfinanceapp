@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using BabylonWealth.Api.BackgroundServices;
 using BabylonWealth.Infrastructure.Extensions;
 using BabylonWealth.Infrastructure.Seeders;
 using BabylonWealth.Services.Extensions;
@@ -47,6 +48,7 @@ namespace Babylon.Api
             });
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddApplicationServices();
+            builder.Services.AddHostedService<SnapshotBackgroundService>();
 
             var app = builder.Build();
 

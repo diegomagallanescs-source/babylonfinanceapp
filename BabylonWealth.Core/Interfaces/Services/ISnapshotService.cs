@@ -1,10 +1,11 @@
+using BabylonWealth.Core.DTOs.Responses;
 using BabylonWealth.Core.Entities;
 
 namespace BabylonWealth.Core.Interfaces.Services;
 
 /// <summary>
 /// Captures point-in-time net worth snapshots.
-/// Called automatically by SnapshotBackgroundService every two weeks on Sunday,
+/// Called automatically by SnapshotBackgroundService daily,
 /// and available via POST /api/v1/networth/snapshot for manual triggers.
 ///
 /// The service is idempotent: calling it multiple times on the same day
@@ -14,13 +15,12 @@ public interface ISnapshotService
 {
     /// <summary>
     /// Computes the current net worth and writes a NetWorthSnapshot record.
-    /// Safe to call on every startup — skips if a snapshot was already taken today.
+    /// Idempotent — skips if a snapshot was already taken today (same UTC date).
     /// </summary>
     Task<NetWorthSnapshot> TakeSnapshotAsync(Guid userId);
 
     /// <summary>
-    /// Determines whether a new snapshot should be taken right now.
-    /// Returns true if: today is Sunday AND it has been 14+ days since the last snapshot.
+    /// Returns true if no snapshot has been taken today (UTC date).
     /// Called by SnapshotBackgroundService on every 6-hour tick.
     /// </summary>
     Task<bool> ShouldTakeSnapshotAsync(Guid userId);
@@ -31,4 +31,10 @@ public interface ISnapshotService
     /// Called by POST /api/v1/networth/annotate
     /// </summary>
     Task AnnotateSnapshotAsync(Guid userId, DateTime annotationDate, string text);
+
+    /// <summary>
+    /// Returns snapshot history within a date range, mapped to chart-ready DTOs.
+    /// Called by GET /api/v1/networth/history
+    /// </summary>
+    Task<IEnumerable<NetWorthHistoryPointDto>> GetHistoryAsync(Guid userId, DateTime from, DateTime to);
 }

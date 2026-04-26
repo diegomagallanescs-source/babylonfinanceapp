@@ -13,6 +13,7 @@ public static class ServicesExtensions
         services.AddScoped<IInvestmentService, InvestmentService>();
         services.AddScoped<IPendingItemService, PendingItemService>();
         services.AddScoped<INetWorthService, NetWorthService>();
+        services.AddScoped<ISnapshotService, SnapshotService>();
         return services;
     }
 }
