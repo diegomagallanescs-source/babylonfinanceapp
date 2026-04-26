@@ -10,10 +10,29 @@ public class CreditCardRepository : BaseRepository<CreditCard, Guid>, ICreditCar
 {
     public CreditCardRepository(BabylonDbContext context) : base(context) { }
 
+    public override async Task<CreditCard?> GetByIdAsync(Guid id, Guid userId)
+    {
+        return await _dbSet
+            .Include(c => c.Bank)
+            .Where(c => c.UserId == userId)
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public override async Task<IEnumerable<CreditCard>> GetAllByUserAsync(Guid userId)
+    {
+        return await _dbSet
+            .Include(c => c.Bank)
+            .Where(c => c.UserId == userId)
+            .OrderBy(c => c.CustomLabel)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<CreditCard>> GetByCardTypeAsync(Guid userId, CardType type)
     {
         return await _dbSet
+            .Include(c => c.Bank)
             .Where(c => c.UserId == userId && c.CardType == type)
+            .OrderBy(c => c.CustomLabel)
             .ToListAsync();
     }
 

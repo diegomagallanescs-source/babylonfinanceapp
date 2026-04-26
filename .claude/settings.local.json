@@ -21,7 +21,12 @@
       "Bash(curl -sv 'http://localhost:5231/api/v1/banks/search?q=chase' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZGVhZThlNy1lMDJjLTQ5MjMtYmFiZi0yOGEyOWE4MWU2NmYiLCJlbWFpbCI6InN3YWdnZXJfdGVzdEBiYWJ5bG9uLmRldiIsImp0aSI6IjI4MGRlYjBjLTRiNzEtNGNkZS1iY2I4LTJjZDk0OGQ1ZWYxMiIsImZpcnN0TmFtZSI6IkFya2FkIiwiZXhwIjoxNzc3Mjk1NjI2LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.B7nKtAN2PDYKu-0w_mj-f7buCJwmV3m1bUxEpKRRC3A')",
       "Bash(taskkill /F /IM \"BabylonWealth.Api.exe\")",
       "PowerShell(Stop-Process -Name \"BabylonWealth.Api\" -Force -ErrorAction SilentlyContinue; Start-Sleep 2; Set-Location \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\BabylonWealth.API\"; Start-Process -NoNewWindow -FilePath \"dotnet\" -ArgumentList \"run\",\"--launch-profile\",\"http\" -RedirectStandardOutput \"$env:TEMP\\\\api3.log\" -RedirectStandardError \"$env:TEMP\\\\api3err.log\"; Start-Sleep 6; Invoke-RestMethod \"http://localhost:5231/api/v1/health\")",
-      "PowerShell(Stop-Process -Name \"BabylonWealth.Api\" -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Name \"BabylonWealth.Api\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s http://localhost:5231/health)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5231/swagger/v1/swagger.json)",
+      "Bash(taskkill /PID 12468 /F)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\"; dotnet build BabylonWealth.sln 2>&1 | Where-Object { $_ -match \"error\" })"
     ]
   }
 }

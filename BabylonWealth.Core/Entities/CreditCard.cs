@@ -17,7 +17,7 @@ public class CreditCard : BaseEntity<Guid>
 
     private CreditCard() { }
 
-    public static CreditCard Create(Guid userId, Guid bankId, string customLabel, decimal balance, decimal creditLimit, decimal apr, CardType cardType)
+    public static CreditCard Create(Guid userId, Guid? bankId, string customLabel, decimal balance, decimal creditLimit, decimal apr, CardType cardType)
     {
         return new CreditCard
         {
@@ -32,9 +32,10 @@ public class CreditCard : BaseEntity<Guid>
         };
     }
 
-    public void UpdateBalance(decimal balance)
-    {
-        Balance = balance;
-        Touch();
-    }
+    public void UpdateLabel(string customLabel) { CustomLabel = customLabel; Touch(); }
+    public void UpdateBalance(decimal balance) { Balance = balance; Touch(); }
+    public void UpdateCreditLimit(decimal creditLimit) { CreditLimit = creditLimit; Touch(); }
+    public void UpdateAPR(decimal apr) { APR = apr; Touch(); }
+    public void UpdateCardType(CardType cardType) { CardType = cardType; Touch(); }
+    public void UpdateNotes(string? notes) { Notes = notes; Touch(); }
 }
