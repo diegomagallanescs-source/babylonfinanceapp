@@ -23,7 +23,7 @@ public class InvestmentIncome : BaseEntity<Guid>
             SourceName = sourceName,
             Type = type,
             Amount = amount,
-            ReceivedDate = receivedDate
+            ReceivedDate = DateTime.SpecifyKind(receivedDate, DateTimeKind.Utc)
         };
     }
 }

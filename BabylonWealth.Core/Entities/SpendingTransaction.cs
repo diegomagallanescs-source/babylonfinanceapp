@@ -29,7 +29,7 @@ public class SpendingTransaction : BaseEntity<Guid>
             BudgetCategoryId = budgetCategoryId,
             Amount = amount,
             Description = description,
-            TransactionDate = transactionDate,
+            TransactionDate = DateTime.SpecifyKind(transactionDate, DateTimeKind.Utc),
             BankAccountId = bankAccountId
         };
     }

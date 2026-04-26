@@ -23,7 +23,7 @@ public class PendingItem : BaseEntity<Guid>
             Description = description,
             Amount = amount,
             Counterparty = counterparty,
-            DueDate = dueDate,
+            DueDate = dueDate.HasValue ? DateTime.SpecifyKind(dueDate.Value, DateTimeKind.Utc) : null,
             Status = PendingItemStatus.Pending
         };
     }

@@ -64,7 +64,16 @@
       "PowerShell(& \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe\" -U postgres -d babylonwealth -c \"\\\\d `\"SpendingTransactions`\"\" 2>&1)",
       "Bash(pkill -f \"dotnet run\")",
       "Bash(pkill -f \"BabylonWealth.Api.dll\")",
-      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"spendtest@test.com\",\"password\":\"Test1234\"}')"
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"spendtest@test.com\",\"password\":\"Test1234\"}')",
+      "Bash(xargs -I {} basename {})",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@babylon.dev\",\"password\":\"Test1234\",\"firstName\":\"Arkad\"}')",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOTNkYjJiYS03ZWU1LTRhNDQtYjY0Yy1mNjBjNjkzZmRlMjQiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5kZXYiLCJqdGkiOiIzODBhOTliNC04MWYxLTQyYTAtYjQxMC0wZTNjNmJlZmExNzYiLCJmaXJzdE5hbWUiOiJBcmthZCIsImV4cCI6MTc3NzMyMzM3NiwiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.s8YeEDlw5KY61uSw6eN92ROQskCnj7NysTo2J8mN_as' http://localhost:5231/api/v1/budget/categories)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/income -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOTNkYjJiYS03ZWU1LTRhNDQtYjY0Yy1mNjBjNjkzZmRlMjQiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5kZXYiLCJqdGkiOiIzODBhOTliNC04MWYxLTQyYTAtYjQxMC0wZTNjNmJlZmExNzYiLCJmaXJzdE5hbWUiOiJBcmthZCIsImV4cCI6MTc3NzMyMzM3NiwiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.s8YeEDlw5KY61uSw6eN92ROQskCnj7NysTo2J8mN_as' -H 'Content-Type: application/json' -d '{\"name\":\"Software Engineer Salary\",\"type\":\"Salary\",\"annualAmount\":72000,\"isActive\":true}')",
+      "Bash(curl -sv -X POST http://localhost:5231/api/v1/spending -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOTNkYjJiYS03ZWU1LTRhNDQtYjY0Yy1mNjBjNjkzZmRlMjQiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5kZXYiLCJqdGkiOiIzODBhOTliNC04MWYxLTQyYTAtYjQxMC0wZTNjNmJlZmExNzYiLCJmaXJzdE5hbWUiOiJBcmthZCIsImV4cCI6MTc3NzMyMzM3NiwiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.s8YeEDlw5KY61uSw6eN92ROQskCnj7NysTo2J8mN_as' -H 'Content-Type: application/json' -d '{\"categoryId\":\"f19de140-95fc-41c5-a125-51930840fc0b\",\"amount\":1800,\"description\":\"Rent\",\"transactionDate\":\"2026-04-01\"}')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/spending -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOTNkYjJiYS03ZWU1LTRhNDQtYjY0Yy1mNjBjNjkzZmRlMjQiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5kZXYiLCJqdGkiOiIzODBhOTliNC04MWYxLTQyYTAtYjQxMC0wZTNjNmJlZmExNzYiLCJmaXJzdE5hbWUiOiJBcmthZCIsImV4cCI6MTc3NzMyMzM3NiwiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.s8YeEDlw5KY61uSw6eN92ROQskCnj7NysTo2J8mN_as' -H 'Content-Type: application/json' -d '{\"categoryId\":\"f19de140-95fc-41c5-a125-51930840fc0b\",\"amount\":1800,\"description\":\"Rent\",\"transactionDate\":\"2026-04-01\"}')",
+      "Bash(kill 45868)",
+      "Bash(kill 3369)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@babylon.dev\",\"password\":\"Test1234\"}')"
     ]
   }
 }

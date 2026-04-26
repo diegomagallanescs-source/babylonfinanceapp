@@ -17,7 +17,7 @@ public class NetWorthAnnotation : BaseEntity<Guid>
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            AnnotationDate = annotationDate,
+            AnnotationDate = DateTime.SpecifyKind(annotationDate, DateTimeKind.Utc),
             Text = text,
             Category = category,
             SnapshotId = snapshotId
