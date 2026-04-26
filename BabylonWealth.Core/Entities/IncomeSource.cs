@@ -25,9 +25,11 @@ public class IncomeSource : BaseEntity<Guid>
         };
     }
 
-    public void UpdateAmount(decimal amount)
+    public void Update(string name, IncomeType type, decimal annualAmount)
     {
-        AnnualAmount = amount;
+        Name = name;
+        Type = type;
+        AnnualAmount = annualAmount;
         Touch();
     }
 
