@@ -10,9 +10,27 @@ public class InvestmentRepository : BaseRepository<Investment, Guid>, IInvestmen
 {
     public InvestmentRepository(BabylonDbContext context) : base(context) { }
 
+    public override async Task<Investment?> GetByIdAsync(Guid id, Guid userId)
+    {
+        return await _dbSet
+            .Include(i => i.Bank)
+            .Where(i => i.UserId == userId)
+            .FirstOrDefaultAsync(i => i.Id == id);
+    }
+
+    public override async Task<IEnumerable<Investment>> GetAllByUserAsync(Guid userId)
+    {
+        return await _dbSet
+            .Include(i => i.Bank)
+            .Where(i => i.UserId == userId)
+            .OrderBy(i => i.CustomLabel)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Investment>> GetByInvestmentTypeAsync(Guid userId, InvestmentType type)
     {
         return await _dbSet
+            .Include(i => i.Bank)
             .Where(i => i.UserId == userId && i.InvestmentType == type)
             .ToListAsync();
     }
