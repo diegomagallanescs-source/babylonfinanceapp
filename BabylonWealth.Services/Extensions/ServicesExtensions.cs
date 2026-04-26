@@ -9,6 +9,7 @@ public static class ServicesExtensions
     {
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ICreditCardService, CreditCardService>();
+        services.AddScoped<ILoanService, LoanService>();
         return services;
     }
 }

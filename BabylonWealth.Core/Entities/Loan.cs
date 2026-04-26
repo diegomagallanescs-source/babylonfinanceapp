@@ -28,9 +28,13 @@ public class Loan : BaseEntity<Guid>
         };
     }
 
-    public void UpdateBalance(decimal balance)
+    public void Update(string? customLabel, string? lenderName, decimal? balance, decimal? interestRate, LoanType? loanType)
     {
-        Balance = balance;
+        if (customLabel is not null) CustomLabel = customLabel;
+        if (lenderName is not null) LenderName = lenderName;
+        if (balance is not null) Balance = balance.Value;
+        if (interestRate is not null) InterestRate = interestRate.Value;
+        if (loanType is not null) LoanType = loanType.Value;
         Touch();
     }
 }
