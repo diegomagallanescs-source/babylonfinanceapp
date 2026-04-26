@@ -9,6 +9,23 @@ public class AccountRepository : BaseRepository<BankAccount, Guid>, IAccountRepo
 {
     public AccountRepository(BabylonDbContext context) : base(context) { }
 
+    public override async Task<BankAccount?> GetByIdAsync(Guid id, Guid userId)
+    {
+        return await _dbSet
+            .Include(a => a.Bank)
+            .Where(a => a.UserId == userId)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
+
+    public override async Task<IEnumerable<BankAccount>> GetAllByUserAsync(Guid userId)
+    {
+        return await _dbSet
+            .Include(a => a.Bank)
+            .Where(a => a.UserId == userId)
+            .OrderBy(a => a.CustomLabel)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<BankAccount>> GetByBudgetCategoryAsync(Guid userId, Guid categoryId)
     {
         return await _dbSet

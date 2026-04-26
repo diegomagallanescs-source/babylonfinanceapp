@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using BabylonWealth.Infrastructure.Extensions;
 using BabylonWealth.Infrastructure.Seeders;
+using BabylonWealth.Services.Extensions;
 using Microsoft.OpenApi.Models;
 
 namespace Babylon.Api
@@ -10,7 +12,8 @@ namespace Babylon.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -43,6 +46,7 @@ namespace Babylon.Api
                 });
             });
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddApplicationServices();
 
             var app = builder.Build();
 

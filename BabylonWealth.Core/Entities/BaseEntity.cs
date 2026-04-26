@@ -8,7 +8,11 @@ public abstract class BaseEntity<TKey>
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
 
-    protected BaseEntity() { }
+    protected BaseEntity()
+    {
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     protected BaseEntity(TKey id)
     {

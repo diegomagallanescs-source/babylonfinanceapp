@@ -13,7 +13,15 @@
       "Bash(curl -s http://localhost:5000/api/v1/health/di)",
       "Bash(python -m json.tool)",
       "Bash(curl -s http://localhost:5231/api/v1/health/di)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "Bash(curl -s http://localhost:5231/api/v1/health)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"swagger_test@babylon.dev\",\"password\":\"Test1234\",\"firstName\":\"Arkad\"}')",
+      "Bash(curl -s 'http://localhost:5231/api/v1/banks/search?q=chase' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZGVhZThlNy1lMDJjLTQ5MjMtYmFmLTI4YTI5YTgxZTY2ZiIsImVtYWlsIjoic3dhZ2dlcl90ZXN0QGJhYnlsb24uZGV2IiwianRpIjoiMjgwZGViMGMtNGI3MS00Y2RlLWJjYjgtMmNkOTQ4ZDVlZjEyIiwiZmlyc3ROYW1lIjoiQXJrYWQiLCJleHAiOjE3NzcyOTU2MjYsImlzcyI6IkJhYnlsb25XZWFsdGgiLCJhdWQiOiJCYWJ5bG9uV2VhbHRoVXNlcnMifQ.B7nKtAN2PDYKu-0w_mj-f7buCJwmV3m1bUxEpKRRC3A')",
+      "Bash(curl -sv 'http://localhost:5231/api/v1/banks/search?q=chase' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZGVhZThlNy1lMDJjLTQ5MjMtYmFiZi0yOGEyOWE4MWU2NmYiLCJlbWFpbCI6InN3YWdnZXJfdGVzdEBiYWJ5bG9uLmRldiIsImp0aSI6IjI4MGRlYjBjLTRiNzEtNGNkZS1iY2I4LTJjZDk0OGQ1ZWYxMiIsImZpcnN0TmFtZSI6IkFya2FkIiwiZXhwIjoxNzc3Mjk1NjI2LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.B7nKtAN2PDYKu-0w_mj-f7buCJwmV3m1bUxEpKRRC3A')",
+      "Bash(taskkill /F /IM \"BabylonWealth.Api.exe\")",
+      "PowerShell(Stop-Process -Name \"BabylonWealth.Api\" -Force -ErrorAction SilentlyContinue; Start-Sleep 2; Set-Location \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\BabylonWealth.API\"; Start-Process -NoNewWindow -FilePath \"dotnet\" -ArgumentList \"run\",\"--launch-profile\",\"http\" -RedirectStandardOutput \"$env:TEMP\\\\api3.log\" -RedirectStandardError \"$env:TEMP\\\\api3err.log\"; Start-Sleep 6; Invoke-RestMethod \"http://localhost:5231/api/v1/health\")",
+      "PowerShell(Stop-Process -Name \"BabylonWealth.Api\" -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }
