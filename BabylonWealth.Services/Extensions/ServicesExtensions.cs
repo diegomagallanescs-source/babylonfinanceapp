@@ -17,6 +17,8 @@ public static class ServicesExtensions
         services.AddScoped<IAnnotationService, AnnotationService>();
         services.AddScoped<IIncomeService, IncomeService>();
         services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
+        services.AddScoped<ISpendingService, SpendingService>();
+        services.AddScoped<IBudgetAnalyticsService, BudgetAnalyticsService>();
         return services;
     }
 }
