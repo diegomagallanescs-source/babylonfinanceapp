@@ -32,7 +32,19 @@
       "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"Test1234\"}')",
       "Bash(curl -s 'http://localhost:5231/api/v1/banks/search?q=chase' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MGVjMGQ5YS00NDgxLTQ5MTctOTZhNC01ZmQ2MGQ3ZjAwMTIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJqdGkiOiI1ZmYxMzEzOC0yNWJjLTRlZDMtYmRkNS0zN2I3YjI3YjliYjAiLCJmaXJzdE5hbWUiOiJUZXN0IiwiZXhwIjoxNzc3MzE1NDU4LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.x1MxJhAQCt9teHYzDyUjQnexV31PpLZ0v08U0yoKAoY')",
       "Bash(curl -s -X POST http://localhost:5231/api/v1/investments -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MGVjMGQ5YS00NDgxLTQ5MTctOTZhNC01ZmQ2MGQ3ZjAwMTIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJqdGkiOiI1ZmYxMzEzOC0yNWJjLTRlZDMtYmRkNS0zN2I3YjI3YjliYjAiLCJmaXJzdE5hbWUiOiJUZXN0IiwiZXhwIjoxNzc3MzE1NDU4LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.x1MxJhAQCt9teHYzDyUjQnexV31PpLZ0v08U0yoKAoY' -H 'Content-Type: application/json' -d '{\"bankId\":\"8106b7d5-b776-4560-805c-3505f969c74e\",\"customLabel\":\"My Roth IRA\",\"currentValue\":25000.00,\"investmentType\":\"RothIRA\",\"ticker\":null}')",
-      "Bash(taskkill /PID 47252 /F)"
+      "Bash(taskkill /PID 47252 /F)",
+      "Bash(curl -s http://localhost:5001/health)",
+      "Bash(curl -s https://localhost:7001/health -k)",
+      "Bash(curl -s http://localhost:5050/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5231/health)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5231 -State Listen)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5231/api/v1/health)",
+      "Bash(curl -s http://localhost:5231/api/v1/networth/current -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZjAzYjNiYy02Y2U2LTRjN2EtYjFmNy0zMTA5MDRmMTJlM2YiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5jb20iLCJqdGkiOiJjMDAxNDU4Mi1mNTQzLTQxNTgtODkyZC0zYWZjZmY3OWE1ZmMiLCJmaXJzdE5hbWUiOiJUZXN0IiwiZXhwIjoxNzc3MzE2NDE1LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.4VbTkTmS1fJKCMNrKpHgUdBUPUL5MgpZglV-iRxEkjU')",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --no-launch-profile --urls \"http://localhost:5231\")",
+      "Bash(curl -s http://localhost:5231/api/v1/networth/current -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMjc1ZmJlNC1mMmZhLTQ0NDQtOWQ5Yy05NzI0MzBmNmE4ODYiLCJlbWFpbCI6Im53dGVzdEBiYWJ5bG9uLmNvbSIsImp0aSI6ImFlZTdmZWE1LTFjZWYtNGI2ZC1hMWU4LTJjODY3YTc3ZmUxYSIsImZpcnN0TmFtZSI6Ik5ldFdvcnRoIiwiZXhwIjoxNzc3MzE2NTE0LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.yS309OBqPVKV_uw7QRQCP8Y5IjAbvJY6KjaaD3BT9ng')",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5231/api/v1/networth/current -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMjc1ZmJlNC1mMmZhLTQ0NDQtOWQ5Yy05NzI0MzBmNmE4ODYiLCJlbWFpbCI6Im53dGVzdEBiYWJ5bG9uLmNvbSIsImp0aSI6ImFlZTdmZWE1LTFjZWYtNGI2ZC1hMWU4LTJjODY3YTc3ZmUxYSIsImZpcnN0TmFtZSI6Ik5ldFdvcnRoIiwiZXhwIjoxNzc3MzE2NTE0LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.yS309OBqPVKV_uw7QRQCP8Y5IjAbvJY6KjaaD3BT9ng')",
+      "Bash(curl -s 'http://localhost:5231/api/v1/banks/search?q=chase' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMjc1ZmJlNC1mMmZhLTQ0NDQtOWQ5Yy05NzI0MzBmNmE4ODYiLCJlbWFpbCI6Im53dGVzdEBiYWJ5bG9uLmNvbSIsImp0aSI6ImFlZTdmZWE1LTFjZWYtNGI2ZC1hMWU4LTJjODY3YTc3ZmUxYSIsImZpcnN0TmFtZSI6Ik5ldFdvcnRoIiwiZXhwIjoxNzc3MzE2NTE0LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.yS309OBqPVKV_uw7QRQCP8Y5IjAbvJY6KjaaD3BT9ng')"
     ]
   }
 }
