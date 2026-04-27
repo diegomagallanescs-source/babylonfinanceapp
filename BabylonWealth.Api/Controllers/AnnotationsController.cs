@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Net worth snapshot annotations — add notes to any point on the chart.</summary>
 [ApiController]
 [Route("api/v1/networth")]
 [Authorize]
@@ -19,7 +20,12 @@ public class AnnotationsController : ControllerBase
         _annotationService = annotationService;
     }
 
+    /// <summary>Creates or updates the annotation for a specific snapshot date (upsert by date).</summary>
+    /// <response code="200">Annotation saved.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpPost("annotate")]
+    [ProducesResponseType(typeof(AnnotationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AnnotationResponseDto>> Annotate([FromBody] CreateAnnotationRequest request)
     {
         var userId = GetUserId();
@@ -27,7 +33,14 @@ public class AnnotationsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Returns all annotations within the given date range. Defaults to the past year.</summary>
+    /// <param name="from">Range start (UTC). Defaults to one year ago.</param>
+    /// <param name="to">Range end (UTC). Defaults to now.</param>
+    /// <response code="200">List of annotations.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpGet("annotations")]
+    [ProducesResponseType(typeof(IEnumerable<AnnotationResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<AnnotationResponseDto>>> GetAnnotations(
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Bank account management.</summary>
 [ApiController]
 [Route("api/v1/accounts")]
 [Authorize]
@@ -20,7 +21,12 @@ public class AccountsController : ControllerBase
         _accountService = accountService;
     }
 
+    /// <summary>Returns all bank accounts for the authenticated user. Soft-deleted records are excluded.</summary>
+    /// <response code="200">List of accounts.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<AccountResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<AccountResponseDto>>> GetAll()
     {
         var userId = GetUserId();
@@ -28,7 +34,14 @@ public class AccountsController : ControllerBase
         return Ok(accounts);
     }
 
+    /// <summary>Returns a single bank account by ID.</summary>
+    /// <response code="200">Account found.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Account not found or belongs to another user.</response>
     [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(AccountResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AccountResponseDto>> GetById(Guid id)
     {
         var userId = GetUserId();
@@ -43,7 +56,12 @@ public class AccountsController : ControllerBase
         }
     }
 
+    /// <summary>Creates a new bank account for the authenticated user.</summary>
+    /// <response code="201">Account created.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(AccountResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AccountResponseDto>> Create([FromBody] CreateAccountRequest request)
     {
         var userId = GetUserId();
@@ -51,7 +69,14 @@ public class AccountsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
     }
 
+    /// <summary>Updates an existing bank account.</summary>
+    /// <response code="200">Account updated.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Account not found or belongs to another user.</response>
     [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(AccountResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AccountResponseDto>> Update(Guid id, [FromBody] UpdateAccountRequest request)
     {
         var userId = GetUserId();
@@ -66,7 +91,14 @@ public class AccountsController : ControllerBase
         }
     }
 
+    /// <summary>Soft-deletes a bank account. The record is retained in the database with IsDeleted = true.</summary>
+    /// <response code="204">Account deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Account not found or belongs to another user.</response>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = GetUserId();

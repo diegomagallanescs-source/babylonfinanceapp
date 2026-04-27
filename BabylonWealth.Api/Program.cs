@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using BabylonWealth.Api.BackgroundServices;
 using BabylonWealth.Infrastructure.Extensions;
@@ -45,6 +46,10 @@ namespace Babylon.Api
                         Array.Empty<string>()
                     }
                 });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
             });
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddApplicationServices();

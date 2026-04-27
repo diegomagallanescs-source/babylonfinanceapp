@@ -1,8 +1,10 @@
 using System.Text;
 using BabylonWealth.Core.Interfaces.Repositories;
+using BabylonWealth.Core.Interfaces.Services;
 using BabylonWealth.Infrastructure.Identity;
 using BabylonWealth.Infrastructure.Persistence;
 using BabylonWealth.Infrastructure.Repositories;
+using BabylonWealth.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -77,6 +79,7 @@ public static class InfrastructureExtensions
 
         // ── Services ──────────────────────────────────────────────
         services.AddScoped<JwtService>();
+        services.AddScoped<IUserService, UserService>();
 
         // ── Repositories ──────────────────────────────────────────
         // Scoped = one instance per HTTP request. The DI container builds the full

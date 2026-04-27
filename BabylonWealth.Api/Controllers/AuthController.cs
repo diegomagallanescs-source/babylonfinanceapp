@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Authentication — register and login. No JWT required.</summary>
 [ApiController]
 [Route("api/v1/auth")]
 public class AuthController : ControllerBase
@@ -28,7 +29,12 @@ public class AuthController : ControllerBase
         _budgetCategoryService = budgetCategoryService;
     }
 
+    /// <summary>Creates a new user account and returns a JWT. Default budget categories are seeded automatically.</summary>
+    /// <response code="200">Registration successful. JWT token returned.</response>
+    /// <response code="400">Validation errors (e.g. email already taken, weak password).</response>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequest request)
     {
         var user = new ApplicationUser
@@ -62,7 +68,12 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>Validates credentials and returns a JWT.</summary>
+    /// <response code="200">Login successful. JWT token returned.</response>
+    /// <response code="401">Invalid email or password.</response>
     [HttpPost("login")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);

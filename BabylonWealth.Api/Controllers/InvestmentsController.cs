@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Investment account management — brokerage, retirement, crypto, and other investment types.</summary>
 [ApiController]
 [Route("api/v1/investments")]
 [Authorize]
@@ -21,7 +22,13 @@ public class InvestmentsController : ControllerBase
         _investmentService = investmentService;
     }
 
+    /// <summary>Returns all investments for the authenticated user. Optionally filter by investment type.</summary>
+    /// <param name="type">Optional investment type filter.</param>
+    /// <response code="200">List of investments.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<InvestmentResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<InvestmentResponseDto>>> GetAll([FromQuery] InvestmentType? type)
     {
         var userId = GetUserId();
@@ -31,7 +38,14 @@ public class InvestmentsController : ControllerBase
         return Ok(investments);
     }
 
+    /// <summary>Returns a single investment by ID.</summary>
+    /// <response code="200">Investment found.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Investment not found or belongs to another user.</response>
     [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(InvestmentResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<InvestmentResponseDto>> GetById(Guid id)
     {
         var userId = GetUserId();
@@ -46,7 +60,12 @@ public class InvestmentsController : ControllerBase
         }
     }
 
+    /// <summary>Returns a rolled-up summary of all investment accounts (total value by type).</summary>
+    /// <response code="200">Investment summary.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpGet("summary")]
+    [ProducesResponseType(typeof(InvestmentSummaryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<InvestmentSummaryDto>> GetSummary()
     {
         var userId = GetUserId();
@@ -54,7 +73,12 @@ public class InvestmentsController : ControllerBase
         return Ok(summary);
     }
 
+    /// <summary>Creates a new investment account.</summary>
+    /// <response code="201">Investment created.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(InvestmentResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<InvestmentResponseDto>> Create([FromBody] CreateInvestmentRequest request)
     {
         var userId = GetUserId();
@@ -62,7 +86,14 @@ public class InvestmentsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = investment.Id }, investment);
     }
 
+    /// <summary>Updates an existing investment account.</summary>
+    /// <response code="200">Investment updated.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Investment not found or belongs to another user.</response>
     [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(InvestmentResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<InvestmentResponseDto>> Update(Guid id, [FromBody] UpdateInvestmentRequest request)
     {
         var userId = GetUserId();
@@ -77,7 +108,14 @@ public class InvestmentsController : ControllerBase
         }
     }
 
+    /// <summary>Soft-deletes an investment account.</summary>
+    /// <response code="204">Investment deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Investment not found or belongs to another user.</response>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = GetUserId();

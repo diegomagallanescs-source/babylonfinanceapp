@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Health and DI wiring checks. No authentication required.</summary>
 [ApiController]
 [Route("api/v1/health")]
 public class HealthController : ControllerBase
@@ -24,15 +25,20 @@ public class HealthController : ControllerBase
         _netWorth = netWorth;
     }
 
-    /// <summary>
-    /// Verifies the DI container resolves the full repository → DbContext object graph.
-    /// Returns the concrete type names so it's clear which implementations were injected.
-    /// No database query is made — this is a pure DI wiring check.
-    /// </summary>
+    /// <summary>Returns a simple liveness check. Used by Railway health probes and load balancers.</summary>
+    /// <response code="200">API is running.</response>
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Get() => Ok(new { status = "healthy" });
 
+    /// <summary>
+    /// Verifies the DI container resolves the full repository → DbContext object graph.
+    /// Returns the concrete type names so it is clear which implementations were injected.
+    /// No database query is made — this is a pure DI wiring check.
+    /// </summary>
+    /// <response code="200">DI wiring is healthy.</response>
     [HttpGet("di")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult DiCheck() => Ok(new
     {
         status = "ok",

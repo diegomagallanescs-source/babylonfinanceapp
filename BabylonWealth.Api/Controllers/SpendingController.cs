@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>
+/// Spending transactions and budget analytics.
+/// Transactions are immutable — soft-delete and re-enter to correct a mistake.
+/// </summary>
 [ApiController]
 [Route("api/v1/spending")]
 [Authorize]
@@ -22,7 +26,16 @@ public class SpendingController : ControllerBase
         _analyticsService = analyticsService;
     }
 
+    /// <summary>Returns all spending transactions for the given month and year.</summary>
+    /// <param name="month">Month (1–12).</param>
+    /// <param name="year">Year (2000–2100).</param>
+    /// <response code="200">List of transactions.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="422">Month or year is out of valid range.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<SpendingTransactionResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<IEnumerable<SpendingTransactionResponseDto>>> GetByMonth(
         [FromQuery] int month,
         [FromQuery] int year)
@@ -38,7 +51,14 @@ public class SpendingController : ControllerBase
         return Ok(transactions);
     }
 
+    /// <summary>Records a new spending transaction. Transactions are immutable — there is no PUT endpoint.</summary>
+    /// <response code="201">Transaction created.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Referenced budget category not found.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(SpendingTransactionResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SpendingTransactionResponseDto>> Create(
         [FromBody] CreateSpendingTransactionRequest request)
     {
@@ -54,7 +74,14 @@ public class SpendingController : ControllerBase
         }
     }
 
+    /// <summary>Soft-deletes a spending transaction. Use this to correct a mistake — re-enter the correct amount.</summary>
+    /// <response code="204">Transaction deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Transaction not found or belongs to another user.</response>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = GetUserId();
@@ -69,7 +96,16 @@ public class SpendingController : ControllerBase
         }
     }
 
+    /// <summary>Returns budget analytics for the given month — actual vs. target spend per category.</summary>
+    /// <param name="month">Month (1–12).</param>
+    /// <param name="year">Year (2000–2100).</param>
+    /// <response code="200">Monthly budget analytics.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="422">Month or year is out of valid range.</response>
     [HttpGet("analytics")]
+    [ProducesResponseType(typeof(BudgetAnalyticsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<BudgetAnalyticsResponseDto>> GetAnalytics(
         [FromQuery] int month,
         [FromQuery] int year)

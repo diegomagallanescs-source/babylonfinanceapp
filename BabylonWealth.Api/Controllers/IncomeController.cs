@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BabylonWealth.Api.Controllers;
 
+/// <summary>Income source management — salary, freelance, rental, and other earned income.</summary>
 [ApiController]
 [Route("api/v1/income")]
 [Authorize]
@@ -20,7 +21,12 @@ public class IncomeController : ControllerBase
         _incomeService = incomeService;
     }
 
+    /// <summary>Returns all active and inactive income sources. Soft-deleted records are excluded.</summary>
+    /// <response code="200">List of income sources.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<IncomeResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<IncomeResponseDto>>> GetAll()
     {
         var userId = GetUserId();
@@ -28,7 +34,12 @@ public class IncomeController : ControllerBase
         return Ok(sources);
     }
 
+    /// <summary>Creates a new income source.</summary>
+    /// <response code="201">Income source created.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(IncomeResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IncomeResponseDto>> Create([FromBody] CreateIncomeRequest request)
     {
         var userId = GetUserId();
@@ -36,7 +47,14 @@ public class IncomeController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { }, source);
     }
 
+    /// <summary>Updates an existing income source.</summary>
+    /// <response code="200">Income source updated.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Income source not found or belongs to another user.</response>
     [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(IncomeResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IncomeResponseDto>> Update(Guid id, [FromBody] UpdateIncomeRequest request)
     {
         var userId = GetUserId();
@@ -51,7 +69,14 @@ public class IncomeController : ControllerBase
         }
     }
 
+    /// <summary>Soft-deletes an income source.</summary>
+    /// <response code="204">Income source deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    /// <response code="404">Income source not found or belongs to another user.</response>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = GetUserId();
