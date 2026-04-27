@@ -56,4 +56,26 @@ public class Property : BaseEntity<Guid>
         MonthlyRent = rent;
         Touch();
     }
+
+    public void Update(
+        string address,
+        decimal purchasePrice,
+        decimal currentEstimatedValue,
+        decimal loanBalance,
+        decimal interestRate,
+        LoanProductType loanType,
+        decimal monthlyRent,
+        decimal monthlyExpenses)
+    {
+        Address = address;
+        PurchasePrice = purchasePrice;
+        CurrentEstimatedValue = currentEstimatedValue;
+        LoanBalance = loanBalance;
+        InterestRate = interestRate;
+        LoanType = loanType;
+        MonthlyRent = monthlyRent;
+        MonthlyExpenses = monthlyExpenses;
+        LastValueUpdateDate = DateTime.UtcNow;
+        Touch();
+    }
 }

@@ -21,6 +21,7 @@ public static class ServicesExtensions
         services.AddScoped<IBudgetAnalyticsService, BudgetAnalyticsService>();
         services.AddScoped<IPassiveIncomeService, PassiveIncomeService>();
         services.AddScoped<IMonthlyBudgetSnapshotService, MonthlyBudgetSnapshotService>();
+        services.AddScoped<IPropertyService, PropertyService>();
         services.AddScoped<IPropertyAnalyzerService, PropertyAnalyzerService>();
         services.AddScoped<IStatementAnalyzerService, StatementAnalyzerService>();
         services.AddScoped<ICheckingStatementAnalyzerService, CheckingStatementAnalyzerService>();
