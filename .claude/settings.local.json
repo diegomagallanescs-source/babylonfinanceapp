@@ -88,7 +88,9 @@
       "Read(//c/Users/diego/AppData/Local/Temp/**)",
       "Bash(xargs cat *)",
       "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"dmagallanes2@gmail.com\",\"password\":\"Babylon1\"}')",
-      "Bash(taskkill /F /IM dotnet.exe)"
+      "Bash(taskkill /F /IM dotnet.exe)",
+      "PowerShell(Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -in @\\(5000, 5001, 5231, 7000, 7001, 8080\\) } | Select-Object LocalAddress, LocalPort, OwningProcess)",
+      "PowerShell(Get-NetTCPConnection -State Listen)"
     ]
   }
 }
