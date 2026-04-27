@@ -19,6 +19,7 @@
    - [4.6 Real Estate Analyzer](#46-real-estate-analyzer)
 5. [Shared Components](#5-shared-components)
    - [5.1 CumulativeTransactionView](#51-cumulativetransactionview)
+   - [5.2 UploadFlowPanel](#52-uploadflowpanel)
 
 ---
 
@@ -190,6 +191,13 @@ Returns all saved monthly credit-card summaries ordered by year/month ascending.
 
 **Response:** array of `StatementSummaryResponseDto`
 
+#### `PUT /statements/{id}`
+Updates the totals for an existing saved monthly credit-card summary (re-upload scenario).
+
+**Body:** same as `POST /statements/save`  
+**Response:** updated `StatementSummaryResponseDto`  
+**Errors:** `404` if not found / not owned by user; `422` if validation fails (zero transactions, etc.)
+
 #### `DELETE /statements/{id}`
 Soft-deletes a saved monthly credit-card summary.
 
@@ -272,6 +280,13 @@ Persists a monthly checking summary to the database.
 Returns all saved monthly checking summaries ordered by year/month ascending. Used to power the Money In over-time chart.
 
 **Response:** array of `CheckingStatementSummaryDto`
+
+#### `PUT /statements/checking/{id}`
+Updates the totals for an existing saved monthly checking summary (re-upload scenario).
+
+**Body:** same as `POST /statements/checking/save`  
+**Response:** updated `CheckingStatementSummaryDto`  
+**Errors:** `404` if not found / not owned by user; `422` if validation fails
 
 #### `DELETE /statements/checking/{id}`
 Soft-deletes a saved checking monthly summary.
@@ -446,12 +461,63 @@ Assets: $XXX,XXX  |  Liabilities: $XXX,XXX  |  Net Worth: $XXX,XXX
 
 This is derived from `useNetWorth()` — no extra API call needed.
 
+#### Batch Save pattern
+
+All editable tables on the Accounting tab (Bank Accounts, Credit Cards, Loans, Investments, Pending) use a **dirty-tracking / batch-save** model. No PUT request fires on every keystroke or blur — all edits accumulate in local state and are flushed only when the user clicks "Save All Changes".
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Bank Accounts                                       │
+│  ┌────────────────────────────────────────────────┐  │
+│  │  Chase Checking   Checking   $4,200  ✏  [Edit] │  │
+│  │  SoFi Checking    Checking   $1,800  ✏  [Edit] │  │  ← row in edit mode shows inline inputs
+│  └────────────────────────────────────────────────┘  │
+│                                           [+ Add]    │
+│                                                      │
+│  ⚠ 2 unsaved changes                                 │
+│                              [Discard]  [Save All →] │
+└──────────────────────────────────────────────────────┘
+```
+
+**Implementation pattern:**
+
+```ts
+// One dirty-map per entity type
+const [dirtyAccounts, setDirtyAccounts] = useState<Map<string, UpdateAccountRequest>>(new Map());
+
+const handleFieldChange = (id: string, field: string, value: unknown) => {
+  setDirtyAccounts(prev => {
+    const next = new Map(prev);
+    const current = next.get(id) ?? {};
+    next.set(id, { ...current, [field]: value });
+    return next;
+  });
+};
+
+const handleSaveAll = async () => {
+  const entries = [...dirtyAccounts.entries()];
+  await Promise.all(entries.map(([id, changes]) =>
+    updateAccountMutation.mutateAsync({ id, ...changes })
+  ));
+  setDirtyAccounts(new Map());
+  queryClient.invalidateQueries({ queryKey: ['accounts'] });
+  queryClient.invalidateQueries({ queryKey: ['networth'] });
+  toast.success(`${entries.length} change${entries.length > 1 ? 's' : ''} saved`);
+};
+```
+
+- The "Save All" button is **disabled** when the dirty map is empty
+- A "⚠ N unsaved changes" badge appears above the button when the map is non-empty
+- "Discard" resets the dirty map and re-renders rows from the server data
+- Adds are still immediate POST calls (new records have no local ID to track); only edits to existing records are batched
+- The same pattern applies independently to each tab (dirty accounts ≠ dirty loans ≠ dirty credit cards)
+
 ---
 
 ### 4.3 Money In
 
 **Route:** `/money-in`  
-**Purpose:** Upload checking account PDFs, view income breakdown, and save monthly totals to build a history chart.  
+**Purpose:** Upload checking account PDFs, view income breakdown, and save monthly totals to build a history chart. Supports historical backfill — the user specifies the target period before uploading so past months are tagged correctly.  
 **Data:** `useCheckingHistory()`, `useAnnualSummary()`  
 **Input:** PDF file upload (Chase, SoFi, BofA auto-detected)
 
@@ -461,40 +527,52 @@ This is derived from `useNetWorth()` — no extra API call needed.
 ┌─────────────────────────────────────────────────────────┐
 │  MONEY IN                                               │
 ├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ── New Import ────────────────────────────────────── │
+│                                                         │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  Drop checking statement PDFs here               │   │
-│  │  (Chase, SoFi, Bank of America — any mix)        │   │
-│  │  [Browse files]         [Analyze →]              │   │
+│  │  Import Type:  [● Monthly]  [○ Year-End]         │   │
+│  │                                                  │   │
+│  │  Period:  [January      ▼]  [2025   ]            │   │
+│  │           (month shown for Monthly mode only)    │   │
+│  │                                                  │   │
+│  │  ┌────────────────────────────────────────────┐  │   │
+│  │  │  Drop checking PDFs here or [Browse]       │  │   │
+│  │  │  (Chase, SoFi, Bank of America — any mix)  │  │   │
+│  │  │                                            │  │   │
+│  │  │  chase-jan-2025.pdf            ✕           │  │   │
+│  │  │  sofi-jan-2025.pdf             ✕           │  │   │
+│  │  └────────────────────────────────────────────┘  │   │
+│  │                                                  │   │
+│  │                    [Start Analysis →]            │   │
 │  └──────────────────────────────────────────────────┘   │
 │                                                         │
-│  ── Analysis Results (after upload) ──────────────────  │
+│  ── Analysis Results (appears after Start) ───────────  │
 │                                                         │
-│  Period: March 2026    Accounts: 0698, 1820, 2685       │
+│  January 2025 · Checking · 2 accounts                  │
 │                                                         │
 │  ┌──────────────────┐  ┌────────────────────────────┐   │
 │  │ Total Money In   │  │ Breakdown Donut Chart       │   │
-│  │ $18,177          │  │  Payroll 10.6%              │   │
-│  │                  │  │  Zelle Received 64.3%       │   │
-│  │ Total Money Out  │  │  Business/Freelance 2.1%    │   │
-│  │ $23,072          │  │  ...                        │   │
+│  │ $7,240           │  │  Payroll 26.5%              │   │
+│  │                  │  │  Zelle Received 61.2%       │   │
+│  │ Total Money Out  │  │  Transfer In 12.3%          │   │
+│  │ $6,890           │  │                             │   │
 │  │                  │  └────────────────────────────┘   │
 │  │ Net Flow         │                                   │
-│  │ -$4,895          │                                   │
+│  │ +$350            │                                   │
 │  └──────────────────┘                                   │
 │                                                         │
 │  ── Cumulative Transaction View ───────────────────── │
-│  [All] [Payroll] [Zelle Received] [Credit Card Pymt]   │
-│  (category filter pills — click any to drill in)       │
+│  [All (52)] [Payroll (3)] [Zelle Received (18)] [...]  │
+│  (year-end: also shows Month filter row above pills)   │
 │                                                         │
-│  Date        Dir  Description              Amount       │
-│  03/30/2026  In   STAREDLA PAYROLL         +$488.81     │
-│  03/28/2026  In   Zelle from John          +$500.00     │
-│  03/25/2026  Out  CHASE CARD SERVICES      -$3,500.00   │
+│  Dir  Date        Description              Amount       │
+│  +    01/15/2025  STAREDLA PAYROLL         $2,450.00    │
+│  +    01/22/2025  Zelle from John          $500.00      │
+│  −    01/28/2025  CHASE CARD SERVICES      $3,200.00    │
 │  ...                                                    │
 │                                                         │
-│  (if year-end upload: add Month filter row above pills) │
-│                                                         │
-│                [Export to PDF]  [Save This Month →]     │
+│         [Export to PDF]   [Save January 2025 →]        │
 │                                                         │
 │  ── Monthly History Chart ─────────────────────────── │
 │  (Area chart — Money In per month from saved records)  │
@@ -510,17 +588,27 @@ This is derived from `useNetWorth()` — no extra API call needed.
 
 ```
 <MoneyInPage>
-  ├── <PdfDropZone onAnalyze={handleAnalyze} />
-  ├── <CheckingResultsPanel result={analysisResult}>
+  ├── <UploadFlowPanel                        // see §5.2
+  │     mode="checking"
+  │     onResult={setAnalysisResult}
+  │     onPeriodChange={setPeriod}
+  │   />
+  ├── {analysisResult && (
+  │   <CheckingResultsPanel result={analysisResult}>
   │     ├── <MoneyFlowSummaryCards />          // In / Out / Net Flow KPI cards
   │     ├── <MoneyInDonutChart />              // Recharts PieChart
   │     ├── <CumulativeTransactionView        // see §5.1
   │     │     transactions={result.transactions}
   │     │     breakdown={result.moneyInBreakdown}
-  │     │     title="Money In — March 2026"
-  │     │     showMonthFilter={isYearEnd}
+  │     │     title={`Money In — ${period.label}`}
+  │     │     showMonthFilter={period.mode === 'year-end'}
   │     │   />
-  │     └── <SaveMonthButton onSave={handleSave} />
+  │     └── <SavePeriodButton
+  │           period={period}
+  │           result={result}
+  │           onSave={handleSave}
+  │         />
+  │   )}
   └── <MoneyInHistorySection>
         ├── <MoneyInAreaChart />               // Recharts AreaChart from saved history
         └── <AnnualSummaryTable />             // from useAnnualSummary()
@@ -530,24 +618,48 @@ This is derived from `useNetWorth()` — no extra API call needed.
 
 - **X-axis:** `Jan 25, Feb 25, ... Mar 26` (month/year labels)
 - **Y-axis:** dollar amount
-- **Series:** single gold-tinted area — `TotalMoneyIn` per month
+- **Series:** single green area — `TotalMoneyIn` per month
 - **Data source:** `useCheckingHistory()` → `CheckingStatementSummaryDto[]`
 - **Tooltip:** month name, money in amount, net flow
 
-#### Save flow
+#### Save flow — Monthly
 
-1. User uploads PDFs → `POST /statements/analyze-checking` → results shown
-2. User reviews results → clicks "Save This Month"
-3. Frontend calls `POST /statements/checking/save` with `{ month, year, totalMoneyIn, totalMoneyOut, transactionCount, accountsIncluded }`
-4. `queryClient.invalidateQueries(['checking-history'])` → chart updates
-5. Toast: "March 2026 saved ✓"
+1. User sets mode = Monthly, picks month + year (e.g. January 2025)
+2. Drops PDFs → clicks "Start Analysis" → `POST /statements/analyze-checking`
+3. Results shown with "Save January 2025 →" button
+4. Frontend calls `POST /statements/checking/save` with user-specified `{ month: 1, year: 2025, totalMoneyIn, totalMoneyOut, transactionCount, accountsIncluded }`
+5. `queryClient.invalidateQueries(['checking-history'])` → chart updates
+6. Toast: "January 2025 saved ✓"
+
+#### Save flow — Year-End (batch checking import)
+
+1. User sets mode = Year-End, picks year (e.g. 2025)
+2. Drops all 12 months of checking PDFs → clicks "Start Analysis"
+3. Frontend receives all transactions pooled; groups them by calendar month:
+
+```ts
+// Group checking transactions by YYYY-MM from transaction date
+const byMonth = new Map<string, { moneyIn: number; moneyOut: number; count: number }>();
+result.transactions.forEach(t => {
+  const key = t.date.slice(0, 7); // expects "YYYY-MM" prefix
+  const entry = byMonth.get(key) ?? { moneyIn: 0, moneyOut: 0, count: 0 };
+  if (t.direction === 'In' && t.category !== 'Self Transfer') entry.moneyIn += t.amount;
+  if (t.direction === 'Out') entry.moneyOut += t.amount;
+  entry.count++;
+  byMonth.set(key, entry);
+});
+```
+
+4. Shows monthly summary table: Jan $X in / $Y out, Feb $X in / $Y out, etc.
+5. "Save All Months →" loops `byMonth` entries and calls `POST /statements/checking/save` for each, with a progress indicator (e.g. "Saving 3 of 12…")
+6. Toast: "12 months saved for 2025 ✓"
 
 ---
 
 ### 4.4 Money Out
 
 **Route:** `/money-out`  
-**Purpose:** Upload credit card PDF statements, view spending breakdown, and save monthly totals to build a spend history chart.  
+**Purpose:** Upload credit card PDF statements, view spending breakdown, and save monthly totals to build a spend history chart. Supports historical backfill — the user specifies the target period before uploading.  
 **Data:** `useStatementHistory()`, `useAnnualSummary()`  
 **Input:** PDF file upload (Chase credit, Amex monthly, Amex year-end, Chase year-end spending report — all auto-detected)
 
@@ -557,17 +669,29 @@ This is derived from `useNetWorth()` — no extra API call needed.
 ┌─────────────────────────────────────────────────────────┐
 │  MONEY OUT                                              │
 ├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ── New Import ────────────────────────────────────── │
+│                                                         │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  Drop credit card statement PDFs here            │   │
-│  │  (Chase, Amex monthly or year-end)               │   │
-│  │  [Browse files]         [Analyze →]              │   │
+│  │  Import Type:  [● Monthly]  [○ Year-End]         │   │
+│  │                                                  │   │
+│  │  Period:  [January      ▼]  [2025   ]            │   │
+│  │           (month shown for Monthly mode only)    │   │
+│  │                                                  │   │
+│  │  ┌────────────────────────────────────────────┐  │   │
+│  │  │  Drop credit card PDFs here or [Browse]    │  │   │
+│  │  │  (Chase, Amex monthly or year-end)         │  │   │
+│  │  │                                            │  │   │
+│  │  │  chase-jan-2025.pdf            ✕           │  │   │
+│  │  │  amex-jan-2025.pdf             ✕           │  │   │
+│  │  └────────────────────────────────────────────┘  │   │
+│  │                                                  │   │
+│  │                    [Start Analysis →]            │   │
 │  └──────────────────────────────────────────────────┘   │
 │                                                         │
-│  ── Analysis Results ─────────────────────────────────  │
+│  ── Analysis Results (appears after Start) ───────────  │
 │                                                         │
-│  Period: March 2026    Accounts: 2271, 41007            │
-│  Report: Monthly                                        │
-│                                                         │
+│  January 2025 · Monthly · Accounts: 2271, 41007         │
 │  Total Spend: $9,970                                    │
 │                                                         │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -583,21 +707,21 @@ This is derived from `useNetWorth()` — no extra API call needed.
 │  Online Shopping        $1,050  22 txns                 │
 │  ...                                                    │
 │                                                         │
-│  ── If Year-End: Monthly Breakdown ─────────────────── │
+│  ── Year-End: Monthly Breakdown (if Year-End mode) ─── │
 │  (Bar chart — one bar per month, Jan–Dec)               │
+│  Jan $X  Feb $X  Mar $X  ...  Dec $X                   │
 │                                                         │
 │  ── Cumulative Transaction View ───────────────────── │
-│  [All] [Amazon] [Shopping] [Dining] [Travel] [...]     │
-│  (category filter pills — click any to drill in)       │
-│                                                         │
-│  Date   Description                     Amount         │
-│  03/01  AMAZON MARKETPLACE              $18.31         │
-│  03/02  UBER EATS                       $42.50         │
-│  ...                                                    │
-│                                                         │
+│  [All (231)] [Amazon (28)] [Shopping (23)] [...]       │
 │  (year-end: Month filter row above category pills)      │
 │                                                         │
-│               [Export to PDF]  [Save This Month →]     │
+│  Date   Description                     Amount         │
+│  01/01  AMAZON MARKETPLACE              $18.31         │
+│  01/02  UBER EATS                       $42.50         │
+│  ...                                                    │
+│                                                         │
+│        [Export to PDF]   [Save January 2025 →]         │
+│        (year-end: button reads "Save All 12 Months →") │
 │                                                         │
 │  ── Spend History Chart ───────────────────────────── │
 │  (Area chart — TotalSpend per month from saved records) │
@@ -613,19 +737,29 @@ This is derived from `useNetWorth()` — no extra API call needed.
 
 ```
 <MoneyOutPage>
-  ├── <PdfDropZone onAnalyze={handleAnalyze} />
-  ├── <StatementResultsPanel result={analysisResult}>
+  ├── <UploadFlowPanel                        // see §5.2
+  │     mode="credit"
+  │     onResult={setAnalysisResult}
+  │     onPeriodChange={setPeriod}
+  │   />
+  ├── {analysisResult && (
+  │   <StatementResultsPanel result={analysisResult}>
   │     ├── <SpendSummaryCard />                // total + period + report type badge
   │     ├── <CategoryBarChart />                // Recharts horizontal BarChart
   │     ├── <TopMerchantsTable />
-  │     ├── <MonthlyBreakdownBarChart />        // visible only if reportType === "YearEnd"
+  │     ├── <MonthlyBreakdownBarChart />        // visible only when period.mode === 'year-end'
   │     ├── <CumulativeTransactionView         // see §5.1
   │     │     transactions={result.transactions}
   │     │     breakdown={result.categoryBreakdown}
-  │     │     title={`Purchases — ${result.statementPeriod}`}
-  │     │     showMonthFilter={result.reportType === 'YearEnd'}
+  │     │     title={`Purchases — ${period.label}`}
+  │     │     showMonthFilter={period.mode === 'year-end'}
   │     │   />
-  │     └── <SaveMonthButton onSave={handleSave} />
+  │     └── <SavePeriodButton
+  │           period={period}
+  │           result={result}
+  │           onSave={handleSave}
+  │         />
+  │   )}
   └── <MoneyOutHistorySection>
         ├── <SpendHistoryAreaChart />           // from useStatementHistory()
         └── <AnnualSummaryTable />              // from useAnnualSummary()
@@ -639,16 +773,36 @@ This is derived from `useNetWorth()` — no extra API call needed.
 - **Data source:** `useStatementHistory()` → `StatementSummaryResponseDto[]`
 - **Tooltip:** month, spend amount
 
-#### Year-End report handling
+#### Save flow — Monthly
 
-When `reportType === "YearEnd"`, the `monthlyBreakdown` array has one entry per month. Render a grouped bar chart instead of the regular category chart:
+1. User sets mode = Monthly, picks month + year (e.g. January 2025)
+2. Drops PDFs → clicks "Start Analysis" → `POST /statements/analyze`
+3. Results shown with "Save January 2025 →" button
+4. Frontend calls `POST /statements/save` with user-specified `{ month: 1, year: 2025, totalSpend, transactionCount, accountsIncluded }`
+5. `queryClient.invalidateQueries(['statement-history'])` → chart updates
+6. Toast: "January 2025 saved ✓"
 
+#### Save flow — Year-End (single Amex/Chase year-end PDF)
+
+When `period.mode === 'year-end'` and `result.reportType === 'YearEnd'`, the `monthlyBreakdown` array has one entry per calendar month. Save button reads "Save All 12 Months →":
+
+```ts
+const handleYearEndSave = async () => {
+  const months = result.monthlyBreakdown; // MonthlySpendDto[]
+  for (let i = 0; i < months.length; i++) {
+    setSaveProgress(`Saving ${i + 1} of ${months.length}…`);
+    await saveMutation.mutateAsync({
+      month: months[i].month,
+      year: period.year,
+      totalSpend: months[i].total,
+      transactionCount: months[i].count,
+      accountsIncluded: result.accountsDetected.join(', '),
+    });
+  }
+  queryClient.invalidateQueries({ queryKey: ['statement-history'] });
+  toast.success(`${months.length} months saved for ${period.year} ✓`);
+};
 ```
-         Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
-Spend    ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████
-```
-
-On save, prompt the user: "This is a full year — save all 12 months?" and loop through `monthlyBreakdown` calling `POST /statements/save` for each month.
 
 ---
 
@@ -756,6 +910,24 @@ The existing `Investment` entity stores `CurrentValue` and `Ticker` but not a mo
 2. **Store contributions client-side** in `localStorage` — no migration needed, zero persistence risk. Good for MVP.
 
 Recommendation: start with option 2 for the projector (it's a calculator, not financial record-keeping). Add the column later if the user wants cross-device sync.
+
+#### Batch Save pattern (Investing tab)
+
+The Monthly Contributions table and the Portfolio Summary bar both follow the same batch-save model as the Accounting tab. All edits to investment accounts (current value, ticker, monthly contribution if stored server-side) are held in a dirty map and flushed on "Save All":
+
+```
+┌──────────────────────────────────────────────────────┐
+│  My Investments                                      │
+│  Schwab Brokerage   $42,000   SCHB   ✏              │
+│  401(k) — Fidelity  $28,500   FSKAX  ✏              │
+│  Roth IRA — SoFi    $11,200   VTI    ✏              │
+│                                                      │
+│  ⚠ 1 unsaved change                                  │
+│                              [Discard]  [Save All →] │
+└──────────────────────────────────────────────────────┘
+```
+
+Same implementation as Accounting (dirty `Map<id, UpdateInvestmentRequest>`, flush with `Promise.all`, invalidate `['investments']` and `['networth']`).
 
 ---
 
@@ -1246,6 +1418,402 @@ export function CumulativeTransactionView({
       <div className="ctv-footer">
         Showing {filtered.length} of {transactions.length} transactions
       </div>
+    </div>
+  );
+}
+```
+
+---
+
+### 5.2 UploadFlowPanel
+
+**Purpose:** The primary entry point on both the Money In and Money Out pages. Replaces the simple file drop zone with a structured 3-step card: choose import type → set the period → upload files → start analysis. This makes historical backfill natural — the user explicitly tags each upload before it runs.
+
+---
+
+#### Props
+
+```ts
+interface UploadFlowPanelProps {
+  mode: 'checking' | 'credit';   // which analyze endpoint to call
+  onResult: (result: CheckingStatementResponseDto | StatementAnalysisResponseDto) => void;
+  onPeriodChange: (period: SelectedPeriod) => void;
+}
+
+interface SelectedPeriod {
+  mode: 'monthly' | 'year-end';
+  month: number | null;  // 1–12; null for year-end
+  year: number;
+  label: string;         // e.g. "January 2025" or "2025 Year-End"
+}
+```
+
+---
+
+#### Layout
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  New Import                                              │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  Import Type                                             │
+│  ┌─────────────────┐  ┌─────────────────┐               │
+│  │  ● Monthly      │  │  ○ Year-End     │               │
+│  │  One month's    │  │  Full year PDF  │               │
+│  │  statements     │  │  or all months  │               │
+│  └─────────────────┘  └─────────────────┘               │
+│                                                          │
+│  Period                                                  │
+│  [January          ▼]   [2025    ▲▼]                    │
+│   ^ month shown for monthly only                        │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  📄 Drop PDFs here or click to browse              │  │
+│  │                                                    │  │
+│  │  chase-jan-2025.pdf                            ✕  │  │
+│  │  sofi-jan-2025.pdf                             ✕  │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ⚠  Tip: You can upload multiple months at once in      │
+│     Year-End mode to backfill a full year.              │
+│                                         (if year-end)   │
+│                                                          │
+│               [Start Analysis →]  ← disabled until      │
+│                                     files + period set  │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### State
+
+```ts
+const [importMode, setImportMode] = useState<'monthly' | 'year-end'>('monthly');
+const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+const [selectedYear, setSelectedYear]   = useState<number>(new Date().getFullYear());
+const [files, setFiles]                 = useState<File[]>([]);
+const [loading, setLoading]             = useState(false);
+
+const periodLabel = importMode === 'monthly'
+  ? `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`
+  : `${selectedYear} Year-End`;
+
+const canStart = files.length > 0; // year is always valid — it's a dropdown, not free text
+```
+
+---
+
+#### Month and year dropdowns
+
+Both pickers are strict `<select>` elements — no free-text input so the user cannot enter an invalid value.
+
+```ts
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+const YEAR_OPTIONS = Array.from({ length: 31 }, (_, i) => 2020 + i); // 2020–2050
+
+// Month select (hidden in Year-End mode)
+<select value={selectedMonth} onChange={e => setSelectedMonth(+e.target.value)}>
+  {MONTH_NAMES.map((name, i) => (
+    <option key={i + 1} value={i + 1}>{name}</option>
+  ))}
+</select>
+
+// Year select
+<select value={selectedYear} onChange={e => setSelectedYear(+e.target.value)}>
+  {YEAR_OPTIONS.map(y => (
+    <option key={y} value={y}>{y}</option>
+  ))}
+</select>
+```
+
+Default both to the current month and year. Users step the year dropdown backward for historical backfill.
+
+---
+
+#### File zone
+
+- Accepts `.pdf` only (`accept=".pdf"`)
+- `multiple` attribute — any number of files
+- Files listed with a remove (✕) button for each
+- Drag-and-drop: `onDragOver={e => e.preventDefault()}` + `onDrop={handleDrop}`
+
+```ts
+const handleDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+  const dropped = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.pdf'));
+  setFiles(prev => [...prev, ...dropped]);
+};
+const removeFile = (index: number) =>
+  setFiles(prev => prev.filter((_, i) => i !== index));
+```
+
+---
+
+#### Start Analysis handler
+
+```ts
+const handleStart = async () => {
+  setLoading(true);
+  setError(null);
+  const period: SelectedPeriod = {
+    mode: importMode,
+    month: importMode === 'monthly' ? selectedMonth : null,
+    year: selectedYear,
+    label: periodLabel,
+  };
+  onPeriodChange(period);
+
+  const formData = new FormData();
+  files.forEach(f => formData.append('files', f));
+
+  const endpoint = props.mode === 'checking'
+    ? '/statements/analyze-checking'
+    : '/statements/analyze';
+
+  try {
+    const { data } = await apiClient.post(endpoint, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    // Guard: if the parser returned zero transactions, block the save immediately
+    // and show an error — don't surface results that can't be saved
+    if (data.transactionCount === 0) {
+      setError('No transactions were detected in the uploaded PDF(s). Please check that you uploaded a valid statement and try again.');
+      return;
+    }
+
+    onResult(data);
+  } catch (err: any) {
+    setError(err?.response?.data?.error ?? 'Analysis failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+The analyze endpoints are **stateless** — they don't need the period. The period is carried forward in the parent page's state and used only when the user clicks Save.
+
+---
+
+#### Inferred-date mismatch warning
+
+After the result comes back, compare the user's selected period against `result.inferredMonth` / `result.inferredYear`. If they differ, show a non-blocking yellow banner inside the results panel (not on the upload panel):
+
+```tsx
+{result.inferredMonth && result.inferredMonth !== period.month && (
+  <div className="banner banner--warn">
+    The PDF appears to be from {MONTH_NAMES[result.inferredMonth - 1]} {result.inferredYear}.
+    You selected {period.label}. The save will use your selection — update the period above if needed.
+  </div>
+)}
+```
+
+This lets the user catch a wrong-month upload without blocking the save.
+
+---
+
+#### Upsert logic — detecting an existing record
+
+Before calling Save, the parent page checks `useStatementHistory()` / `useCheckingHistory()` to see whether a record already exists for the selected month and year. If one does, the save calls `PUT /{id}` instead of `POST /save`:
+
+```ts
+// In the parent page (MoneyInPage / MoneyOutPage)
+const { data: history } = useCheckingHistory(); // or useStatementHistory()
+
+const handleSave = async (payload: SaveCheckingStatementRequest) => {
+  const existing = history?.find(
+    r => r.month === period.month && r.year === period.year
+  );
+
+  if (existing) {
+    // Confirm before overwriting
+    const confirmed = window.confirm(
+      `${period.label} is already saved. Overwrite with the new numbers?`
+    );
+    if (!confirmed) return;
+    await updateMutation.mutateAsync({ id: existing.id, ...payload });
+    toast.success(`${period.label} updated ✓`);
+  } else {
+    await saveMutation.mutateAsync(payload);
+    toast.success(`${period.label} saved ✓`);
+  }
+
+  queryClient.invalidateQueries({ queryKey: ['checking-history'] });
+};
+```
+
+The same pattern applies to `MoneyOutPage` using `statement-history` and `PUT /statements/{id}`.
+
+#### SavePeriodButton
+
+The save button at the bottom of the results panel is labeled dynamically:
+
+```tsx
+function SavePeriodButton({ period, result, onSave, existingRecord }) {
+  const label = period.mode === 'year-end'
+    ? `Save All Months (${result.monthlyBreakdown?.length ?? 12}) →`
+    : existingRecord
+      ? `Update ${period.label} →`
+      : `Save ${period.label} →`;
+
+  return <button className="btn btn--primary" onClick={onSave}>{label}</button>;
+}
+```
+
+When `existingRecord` is truthy the button reads "Update …" so the user knows they're overwriting. For year-end credit card saves the parent calls `handleYearEndSave` (see §4.4). For year-end checking saves the parent calls `handleCheckingYearEndSave` (see §4.3).
+
+---
+
+#### Complete component skeleton
+
+```tsx
+// src/components/UploadFlowPanel.tsx
+
+import { useState } from 'react';
+import apiClient from '../api/client';
+
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+
+export function UploadFlowPanel({ mode, onResult, onPeriodChange }: UploadFlowPanelProps) {
+  const now = new Date();
+  const [importMode, setImportMode] = useState<'monthly' | 'year-end'>('monthly');
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear]   = useState(now.getFullYear());
+  const [files, setFiles]   = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+
+  const periodLabel = importMode === 'monthly'
+    ? `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`
+    : `${selectedYear} Year-End`;
+
+  const canStart = files.length > 0; // year always valid — dropdown, not free text
+
+  const YEAR_OPTIONS = Array.from({ length: 31 }, (_, i) => 2020 + i);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const dropped = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.pdf'));
+    setFiles(prev => [...prev, ...dropped]);
+  };
+
+  const handleBrowse = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    setFiles(prev => [...prev, ...picked]);
+    e.target.value = ''; // reset so same file can be re-added after removal
+  };
+
+  const removeFile = (i: number) => setFiles(prev => prev.filter((_, idx) => idx !== i));
+
+  const handleStart = async () => {
+    if (!canStart) return;
+    setLoading(true);
+    setError(null);
+
+    const period: SelectedPeriod = {
+      mode: importMode,
+      month: importMode === 'monthly' ? selectedMonth : null,
+      year: selectedYear,
+      label: periodLabel,
+    };
+    onPeriodChange(period);
+
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    const endpoint = mode === 'checking' ? '/statements/analyze-checking' : '/statements/analyze';
+
+    try {
+      const { data } = await apiClient.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (data.transactionCount === 0) {
+        setError('No transactions were detected in the uploaded PDF(s). Please check that you uploaded a valid statement and try again.');
+        return;
+      }
+      onResult(data);
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Analysis failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="upload-flow-panel">
+      <h3>New Import</h3>
+
+      {/* Mode toggle */}
+      <div className="mode-toggle">
+        {(['monthly', 'year-end'] as const).map(m => (
+          <button
+            key={m}
+            className={`mode-card ${importMode === m ? 'mode-card--active' : ''}`}
+            onClick={() => setImportMode(m)}
+          >
+            <strong>{m === 'monthly' ? 'Monthly' : 'Year-End'}</strong>
+            <span>{m === 'monthly' ? "One month's statements" : 'Full year or all months'}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Period picker */}
+      <div className="period-picker">
+        {importMode === 'monthly' && (
+          <select value={selectedMonth} onChange={e => setSelectedMonth(+e.target.value)}>
+            {MONTH_NAMES.map((name, i) => (
+              <option key={i + 1} value={i + 1}>{name}</option>
+            ))}
+          </select>
+        )}
+        <select value={selectedYear} onChange={e => setSelectedYear(+e.target.value)}>
+          {YEAR_OPTIONS.map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        className="drop-zone"
+        onDrop={handleDrop}
+        onDragOver={e => e.preventDefault()}
+      >
+        <p>Drop PDFs here or <label className="browse-label">
+          browse<input type="file" multiple accept=".pdf" hidden onChange={handleBrowse} />
+        </label></p>
+
+        {files.length > 0 && (
+          <ul className="file-list">
+            {files.map((f, i) => (
+              <li key={i}>
+                <span>{f.name}</span>
+                <button onClick={() => removeFile(i)}>✕</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {importMode === 'year-end' && (
+        <p className="tip">Tip: upload all months at once to backfill a full year in one pass.</p>
+      )}
+
+      {error && <div className="banner banner--error">{error}</div>}
+
+      <button
+        className="btn btn--primary"
+        disabled={!canStart || loading}
+        onClick={handleStart}
+      >
+        {loading ? 'Analyzing…' : `Start Analysis →`}
+      </button>
     </div>
   );
 }

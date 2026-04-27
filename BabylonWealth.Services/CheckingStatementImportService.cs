@@ -22,11 +22,7 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
     public async Task<CheckingStatementSummaryDto> SaveAsync(Guid userId, SaveCheckingStatementRequest request)
     {
-        if (request.Month < 1 || request.Month > 12)
-            throw new ValidationException("Month must be between 1 and 12.");
-
-        if (request.Year < 2000 || request.Year > 2100)
-            throw new ValidationException("Year is out of valid range.");
+        Validate(request);
 
         var entity = CheckingStatementImport.Create(
             userId,
@@ -40,6 +36,18 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
         var saved = await _checkingRepo.CreateAsync(entity);
         return MapToDto(saved);
+    }
+
+    public async Task<CheckingStatementSummaryDto> UpdateAsync(Guid id, Guid userId, SaveCheckingStatementRequest request)
+    {
+        Validate(request);
+
+        var entity = await _checkingRepo.GetByIdAsync(id, userId)
+            ?? throw new NotFoundException("CheckingStatementImport", id);
+
+        entity.Update(request.TotalMoneyIn, request.TotalMoneyOut, request.TransactionCount, request.AccountsIncluded, request.Notes);
+        await _checkingRepo.UpdateAsync(entity);
+        return MapToDto(entity);
     }
 
     public async Task<IEnumerable<CheckingStatementSummaryDto>> GetHistoryAsync(Guid userId)
@@ -87,6 +95,21 @@ public class CheckingStatementImportService : ICheckingStatementImportService
             ?? throw new NotFoundException("CheckingStatementImport", id);
 
         await _checkingRepo.SoftDeleteAsync(id, userId);
+    }
+
+    private static void Validate(SaveCheckingStatementRequest request)
+    {
+        if (request.Month < 1 || request.Month > 12)
+            throw new ValidationException("Month must be between 1 and 12.");
+
+        if (request.Year < 2000 || request.Year > 2100)
+            throw new ValidationException("Year is out of valid range.");
+
+        if (request.TransactionCount <= 0)
+            throw new ValidationException("No transactions detected — the PDF could not be parsed correctly. Data was not saved.");
+
+        if (request.TotalMoneyIn <= 0 && request.TotalMoneyOut <= 0)
+            throw new ValidationException("Both Money In and Money Out are zero — the PDF could not be parsed correctly. Data was not saved.");
     }
 
     private static CheckingStatementSummaryDto MapToDto(CheckingStatementImport e) => new()

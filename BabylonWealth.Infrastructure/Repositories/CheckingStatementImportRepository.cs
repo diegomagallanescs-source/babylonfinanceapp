@@ -18,4 +18,10 @@ public class CheckingStatementImportRepository
             .ThenBy(c => c.Month)
             .ToListAsync();
     }
+
+    public async Task<CheckingStatementImport?> GetByMonthYearAsync(Guid userId, int month, int year)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Month == month && c.Year == year);
+    }
 }

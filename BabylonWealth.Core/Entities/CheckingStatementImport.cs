@@ -36,4 +36,14 @@ public class CheckingStatementImport : BaseEntity<Guid>
             Notes = notes,
         };
     }
+
+    public void Update(decimal totalMoneyIn, decimal totalMoneyOut, int transactionCount, string accountsIncluded, string? notes)
+    {
+        TotalMoneyIn = totalMoneyIn;
+        TotalMoneyOut = totalMoneyOut;
+        TransactionCount = transactionCount;
+        AccountsIncluded = accountsIncluded;
+        Notes = notes;
+        Touch();
+    }
 }

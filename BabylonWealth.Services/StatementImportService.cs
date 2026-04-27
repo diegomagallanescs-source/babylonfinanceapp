@@ -18,11 +18,7 @@ public class StatementImportService : IStatementImportService
 
     public async Task<StatementSummaryResponseDto> SaveAsync(Guid userId, SaveStatementSummaryRequest request)
     {
-        if (request.Month < 1 || request.Month > 12)
-            throw new ValidationException("Month must be between 1 and 12.");
-
-        if (request.Year < 2000 || request.Year > 2100)
-            throw new ValidationException("Year is out of valid range.");
+        Validate(request);
 
         var entity = StatementImport.Create(
             userId,
@@ -37,6 +33,18 @@ public class StatementImportService : IStatementImportService
         return MapToDto(saved);
     }
 
+    public async Task<StatementSummaryResponseDto> UpdateAsync(Guid id, Guid userId, SaveStatementSummaryRequest request)
+    {
+        Validate(request);
+
+        var entity = await _repo.GetByIdAsync(id, userId)
+            ?? throw new NotFoundException("StatementImport", id);
+
+        entity.Update(request.TotalSpend, request.TransactionCount, request.AccountsIncluded, request.Notes);
+        await _repo.UpdateAsync(entity);
+        return MapToDto(entity);
+    }
+
     public async Task<IEnumerable<StatementSummaryResponseDto>> GetHistoryAsync(Guid userId)
     {
         var records = await _repo.GetHistoryAsync(userId);
@@ -49,6 +57,21 @@ public class StatementImportService : IStatementImportService
             ?? throw new NotFoundException("StatementImport", id);
 
         await _repo.SoftDeleteAsync(id, userId);
+    }
+
+    private static void Validate(SaveStatementSummaryRequest request)
+    {
+        if (request.Month < 1 || request.Month > 12)
+            throw new ValidationException("Month must be between 1 and 12.");
+
+        if (request.Year < 2000 || request.Year > 2100)
+            throw new ValidationException("Year is out of valid range.");
+
+        if (request.TransactionCount <= 0)
+            throw new ValidationException("No transactions detected — the PDF could not be parsed correctly. Data was not saved.");
+
+        if (request.TotalSpend <= 0)
+            throw new ValidationException("Total spend is zero or negative — the PDF could not be parsed correctly. Data was not saved.");
     }
 
     private static StatementSummaryResponseDto MapToDto(StatementImport entity) =>

@@ -106,6 +106,27 @@ public class StatementsController : ControllerBase
         return Ok(history);
     }
 
+    /// <summary>Updates an existing monthly credit-card summary with new totals from a re-upload.</summary>
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<StatementSummaryResponseDto>> Update(
+        Guid id, [FromBody] SaveStatementSummaryRequest request)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var updated = await _importService.UpdateAsync(id, userId, request);
+            return Ok(updated);
+        }
+        catch (NotFoundException e)
+        {
+            return NotFound(new { error = e.Message });
+        }
+        catch (ValidationException e)
+        {
+            return UnprocessableEntity(new { error = e.Message });
+        }
+    }
+
     /// <summary>Soft-deletes a saved monthly summary.</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -158,6 +179,27 @@ public class StatementsController : ControllerBase
     {
         var summary = await _checkingImportService.GetAnnualSummaryAsync(GetUserId());
         return Ok(summary);
+    }
+
+    /// <summary>Updates an existing monthly checking summary with new totals from a re-upload.</summary>
+    [HttpPut("checking/{id:guid}")]
+    public async Task<ActionResult<CheckingStatementSummaryDto>> UpdateChecking(
+        Guid id, [FromBody] SaveCheckingStatementRequest request)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var updated = await _checkingImportService.UpdateAsync(id, userId, request);
+            return Ok(updated);
+        }
+        catch (NotFoundException e)
+        {
+            return NotFound(new { error = e.Message });
+        }
+        catch (ValidationException e)
+        {
+            return UnprocessableEntity(new { error = e.Message });
+        }
     }
 
     /// <summary>Soft-deletes a saved checking monthly summary.</summary>

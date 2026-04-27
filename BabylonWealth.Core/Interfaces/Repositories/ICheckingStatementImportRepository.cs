@@ -5,4 +5,5 @@ namespace BabylonWealth.Core.Interfaces.Repositories;
 public interface ICheckingStatementImportRepository : IBaseRepository<CheckingStatementImport, Guid>
 {
     Task<IEnumerable<CheckingStatementImport>> GetHistoryAsync(Guid userId);
+    Task<CheckingStatementImport?> GetByMonthYearAsync(Guid userId, int month, int year);
 }

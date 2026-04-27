@@ -33,4 +33,13 @@ public class StatementImport : BaseEntity<Guid>
             Notes = notes
         };
     }
+
+    public void Update(decimal totalSpend, int transactionCount, string accountsIncluded, string? notes)
+    {
+        TotalSpend = totalSpend;
+        TransactionCount = transactionCount;
+        AccountsIncluded = accountsIncluded;
+        Notes = notes;
+        Touch();
+    }
 }
