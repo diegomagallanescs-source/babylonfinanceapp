@@ -20,6 +20,7 @@ public static class ServicesExtensions
         services.AddScoped<ISpendingService, SpendingService>();
         services.AddScoped<IBudgetAnalyticsService, BudgetAnalyticsService>();
         services.AddScoped<IPassiveIncomeService, PassiveIncomeService>();
+        services.AddScoped<IMonthlyBudgetSnapshotService, MonthlyBudgetSnapshotService>();
         return services;
     }
 }

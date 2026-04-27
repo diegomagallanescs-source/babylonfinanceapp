@@ -40,26 +40,59 @@ public class SnapshotBackgroundService : BackgroundService
         // request pipeline and cannot use the request-scoped DbContext directly.
         using var scope = _serviceProvider.CreateScope();
         var snapshotService = scope.ServiceProvider.GetRequiredService<ISnapshotService>();
+        var budgetSnapshotService = scope.ServiceProvider.GetRequiredService<IMonthlyBudgetSnapshotService>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         var users = userManager.Users.ToList();
+        var now = DateTime.UtcNow;
+        var isFirstSundayOfMonth = now.DayOfWeek == DayOfWeek.Sunday && now.Day <= 7;
 
         foreach (var user in users)
         {
             if (ct.IsCancellationRequested) break;
 
-            try
-            {
-                var should = await snapshotService.ShouldTakeSnapshotAsync(user.Id);
-                if (!should) continue;
+            await TryTakeDailySnapshotAsync(snapshotService, user.Id);
 
-                await snapshotService.TakeSnapshotAsync(user.Id);
-                _logger.LogInformation("Snapshot taken for user {UserId}.", user.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to take snapshot for user {UserId}.", user.Id);
-            }
+            if (isFirstSundayOfMonth)
+                await TryTakeMonthlyBudgetSnapshotAsync(budgetSnapshotService, user.Id, now);
+        }
+    }
+
+    private async Task TryTakeDailySnapshotAsync(ISnapshotService snapshotService, Guid userId)
+    {
+        try
+        {
+            var should = await snapshotService.ShouldTakeSnapshotAsync(userId);
+            if (!should) return;
+
+            await snapshotService.TakeSnapshotAsync(userId);
+            _logger.LogInformation("Daily net worth snapshot taken for user {UserId}.", userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to take daily snapshot for user {UserId}.", userId);
+        }
+    }
+
+    private async Task TryTakeMonthlyBudgetSnapshotAsync(IMonthlyBudgetSnapshotService budgetSnapshotService, Guid userId, DateTime now)
+    {
+        // Snapshot the previous month — the current month is still in progress.
+        var targetMonth = now.Month == 1 ? 12 : now.Month - 1;
+        var targetYear  = now.Month == 1 ? now.Year - 1 : now.Year;
+
+        try
+        {
+            var should = await budgetSnapshotService.ShouldTakeBudgetSnapshotAsync(userId, targetMonth, targetYear);
+            if (!should) return;
+
+            await budgetSnapshotService.TakeBudgetSnapshotAsync(userId, targetMonth, targetYear);
+            _logger.LogInformation(
+                "Monthly budget snapshot taken for user {UserId} ({Month}/{Year}).",
+                userId, targetMonth, targetYear);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to take monthly budget snapshot for user {UserId} ({Month}/{Year}).", userId, targetMonth, targetYear);
         }
     }
 }

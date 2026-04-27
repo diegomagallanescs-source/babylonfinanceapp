@@ -94,6 +94,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IPendingItemRepository, PendingItemRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<ISpendingRepository, SpendingRepository>();
+        services.AddScoped<IMonthlyBudgetSnapshotRepository, MonthlyBudgetSnapshotRepository>();
 
         return services;
     }
