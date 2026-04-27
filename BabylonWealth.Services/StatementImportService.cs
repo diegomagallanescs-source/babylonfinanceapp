@@ -1,0 +1,66 @@
+using BabylonWealth.Core.DTOs.Requests;
+using BabylonWealth.Core.DTOs.Responses;
+using BabylonWealth.Core.Entities;
+using BabylonWealth.Core.Exceptions;
+using BabylonWealth.Core.Interfaces.Repositories;
+using BabylonWealth.Core.Interfaces.Services;
+
+namespace BabylonWealth.Services;
+
+public class StatementImportService : IStatementImportService
+{
+    private readonly IStatementImportRepository _repo;
+
+    public StatementImportService(IStatementImportRepository repo)
+    {
+        _repo = repo;
+    }
+
+    public async Task<StatementSummaryResponseDto> SaveAsync(Guid userId, SaveStatementSummaryRequest request)
+    {
+        if (request.Month < 1 || request.Month > 12)
+            throw new ValidationException("Month must be between 1 and 12.");
+
+        if (request.Year < 2000 || request.Year > 2100)
+            throw new ValidationException("Year is out of valid range.");
+
+        var entity = StatementImport.Create(
+            userId,
+            request.Month,
+            request.Year,
+            request.TotalSpend,
+            request.TransactionCount,
+            request.AccountsIncluded,
+            request.Notes);
+
+        var saved = await _repo.CreateAsync(entity);
+        return MapToDto(saved);
+    }
+
+    public async Task<IEnumerable<StatementSummaryResponseDto>> GetHistoryAsync(Guid userId)
+    {
+        var records = await _repo.GetHistoryAsync(userId);
+        return records.Select(MapToDto);
+    }
+
+    public async Task DeleteAsync(Guid id, Guid userId)
+    {
+        var entity = await _repo.GetByIdAsync(id, userId)
+            ?? throw new NotFoundException("StatementImport", id);
+
+        await _repo.SoftDeleteAsync(id, userId);
+    }
+
+    private static StatementSummaryResponseDto MapToDto(StatementImport entity) =>
+        new()
+        {
+            Id = entity.Id,
+            Month = entity.Month,
+            Year = entity.Year,
+            TotalSpend = entity.TotalSpend,
+            TransactionCount = entity.TransactionCount,
+            AccountsIncluded = entity.AccountsIncluded,
+            Notes = entity.Notes,
+            CreatedAt = entity.CreatedAt
+        };
+}

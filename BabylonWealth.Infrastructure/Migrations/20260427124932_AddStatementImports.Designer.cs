@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BabylonWealth.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BabylonWealth.Infrastructure.Migrations
 {
     [DbContext(typeof(BabylonDbContext))]
-    partial class BabylonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260427124932_AddStatementImports")]
+    partial class AddStatementImports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,60 +184,6 @@ namespace BabylonWealth.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("BudgetCategories");
-                });
-
-            modelBuilder.Entity("BabylonWealth.Core.Entities.CheckingStatementImport", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AccountsIncluded")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<decimal>("TotalMoneyIn")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("TotalMoneyOut")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("TransactionCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "Year", "Month");
-
-                    b.ToTable("CheckingStatementImports");
                 });
 
             modelBuilder.Entity("BabylonWealth.Core.Entities.CreditCard", b =>
@@ -1127,15 +1076,6 @@ namespace BabylonWealth.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Bank");
-                });
-
-            modelBuilder.Entity("BabylonWealth.Core.Entities.CheckingStatementImport", b =>
-                {
-                    b.HasOne("BabylonWealth.Infrastructure.Identity.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BabylonWealth.Core.Entities.CreditCard", b =>

@@ -22,6 +22,10 @@ public static class ServicesExtensions
         services.AddScoped<IPassiveIncomeService, PassiveIncomeService>();
         services.AddScoped<IMonthlyBudgetSnapshotService, MonthlyBudgetSnapshotService>();
         services.AddScoped<IPropertyAnalyzerService, PropertyAnalyzerService>();
+        services.AddScoped<IStatementAnalyzerService, StatementAnalyzerService>();
+        services.AddScoped<ICheckingStatementAnalyzerService, CheckingStatementAnalyzerService>();
+        services.AddScoped<IStatementImportService, StatementImportService>();
+        services.AddScoped<ICheckingStatementImportService, CheckingStatementImportService>();
         return services;
     }
 }

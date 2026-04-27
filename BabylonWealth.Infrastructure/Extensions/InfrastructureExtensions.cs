@@ -95,6 +95,8 @@ public static class InfrastructureExtensions
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<ISpendingRepository, SpendingRepository>();
         services.AddScoped<IMonthlyBudgetSnapshotRepository, MonthlyBudgetSnapshotRepository>();
+        services.AddScoped<IStatementImportRepository, StatementImportRepository>();
+        services.AddScoped<ICheckingStatementImportRepository, CheckingStatementImportRepository>();
 
         return services;
     }

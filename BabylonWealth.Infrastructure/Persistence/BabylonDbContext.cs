@@ -33,6 +33,10 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
     // ── Real estate ───────────────────────────────────────────────
     public DbSet<Property> Properties => Set<Property>();
 
+    // ── Statement imports ─────────────────────────────────────────
+    public DbSet<StatementImport> StatementImports => Set<StatementImport>();
+    public DbSet<CheckingStatementImport> CheckingStatementImports => Set<CheckingStatementImport>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -55,5 +59,7 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
         modelBuilder.Entity<NetWorthAnnotation>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<MonthlyBudgetSnapshot>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Property>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<StatementImport>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<CheckingStatementImport>().HasQueryFilter(e => !e.IsDeleted);
     }
 }
