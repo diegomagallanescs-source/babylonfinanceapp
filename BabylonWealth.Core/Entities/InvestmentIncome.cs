@@ -14,7 +14,13 @@ public class InvestmentIncome : BaseEntity<Guid>
 
     private InvestmentIncome() { }
 
-    public static InvestmentIncome Create(Guid userId, string sourceName, InvestmentIncomeType type, decimal amount, DateTime receivedDate)
+    public static InvestmentIncome Create(
+        Guid userId,
+        string sourceName,
+        InvestmentIncomeType type,
+        decimal amount,
+        DateTime receivedDate,
+        string? notes = null)
     {
         return new InvestmentIncome
         {
@@ -23,7 +29,8 @@ public class InvestmentIncome : BaseEntity<Guid>
             SourceName = sourceName,
             Type = type,
             Amount = amount,
-            ReceivedDate = DateTime.SpecifyKind(receivedDate, DateTimeKind.Utc)
+            ReceivedDate = DateTime.SpecifyKind(receivedDate, DateTimeKind.Utc),
+            Notes = notes
         };
     }
 }

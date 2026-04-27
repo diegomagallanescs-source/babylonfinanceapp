@@ -1,3 +1,5 @@
+using BabylonWealth.Core.Enums;
+
 namespace BabylonWealth.Core.DTOs.Responses;
 
 /// <summary>Returned by GET /api/v1/investmentincome/summary</summary>
@@ -28,4 +30,17 @@ public record MonthlyPassiveIncomeDto
 
     /// <summary>e.g. "Apr 2026" — formatted label for chart axis.</summary>
     public string Label => new DateTime(Year, Month, 1).ToString("MMM yyyy");
+}
+
+/// <summary>Returned by GET /api/v1/investmentincome and POST /api/v1/investmentincome</summary>
+public record InvestmentIncomeResponseDto
+{
+    public Guid Id { get; init; }
+    public string SourceName { get; init; } = string.Empty;
+    public InvestmentIncomeType Type { get; init; }
+    public string TypeLabel { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public DateTime ReceivedDate { get; init; }
+    public string? Notes { get; init; }
+    public DateTime CreatedAt { get; init; }
 }

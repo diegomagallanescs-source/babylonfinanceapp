@@ -1,3 +1,4 @@
+using BabylonWealth.Core.DTOs.Requests;
 using BabylonWealth.Core.DTOs.Responses;
 
 namespace BabylonWealth.Core.Interfaces.Services;
@@ -28,4 +29,13 @@ public interface IPassiveIncomeService
     /// The OptimalRiver modal displays this against the 100% target line.
     /// </summary>
     Task<decimal?> GetPassiveToExpensesRatioAsync(Guid userId);
+
+    /// <summary>All passive income entries for the user, ordered newest first.</summary>
+    Task<IEnumerable<InvestmentIncomeResponseDto>> GetAllAsync(Guid userId);
+
+    /// <summary>Records a passive income receipt.</summary>
+    Task<InvestmentIncomeResponseDto> CreateAsync(Guid userId, CreateInvestmentIncomeRequest request);
+
+    /// <summary>Total passive income received in a given calendar year.</summary>
+    Task<decimal> GetAnnualTotalAsync(Guid userId, int year);
 }

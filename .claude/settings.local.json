@@ -73,7 +73,17 @@
       "Bash(curl -s -X POST http://localhost:5231/api/v1/spending -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkOTNkYjJiYS03ZWU1LTRhNDQtYjY0Yy1mNjBjNjkzZmRlMjQiLCJlbWFpbCI6InRlc3RAYmFieWxvbi5kZXYiLCJqdGkiOiIzODBhOTliNC04MWYxLTQyYTAtYjQxMC0wZTNjNmJlZmExNzYiLCJmaXJzdE5hbWUiOiJBcmthZCIsImV4cCI6MTc3NzMyMzM3NiwiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.s8YeEDlw5KY61uSw6eN92ROQskCnj7NysTo2J8mN_as' -H 'Content-Type: application/json' -d '{\"categoryId\":\"f19de140-95fc-41c5-a125-51930840fc0b\",\"amount\":1800,\"description\":\"Rent\",\"transactionDate\":\"2026-04-01\"}')",
       "Bash(kill 45868)",
       "Bash(kill 3369)",
-      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@babylon.dev\",\"password\":\"Test1234\"}')"
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@babylon.dev\",\"password\":\"Test1234\"}')",
+      "Bash(curl -s http://localhost:5000/api/v1/health)",
+      "Bash(curl -s http://localhost:5001/api/v1/health)",
+      "Bash(curl -s http://localhost:7001/api/v1/health)",
+      "Bash(curl -s http://localhost:5136/api/v1/health)",
+      "Bash(Start-Process -NoNewWindow dotnet -ArgumentList \"run\",\"--no-launch-profile\")",
+      "Bash(curl -s http://localhost:5231/api/v1/investmentincome -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MGVjMGQ5YS00NDgxLTQ5MTctOTZhNC01ZmQ2MGQ3ZjAwMTIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJqdGkiOiIzZDg3NzgwOC0wMjVjLTRmOTQtOGM3Ny03NGU0NzYxODU5OWMiLCJmaXJzdE5hbWUiOiJUZXN0IiwiZXhwIjoxNzc3Mzc4NDAzLCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.4SzODtJrZBrnUV6PVNEJAZZE9rv6hPHLh6fzQ6WihrQ')",
+      "Bash(curl -si http://localhost:5231/api/v1/investmentincome -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MGVjMGQ5YS00NDgxLTQ5MTctOTZhNC01ZmQ2MGQ3ZjAwMTIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJqdGkiOiIzZDg3NzgwOC0wMjVjLTRmOTQtOGM3Ny03NGU0NzYxODU5OWMiLCJmaXJzdE5hbWUiOiJUZXN0IiwiZXhwIjoxNzc3Mzc4NDAzLCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.4SzODtJrZBrnUV6PVNEJAZZE9rv6hPHLh6fzQ6WihrQ')",
+      "Bash(taskkill /PID 5952 /F)",
+      "PowerShell(Stop-Process -Id 5952 -Force)",
+      "Bash(curl -s -X POST http://localhost:5000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"Test1234!\"}')"
     ]
   }
 }
