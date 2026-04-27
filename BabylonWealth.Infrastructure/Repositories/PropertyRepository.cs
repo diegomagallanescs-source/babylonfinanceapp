@@ -25,4 +25,9 @@ public class PropertyRepository : BaseRepository<Property, Guid>, IPropertyRepos
                         (p.LastValueUpdateDate == null || p.LastValueUpdateDate < cutoff))
             .ToListAsync();
     }
+
+    public async Task<bool> HasPropertiesAsync(Guid userId)
+    {
+        return await _dbSet.AnyAsync(p => p.UserId == userId);
+    }
 }

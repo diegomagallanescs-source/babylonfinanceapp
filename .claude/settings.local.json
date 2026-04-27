@@ -90,7 +90,12 @@
       "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"dmagallanes2@gmail.com\",\"password\":\"Babylon1\"}')",
       "Bash(taskkill /F /IM dotnet.exe)",
       "PowerShell(Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -in @\\(5000, 5001, 5231, 7000, 7001, 8080\\) } | Select-Object LocalAddress, LocalPort, OwningProcess)",
-      "PowerShell(Get-NetTCPConnection -State Listen)"
+      "PowerShell(Get-NetTCPConnection -State Listen)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"dmagallanes2@gmail.com\",\"password\":\"Test1234!\"}')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"smoketest@test.com\",\"password\":\"Test1234!\",\"firstName\":\"Smoke\",\"lastName\":\"Test\"}')",
+      "Bash(curl -s http://localhost:5231/api/v1/networth/current -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjJkNTY5OC0zMDkxLTQxNGEtYjVlZi05NDU5ZjMxZTM1ZjciLCJlbWFpbCI6InNtb2tldGVzdEB0ZXN0LmNvbSIsImp0aSI6IjZiNDUyNmE0LTY0YjUtNGNiMi05MTI2LTRkNDUzM2RiYTg5NiIsImZpcnN0TmFtZSI6IlNtb2tlIiwiZXhwIjoxNzc3MzkzNDI0LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.bNQ8Yy-VjZzjeNPOj9kPnsYVbdnLV9FO03BRpA387Y0')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/properties -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjJkNTY5OC0zMDkxLTQxNGEtYjVlZi05NDU5ZjMxZTM1ZjciLCJlbWFpbCI6InNtb2tldGVzdEB0ZXN0LmNvbSIsImp0aSI6IjZiNDUyNmE0LTY0YjUtNGNiMi05MTI2LTRkNDUzM2RiYTg5NiIsImZpcnN0TmFtZSI6IlNtb2tlIiwiZXhwIjoxNzc3MzkzNDI0LCJpc3MiOiJCYWJ5bG9uV2VhbHRoIiwiYXVkIjoiQmFieWxvbldlYWx0aFVzZXJzIn0.bNQ8Yy-VjZzjeNPOj9kPnsYVbdnLV9FO03BRpA387Y0' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(pkill -f \"dotnet.*BabylonWealth\")"
     ]
   }
 }

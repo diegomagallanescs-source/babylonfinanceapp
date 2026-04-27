@@ -27,6 +27,9 @@ public record NetWorthResponseDto
     /// <summary>Total equity across all saved properties. Zero if no properties.</summary>
     public decimal PropertyEquity { get; init; }
 
+    /// <summary>True if the user has at least one saved property. Drives the second NW chart line on the frontend.</summary>
+    public bool HasProperties { get; init; }
+
     public DateTime ComputedAt { get; init; } = DateTime.UtcNow;
 }
 

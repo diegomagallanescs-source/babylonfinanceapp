@@ -15,4 +15,7 @@ public interface IPropertyRepository : IBaseRepository<Property, Guid>
     /// Used to drive the staleness warning badge in the UI.
     /// </summary>
     Task<IEnumerable<Property>> GetStaleValuationsAsync(Guid userId, int staleDays = 90);
+
+    /// <summary>True if the user has at least one saved property (regardless of equity sign).</summary>
+    Task<bool> HasPropertiesAsync(Guid userId);
 }

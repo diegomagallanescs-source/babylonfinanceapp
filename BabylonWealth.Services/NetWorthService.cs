@@ -40,6 +40,7 @@ public class NetWorthService : INetWorthService
         var loanBalance     = await _loanRepo.GetTotalOutstandingBalanceAsync(userId);
         var pendingNet      = await _pendingItemRepo.GetNetPendingAmountAsync(userId);
         var propertyEquity  = await _propertyRepo.GetTotalEquityAsync(userId);
+        var hasProperties   = await _propertyRepo.HasPropertiesAsync(userId);
 
         // Pending items with positive net are assets (owed to user); negative are liabilities.
         var pendingAsset     = pendingNet > 0 ? pendingNet : 0m;
@@ -65,6 +66,7 @@ public class NetWorthService : INetWorthService
             CreditUtilizationPercent = creditUtilizationPercent,
             PendingItemsNet          = pendingNet,
             PropertyEquity           = propertyEquity,
+            HasProperties            = hasProperties,
             ComputedAt               = DateTime.UtcNow
         };
     }

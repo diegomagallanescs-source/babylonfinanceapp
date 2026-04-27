@@ -34,7 +34,8 @@ public class NetWorthServiceTests
         decimal creditLimit = 0m,
         decimal loanBalance = 0m,
         decimal pendingNet = 0m,
-        decimal propertyEquity = 0m)
+        decimal propertyEquity = 0m,
+        bool hasProperties = false)
     {
         _accountRepoMock.Setup(r => r.GetTotalBalanceAsync(_userId)).ReturnsAsync(accountBalance);
         _investmentRepoMock.Setup(r => r.GetTotalValueAsync(_userId)).ReturnsAsync(investmentValue);
@@ -43,6 +44,7 @@ public class NetWorthServiceTests
         _loanRepoMock.Setup(r => r.GetTotalOutstandingBalanceAsync(_userId)).ReturnsAsync(loanBalance);
         _pendingItemRepoMock.Setup(r => r.GetNetPendingAmountAsync(_userId)).ReturnsAsync(pendingNet);
         _propertyRepoMock.Setup(r => r.GetTotalEquityAsync(_userId)).ReturnsAsync(propertyEquity);
+        _propertyRepoMock.Setup(r => r.HasPropertiesAsync(_userId)).ReturnsAsync(hasProperties);
     }
 
     // ── Asset summation ─────────────────────────────────────────────────────
@@ -124,7 +126,7 @@ public class NetWorthServiceTests
     [Fact]
     public async Task ComputeAsync_WithPropertyEquity_TotalNetWorthIncludesEquity()
     {
-        SetupDefaults(accountBalance: 20_000m, propertyEquity: 80_000m);
+        SetupDefaults(accountBalance: 20_000m, propertyEquity: 80_000m, hasProperties: true);
 
         var result = await _service.ComputeAsync(_userId);
 
@@ -136,12 +138,47 @@ public class NetWorthServiceTests
     [Fact]
     public async Task ComputeAsync_NoProperties_TotalNetWorthEqualsLiquidNetWorth()
     {
-        SetupDefaults(accountBalance: 15_000m, propertyEquity: 0m);
+        SetupDefaults(accountBalance: 15_000m, propertyEquity: 0m, hasProperties: false);
 
         var result = await _service.ComputeAsync(_userId);
 
         Assert.Equal(result.LiquidNetWorth, result.TotalNetWorth);
         Assert.Equal(0m, result.PropertyEquity);
+    }
+
+    // ── HasProperties flag ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ComputeAsync_WithSavedProperties_HasPropertiesIsTrue()
+    {
+        SetupDefaults(accountBalance: 10_000m, propertyEquity: 50_000m, hasProperties: true);
+
+        var result = await _service.ComputeAsync(_userId);
+
+        Assert.True(result.HasProperties);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_UnderwaterProperty_HasPropertiesIsTrueEvenWithZeroEquity()
+    {
+        // A property with LoanBalance >= CurrentEstimatedValue contributes 0 or negative equity,
+        // but HasProperties must still be true so the frontend renders the second chart line.
+        SetupDefaults(accountBalance: 5_000m, propertyEquity: 0m, hasProperties: true);
+
+        var result = await _service.ComputeAsync(_userId);
+
+        Assert.True(result.HasProperties);
+        Assert.Equal(0m, result.PropertyEquity);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_NoSavedProperties_HasPropertiesIsFalse()
+    {
+        SetupDefaults(accountBalance: 15_000m, hasProperties: false);
+
+        var result = await _service.ComputeAsync(_userId);
+
+        Assert.False(result.HasProperties);
     }
 
     // ── Settled pending items ───────────────────────────────────────────────
