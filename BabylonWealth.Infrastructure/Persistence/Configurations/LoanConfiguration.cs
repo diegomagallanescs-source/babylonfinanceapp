@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BabylonWealth.Core.Entities;
 using BabylonWealth.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,10 @@ public class LoanConfiguration : IEntityTypeConfiguration<Loan>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(l => l.CustomFields)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new()
+            )
             .HasColumnType("jsonb");
     }
 }
