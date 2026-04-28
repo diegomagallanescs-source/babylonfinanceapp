@@ -47,4 +47,4 @@ export interface AuthResponseDto {
   firstName: string | null;
 }
 
-export type TimePeriod = '1W' | '1M' | '3M' | 'YTD' | '1Y' | 'ALL';
+export type TimePeriod = '1W' | '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'ALL';

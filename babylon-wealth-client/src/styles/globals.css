@@ -49,6 +49,23 @@
   --font-body:    'Inter', system-ui, sans-serif;
 }
 
+/* ── Light mode overrides ────────────────────────────── */
+[data-theme="light"] {
+  --color-bg:           #F7F8FC;
+  --color-bg-surface:   #EEEEF5;
+  --color-bg-card:      #E6E7F0;
+  --color-bg-elevated:  #DCDDE8;
+  --color-text:         #0D1017;
+  --color-text-muted:   #3A4260;
+  --color-text-sub:     #1E2840;
+  --color-river:        #007A6B;
+  --color-river-deep:   #005E53;
+  --color-river-glow:   rgba(0, 122, 107, 0.2);
+  --color-border:       rgba(0, 0, 0, 0.09);
+  --color-border-glow:  rgba(240, 180, 41, 0.4);
+  --shadow-card:        0 1px 2px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {

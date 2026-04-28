@@ -117,7 +117,9 @@
       "mcp__Claude_in_Chrome__form_input",
       "PowerShell(Stop-Process -Id 53368 -Force)",
       "PowerShell(Get-NetTCPConnection -LocalPort 5231 -ErrorAction SilentlyContinue)",
-      "mcp__Claude_in_Chrome__find"
+      "mcp__Claude_in_Chrome__find",
+      "Bash(npx vite *)",
+      "Bash(xargs ls *)"
     ]
   }
 }

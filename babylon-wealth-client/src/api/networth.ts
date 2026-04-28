@@ -10,3 +10,6 @@ export const fetchNetWorthHistory = (from: Date, to: Date) =>
       params: { from: from.toISOString(), to: to.toISOString() },
     })
     .then((r) => r.data);
+
+export const annotateNetWorth = (snapshotDate: string, annotation: string) =>
+  client.post('/networth/annotate', { snapshotDate, annotation }).then((r) => r.data);

@@ -11,12 +11,15 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 0;
   padding: 0 40px;
   height: 58px;
   background: rgba(7, 8, 15, 0.88);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
+}
+
+[data-theme="light"] .app-header {
+  background: rgba(247, 248, 252, 0.92);
 }
 
 /* Gold shimmer line under header */
@@ -39,15 +42,25 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.5px;
-  margin-right: 40px;
   flex-shrink: 0;
 }
 
+/* Centered nav using absolute positioning so brand+right don't compete */
 .app-header__nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 2px;
-  flex: 1;
+}
+
+.app-header__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .header-nav-item {
@@ -89,11 +102,36 @@
   overflow-y: auto;
 }
 
+/* ── Theme toggle ─────────────────────────────────────── */
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
 /* ── Profile menu ─────────────────────────────────────── */
 .profile-menu {
   position: relative;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .profile-btn {
