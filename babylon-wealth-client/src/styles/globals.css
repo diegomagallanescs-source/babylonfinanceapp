@@ -1,32 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap');
+
 :root {
-  --color-bg:          #0D0D0D;
-  --color-bg-surface:  #161616;
-  --color-bg-card:     #1A1A1A;
-  --color-gold:        #C9A84C;
-  --color-gold-hover:  #E2BB6B;
-  --color-gold-dim:    rgba(201, 168, 76, 0.15);
-  --color-river:       #1B7A6E;
-  --color-text:        #F0EAD6;
-  --color-text-muted:  #8A8070;
-  --color-positive:    #4CAF7D;
-  --color-negative:    #E05555;
+  /* ── Backgrounds ─────────────────────────── */
+  --color-bg:          #07080F;
+  --color-bg-surface:  #0D1017;
+  --color-bg-card:     #111520;
+  --color-bg-elevated: #161B2C;
+
+  /* ── Gold ────────────────────────────────── */
+  --color-gold:        #F0B429;
+  --color-gold-hover:  #FFD047;
+  --color-gold-dim:    rgba(240, 180, 41, 0.12);
+  --color-glow-gold:   rgba(240, 180, 41, 0.35);
+
+  /* ── River teal ──────────────────────────── */
+  --color-river:       #00E5CC;
+  --color-river-deep:  #00A896;
+  --color-river-glow:  rgba(0, 229, 204, 0.28);
+
+  /* ── Text ────────────────────────────────── */
+  --color-text:        #EEF0FF;
+  --color-text-muted:  #4E5A7A;
+  --color-text-sub:    #7B8DB5;
+
+  /* ── Semantic ────────────────────────────── */
+  --color-positive:    #00E676;
+  --color-negative:    #FF4458;
+  --color-positive-dim:rgba(0, 230, 118, 0.12);
+  --color-negative-dim:rgba(255, 68, 88, 0.12);
+
+  /* ── Borders ─────────────────────────────── */
   --color-border:      rgba(255, 255, 255, 0.07);
-  --radius-sm:         6px;
-  --radius-md:         12px;
-  --radius-lg:         20px;
-  --font-mono:         'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --color-border-glow: rgba(240, 180, 41, 0.25);
+
+  /* ── Radii ───────────────────────────────── */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* ── Shadows ─────────────────────────────── */
+  --shadow-card:  0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-glow-gold: 0 0 40px rgba(240, 180, 41, 0.2);
+  --shadow-glow-teal: 0 0 40px rgba(0, 229, 204, 0.2);
+
+  /* ── Fonts ───────────────────────────────── */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root {
+html, body {
   height: 100%;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
-a { color: inherit; text-decoration: none; }
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
