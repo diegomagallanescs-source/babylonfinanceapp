@@ -6,7 +6,11 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/Login/LoginPage';
 import { RegisterPage } from './pages/Login/RegisterPage';
 import { RiverPage } from './pages/River/RiverPage';
-import { StubPage } from './pages/Stub';
+import { AccountingPage } from './pages/Accounting/AccountingPage';
+import { MoneyInPage } from './pages/MoneyIn/MoneyInPage';
+import { MoneyOutPage } from './pages/MoneyOut/MoneyOutPage';
+import { InvestingPage } from './pages/Investing/InvestingPage';
+import { RealEstatePage } from './pages/RealEstate/RealEstatePage';
 
 const queryClient = new QueryClient();
 
@@ -29,13 +33,12 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<RiverPage />} />
-        <Route path="ledger"            element={<StubPage name="Ledger" />} />
-        <Route path="income"            element={<StubPage name="Income" />} />
-        <Route path="spending"          element={<StubPage name="Spending" />} />
-        <Route path="investment-income" element={<StubPage name="Passive Income" />} />
-        <Route path="real-estate"       element={<StubPage name="Real Estate" />} />
-        <Route path="wisdom"            element={<StubPage name="Wisdom" />} />
+        <Route index             element={<RiverPage />} />
+        <Route path="accounting" element={<AccountingPage />} />
+        <Route path="money-in"   element={<MoneyInPage />} />
+        <Route path="money-out"  element={<MoneyOutPage />} />
+        <Route path="investing"  element={<InvestingPage />} />
+        <Route path="real-estate" element={<RealEstatePage />} />
       </Route>
     </Routes>
   );

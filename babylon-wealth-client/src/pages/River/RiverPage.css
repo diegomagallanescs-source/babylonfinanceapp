@@ -1,64 +1,56 @@
+/* ── Two-column page shell ─────────────────────────────── */
 .river-page {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  min-height: calc(100vh - 56px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  gap: 0;
+}
+
+.river-page__divider {
+  background: var(--color-border);
+  margin: 32px 0;
+}
+
+/* ── Left panel — Net Worth ────────────────────────────── */
+.nw-panel {
+  padding: 40px 40px 40px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 16px 32px;
-  max-width: 480px;
-  margin: 0 auto;
 }
 
-.river-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 4px;
-}
+.nw-panel__greeting {}
 
-.river-page__greeting {
-  font-size: 12px;
+.nw-panel__label {
+  font-size: 11px;
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
 }
 
-.river-page__name {
-  font-size: 20px;
+.nw-panel__name {
+  font-size: 26px;
   font-weight: 700;
   color: var(--color-text);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
-/* Card container */
-.river-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.river-card__loading {
-  color: var(--color-text-muted);
-  font-size: 14px;
-  padding: 40px 0;
-  text-align: center;
-}
-
-/* Liquid / Total toggle */
-.river-card__toggle {
+/* Toggle pill */
+.nw-panel__toggle {
   display: flex;
   gap: 4px;
   align-self: flex-start;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 3px;
 }
 
 .toggle-btn {
-  padding: 4px 12px;
+  padding: 4px 14px;
   border-radius: 5px;
   font-size: 12px;
   font-weight: 600;
@@ -67,49 +59,337 @@
 }
 
 .toggle-btn:hover { color: var(--color-text); }
+
 .toggle-btn--active {
-  background: var(--color-bg-surface);
+  background: rgba(201, 168, 76, 0.15);
   color: var(--color-gold);
 }
 
-/* Stats row */
-.river-card__stats {
+/* Net worth value + emoji row */
+.nw-panel__value-row {
   display: flex;
   align-items: center;
-  gap: 0;
-  padding-top: 4px;
+  gap: 12px;
+}
+
+.nw-panel__value {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-gold);
+  letter-spacing: -1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nw-panel__tier-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.nw-panel__tier-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-top: -8px;
+}
+
+/* Progress bar */
+.tier-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tier-progress__bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tier-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-hover));
+  border-radius: 2px;
+}
+
+.tier-progress__label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Advice */
+.nw-panel__advice {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-left: 2px solid var(--color-gold);
+  background: rgba(201, 168, 76, 0.05);
+  border-radius: 0 6px 6px 0;
+}
+
+/* Chart placeholder */
+.nw-panel__chart-placeholder {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 60px 0;
+  text-align: center;
+}
+
+/* Stats row */
+.nw-panel__stats {
+  display: flex;
+  align-items: center;
+  padding-top: 12px;
   border-top: 1px solid var(--color-border);
 }
 
-.river-card__stat {
+.nw-panel__stat {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 8px;
+  padding: 0 10px;
 }
 
-.river-card__stat:first-child { padding-left: 0; }
+.nw-panel__stat:first-child { padding-left: 0; }
 
-.river-card__stat-label {
+.nw-panel__stat-label {
   font-size: 11px;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.river-card__stat-value {
-  font-size: 14px;
+.nw-panel__stat-value {
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
 }
 
-.river-card__stat-value--pos { color: var(--color-positive); }
-.river-card__stat-value--neg { color: var(--color-negative); }
+.nw-panel__stat-value--pos { color: var(--color-positive); }
+.nw-panel__stat-value--neg { color: var(--color-negative); }
 
-.river-card__stat-divider {
+.nw-panel__stat-divider {
   width: 1px;
   height: 28px;
   background: var(--color-border);
   flex-shrink: 0;
+}
+
+/* ── Right panel — River ───────────────────────────────── */
+.river-panel {
+  padding: 40px 0 40px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.river-panel__header {
+  width: 100%;
+  text-align: left;
+}
+
+.river-panel__title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.river-panel__strength {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 4px;
+}
+
+.river-panel__strength strong {
+  color: var(--color-river, #1B7A6E);
+}
+
+/* ── River SVG scene ───────────────────────────────────── */
+.river-scene {
+  width: 100%;
+  max-width: 340px;
+}
+
+.river-svg,
+.cracked-earth {
+  width: 100%;
+  height: auto;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.025); }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.45; }
+}
+
+.river-ring {
+  transform-origin: 100px 65px;
+  animation: ringPulse 4s ease-in-out infinite;
+}
+
+.river-shimmer {
+  transform-origin: 100px 65px;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* ── Stick figure ──────────────────────────────────────── */
+.stick-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stick-figure__emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stick-figure__svg {
+  width: 60px;
+  height: 80px;
+}
+
+@keyframes bucketFill {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.4); }
+  50%       { opacity: 0.8; transform: scaleY(1); }
+}
+
+.bucket-fill {
+  transform-origin: bottom;
+  animation: bucketFill 2s ease-in-out infinite;
+}
+
+/* ── "See Optimal River" button ────────────────────────── */
+.btn-optimal {
+  padding: 9px 22px;
+  border: 1.5px solid var(--color-gold);
+  border-radius: 8px;
+  color: var(--color-gold);
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-optimal:hover {
+  background: var(--color-gold);
+  color: #0D0D0D;
+}
+
+/* ── Optimal River Modal ───────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.optimal-modal {
+  background: #111;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.optimal-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.optimal-modal__icon {
+  font-size: 20px;
+  color: var(--color-gold);
+}
+
+.optimal-modal__header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.optimal-modal__content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.optimal-modal__tagline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-gold);
+  text-align: center;
+}
+
+.optimal-modal__flows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.optimal-modal__flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.flow-arrow { font-size: 16px; font-weight: 700; }
+.flow-arrow--lifestyle { color: var(--color-negative); }
+.flow-arrow--reinvest  { color: var(--color-positive); }
+
+.optimal-modal__quote {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 10px 14px;
+  border-left: 2px solid var(--color-gold);
+  background: rgba(201, 168, 76, 0.05);
+  border-radius: 0 6px 6px 0;
+}
+
+.optimal-modal__close {
+  padding: 8px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.optimal-modal__close:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
 }
