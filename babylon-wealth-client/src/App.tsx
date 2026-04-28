@@ -5,6 +5,9 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/Login/LoginPage';
 import { RiverPage } from './pages/River/RiverPage';
 import { StubPage } from './pages/Stub';
+
+// /register is a stub — will be built on Day 30
+const RegisterPage = () => <StubPage name="Register" />;
 import type { ReactNode } from 'react';
 
 const queryClient = new QueryClient();
@@ -19,7 +22,8 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login"    element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route
         element={
           <RequireAuth>
