@@ -1,63 +1,89 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login as apiLogin } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
-import './LoginPage.css';
+import './AuthPages.css';
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const validate = () => {
+    const errors: typeof fieldErrors = {};
+    if (!email) errors.email = 'Email is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Enter a valid email address.';
+    if (!password) errors.password = 'Password is required.';
+    else if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
+    return errors;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setServerError('');
+    const errors = validate();
+    if (Object.keys(errors).length) { setFieldErrors(errors); return; }
+    setFieldErrors({});
     setLoading(true);
     try {
-      const { token, user } = await apiLogin(email, password);
-      login(token, user);
+      const authResponse = await apiLogin(email, password);
+      login(authResponse);
       navigate('/');
     } catch {
-      setError('Invalid email or password.');
+      setServerError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-logo">✦</div>
-        <h1 className="login-title">Babylon Wealth</h1>
-        <p className="login-subtitle">A part of all you earn is yours to keep.</p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-logo">✦</div>
+        <h1 className="auth-title">Babylon Wealth</h1>
+        <p className="auth-subtitle">A part of all you earn is yours to keep.</p>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <input
-            className="login-input"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-          />
-          <input
-            className="login-input"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-          />
-          {error && <div className="login-error">{error}</div>}
-          <button className="login-btn" type="submit" disabled={loading}>
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <div className="auth-field">
+            <input
+              className={`auth-input${fieldErrors.email ? ' auth-input--error' : ''}`}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+            {fieldErrors.email && <span className="auth-field-error">{fieldErrors.email}</span>}
+          </div>
+
+          <div className="auth-field">
+            <input
+              className={`auth-input${fieldErrors.password ? ' auth-input--error' : ''}`}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+            {fieldErrors.password && <span className="auth-field-error">{fieldErrors.password}</span>}
+          </div>
+
+          {serverError && <div className="auth-server-error">{serverError}</div>}
+
+          <button className="auth-btn" type="submit" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
+
+        <p className="auth-switch">
+          Don't have an account?{' '}
+          <Link to="/register" className="auth-switch-link">Create one</Link>
+        </p>
       </div>
     </div>
   );

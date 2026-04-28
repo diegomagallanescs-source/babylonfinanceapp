@@ -49,11 +49,21 @@ export interface InvestmentIncomeResponseDto {
   createdAt: string;
 }
 
+// Matches UserProfileResponseDto from GET /users/me
 export interface UserDto {
   id: string;
   email: string;
-  displayName: string | null;
-  profilePhotoUrl: string | null;
+  firstName: string | null;
+  createdAt: string;
+}
+
+// Matches AuthResponseDto from POST /auth/login and POST /auth/register
+export interface AuthResponseDto {
+  token: string;
+  expiresAt: string;
+  userId: string;
+  email: string;
+  firstName: string | null;
 }
 
 export type TimePeriod = '1W' | '1M' | '3M' | 'YTD' | '1Y' | 'ALL';

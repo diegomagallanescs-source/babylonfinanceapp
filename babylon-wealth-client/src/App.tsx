@@ -1,14 +1,12 @@
+import type { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/Login/LoginPage';
+import { RegisterPage } from './pages/Login/RegisterPage';
 import { RiverPage } from './pages/River/RiverPage';
 import { StubPage } from './pages/Stub';
-
-// /register is a stub — will be built on Day 30
-const RegisterPage = () => <StubPage name="Register" />;
-import type { ReactNode } from 'react';
 
 const queryClient = new QueryClient();
 

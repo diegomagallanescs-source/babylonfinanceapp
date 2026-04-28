@@ -55,6 +55,20 @@ namespace Babylon.Api
             builder.Services.AddApplicationServices();
             builder.Services.AddHostedService<SnapshotBackgroundService>();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("FrontendPolicy", policy =>
+                {
+                    var allowedOrigins = builder.Configuration
+                        .GetSection("AllowedOrigins")
+                        .Get<string[]>() ?? [];
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
             var app = builder.Build();
 
             await BankSeeder.SeedAsync(app.Services);
@@ -66,6 +80,7 @@ namespace Babylon.Api
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("FrontendPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

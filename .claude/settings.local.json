@@ -103,7 +103,21 @@
       "Bash(npm create *)",
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(timeout 10 npm run dev)"
+      "Bash(timeout 10 npm run dev)",
+      "Bash(npm run *)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@babylon.com\",\"password\":\"Test1234!\",\"firstName\":\"Diego\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"newuser@babylon.com\",\"password\":\"Test1234!\",\"firstName\":\"Test\"}')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"newuser@babylon.com\",\"password\":\"wrongpass\"}')",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"weak@babylon.com\",\"password\":\"abc\"}')",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "mcp__Claude_in_Chrome__read_page",
+      "mcp__Claude_in_Chrome__form_input",
+      "PowerShell(Stop-Process -Id 53368 -Force)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5231 -ErrorAction SilentlyContinue)",
+      "mcp__Claude_in_Chrome__find"
     ]
   }
 }

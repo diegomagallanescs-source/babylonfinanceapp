@@ -11,7 +11,7 @@ export function RiverPage() {
   const { data: nw, isLoading } = useNetWorth();
   const [showTotal, setShowTotal] = useState(false);
 
-  const displayName = user?.displayName ?? user?.email?.split('@')[0] ?? 'there';
+  const displayName = user?.firstName ?? user?.email?.split('@')[0] ?? 'there';
 
   return (
     <div className="river-page">

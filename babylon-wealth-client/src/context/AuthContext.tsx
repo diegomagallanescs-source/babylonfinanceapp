@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { fetchMe } from '../api/auth';
-import type { UserDto } from '../types';
+import type { AuthResponseDto, UserDto } from '../types';
 
 interface AuthState {
   user: UserDto | null;
   token: string | null;
   isLoading: boolean;
-  login: (token: string, user: UserDto) => void;
+  login: (authResponse: AuthResponseDto) => void;
   logout: () => void;
 }
 
@@ -25,10 +25,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [token]);
 
-  const login = (newToken: string, newUser: UserDto) => {
-    localStorage.setItem('babylon_token', newToken);
-    setToken(newToken);
-    setUser(newUser);
+  const login = (authResponse: AuthResponseDto) => {
+    localStorage.setItem('babylon_token', authResponse.token);
+    setToken(authResponse.token);
+    // Optimistically populate user from the auth response so we don't need
+    // an extra /users/me round-trip right after login.
+    setUser({
+      id: authResponse.userId,
+      email: authResponse.email,
+      firstName: authResponse.firstName,
+      createdAt: new Date().toISOString(),
+    });
   };
 
   const logout = () => {
