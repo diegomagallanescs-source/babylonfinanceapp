@@ -7,7 +7,7 @@ import { useAnnualSummary } from '../../hooks/useAnnualSummary';
 import { NetWorthChart } from '../../components/NetWorthChart';
 import { formatCurrency, formatDelta, formatPercent } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
-import { getTier, getTierProgress, getNextTier, getTierLevel, formatRiverSpeed } from '../../constants/tiers';
+import { getTier, getTierLevel, formatRiverSpeed } from '../../constants/tiers';
 import { annotateNetWorth } from '../../api/networth';
 import type { TimePeriod } from '../../types';
 import './RiverPage.css';
@@ -1090,26 +1090,6 @@ function OptimalRiverModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─────────────────────────────────────────────────────────
-// TIER PROGRESS BAR
-// ─────────────────────────────────────────────────────────
-
-function TierProgressBar({ progress, nextLabel }: { progress: number; nextLabel: string | null }) {
-  return (
-    <div className="tier-progress">
-      <div className="tier-progress__track">
-        <motion.div className="tier-progress__fill"
-          initial={{ width: 0 }} animate={{ width: `${progress * 100}%` }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} />
-        <motion.div className="tier-progress__glow"
-          initial={{ left: 0 }} animate={{ left: `${progress * 100}%` }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} />
-      </div>
-      {nextLabel && <div className="tier-progress__label">Next: {nextLabel}</div>}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
 // NET WORTH PANEL (left)
 // ─────────────────────────────────────────────────────────
 
@@ -1154,10 +1134,6 @@ function NetWorthPanel() {
 
   const accentColor = delta >= 0 ? '#00E676' : '#FF4458';
   const displayName = user?.firstName ?? user?.email?.split('@')[0] ?? 'there';
-  const tier        = getTier(currentValue);
-  const progress    = getTierProgress(currentValue);
-  const next        = getNextTier(currentValue);
-  const level       = getTierLevel(currentValue);
 
   const scrubbedPoint   = scrubbedIndex != null ? historyData[scrubbedIndex] : null;
   const scrubDateLabel  = scrubbedPoint
@@ -1312,27 +1288,6 @@ function NetWorthPanel() {
         )}
       </AnimatePresence>
 
-      <div className="nw-panel__tier-row">
-        <AnimatePresence mode="wait">
-          <motion.span key={`${tier.label}-${level}`} className="tier-badge"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}>
-            {tier.label}
-            <span className="tier-badge__level"> · Level {level}</span>
-          </motion.span>
-        </AnimatePresence>
-      </div>
-
-      <TierProgressBar
-        progress={progress}
-        nextLabel={
-          next
-            ? next.label !== tier.label
-              ? `Next: ${next.label} at ${formatCurrency(next.minNW)}`
-              : `Level ${level + 1} · ${formatCurrency(next.minNW)}`
-            : null
-        }
-      />
 
       {nw && (
         <div className="stats-row">
@@ -1507,6 +1462,14 @@ function RiverMeaningModal({ onClose }: { onClose: () => void }) {
           What does the river mean?
         </div>
 
+        <p className="meaning-modal__intro">
+          In <em>The Richest Man in Babylon</em>, Arkad teaches that your active income is water
+          you carry in a bucket — you work, you fill it, you spend it, and it empties. True wealth
+          comes from pouring that water into a river: investments and assets that flow on their own.
+          When your river runs strong enough, it fills your bucket for you — and you are no longer
+          dependent on a job to survive. You are free.
+        </p>
+
         <div className="meaning-steps">
           {/* Step 1 */}
           <div className="meaning-step meaning-step--bucket">
@@ -1530,7 +1493,7 @@ function RiverMeaningModal({ onClose }: { onClose: () => void }) {
               <div className="meaning-step__label">Step 2 · Invest</div>
               <div className="meaning-step__title">Pour into the river</div>
               <div className="meaning-step__desc">
-                <strong style={{ color: 'var(--color-positive)' }}>Assets</strong> put money in your pocket (investments, rental income).{' '}
+                <strong className="meaning-asset-label">Assets</strong> put money in your pocket (investments, rental income).{' '}
                 <strong style={{ color: 'var(--color-negative)' }}>Liabilities</strong> take money out (cars, clothes, subscriptions).
                 Buy assets — not liabilities.
               </div>

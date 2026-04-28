@@ -395,6 +395,8 @@
 .stat-chip--pos .stat-chip__value { color: var(--color-positive); }
 .stat-chip--neg .stat-chip__value { color: var(--color-negative); }
 
+[data-theme="light"] .stat-chip--pos .stat-chip__value { color: #1A8040; }
+
 /* ── Annual Summary Callout ──────────────────────────── */
 .annual-callout {
   padding: 14px 16px;
@@ -808,6 +810,28 @@
   font-size: 22px;
 }
 
+.meaning-modal__intro {
+  font-size: 13px;
+  color: var(--color-text-sub);
+  line-height: 1.65;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.meaning-modal__intro em {
+  color: var(--color-gold);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.meaning-asset-label {
+  color: var(--color-positive);
+}
+
+[data-theme="light"] .meaning-asset-label {
+  color: #1A8040;
+}
+
 .meaning-steps {
   display: flex;
   flex-direction: column;
@@ -913,15 +937,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 56px 24px;
+  overflow-y: auto;
 }
 
 .optimal-modal {
   background: var(--color-bg-card);
   border: 1px solid rgba(0, 229, 204, 0.2);
   border-radius: var(--radius-xl);
-  padding: 32px;
-  max-width: 460px;
+  padding: 36px 36px 32px;
+  max-width: 560px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -937,7 +962,7 @@
   width: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
-  max-height: 200px;
+  min-height: 320px;
 }
 
 /* The rule banner */
