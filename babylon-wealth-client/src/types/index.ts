@@ -1,6 +1,7 @@
 export type { NetWorthResponseDto, NetWorthHistoryPointDto, AnnualSummaryDto } from './netWorth';
 export type {
   BankDto,
+  BudgetCategoryResponseDto,
   BankAccountResponseDto, CreateBankAccountRequest, UpdateBankAccountRequest,
   CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,

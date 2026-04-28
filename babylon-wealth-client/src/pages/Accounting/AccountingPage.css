@@ -236,10 +236,122 @@
   margin: 4px 0;
 }
 
+/* ── Section title sub-variant (Business / Personal labels) ─── */
+.acc-section-title--sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+/* ── Budget category pill ───────────────────────────────────── */
+.acc-category-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.acc-category-pill--none {
+  color: var(--color-text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+/* ── Credit utilization badge ───────────────────────────────── */
+.acc-util {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.acc-util--low  { color: var(--color-positive); }
+.acc-util--mid  { color: #E2BB6B; }
+.acc-util--high { color: var(--color-negative); }
+.acc-util--none { color: var(--color-text-muted); }
+
+/* ── + Add button (section header) ─────────────────────────── */
+.acc-btn-add {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.acc-btn-add:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+/* ── Add row form ───────────────────────────────────────────── */
+.acc-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 12px 14px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.acc-add-input,
+.acc-add-select {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.12s;
+  min-width: 100px;
+}
+
+.acc-add-input:focus,
+.acc-add-select:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px var(--color-glow-gold);
+}
+
+.acc-add-input--number { max-width: 130px; }
+
+/* Labeled field wrapper (for number inputs in add forms) */
+.acc-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.acc-add-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.acc-btn--sm {
+  padding: 5px 14px;
+  font-size: 12px;
+}
+
 /* ── Light mode overrides ───────────────────────────────────── */
-[data-theme="light"] .acc-amount--positive       { color: #1A8040; }
+[data-theme="light"] .acc-amount--positive        { color: #1A8040; }
 [data-theme="light"] .acc-summary-value--positive { color: #1A8040; }
-[data-theme="light"] .acc-batch-info             { color: #7A6200; }
+[data-theme="light"] .acc-batch-info              { color: #7A6200; }
+[data-theme="light"] .acc-util--low               { color: #1A8040; }
+[data-theme="light"] .acc-add-input,
+[data-theme="light"] .acc-add-select              { background: #fff; color: var(--color-text); }
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {

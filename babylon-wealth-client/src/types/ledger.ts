@@ -153,6 +153,16 @@ export interface UpdatePendingItemRequest {
   dueDate?: string | null;
 }
 
+// ── Budget Category ──────────────────────────────────────────
+export interface BudgetCategoryResponseDto {
+  id: string;
+  name: string;
+  targetPercentage: number;
+  color: string;
+  displayOrder: number;
+  createdAt: string;
+}
+
 // ── Property ─────────────────────────────────────────────────
 export interface PropertyResponseDto {
   id: string;

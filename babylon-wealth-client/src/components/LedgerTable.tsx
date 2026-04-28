@@ -19,6 +19,7 @@ interface LedgerTableProps<T extends object> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   getRowVariant?: (row: T) => RowVariant;
+  getRowClass?: (row: T) => string;
   totals?: TotalsRow;
   isLoading?: boolean;
   emptyMessage?: string;
@@ -30,6 +31,7 @@ export function LedgerTable<T extends object>({
   data,
   columns,
   getRowVariant,
+  getRowClass,
   totals,
   isLoading,
   emptyMessage = 'No records yet.',
@@ -131,10 +133,11 @@ export function LedgerTable<T extends object>({
           ) : (
             table.getRowModel().rows.map((row) => {
               const variant = getRowVariant ? getRowVariant(row.original) : 'neutral';
+              const extra = getRowClass ? getRowClass(row.original) : '';
               return (
                 <tr
                   key={row.id}
-                  className={`lt__row lt__row--${variant}`}
+                  className={`lt__row lt__row--${variant}${extra ? ` ${extra}` : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="lt__td">

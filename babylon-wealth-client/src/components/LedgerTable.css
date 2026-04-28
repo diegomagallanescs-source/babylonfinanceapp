@@ -152,6 +152,66 @@
   50%       { opacity: 0.4; }
 }
 
+/* ── Inline edit inputs ─────────────────────────────────────── */
+.lt__edit-input,
+.lt__edit-select {
+  width: 100%;
+  min-width: 80px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.lt__edit-input:focus,
+.lt__edit-select:focus {
+  border-color: var(--color-gold-hover);
+  box-shadow: 0 0 0 2px var(--color-glow-gold);
+}
+
+.lt__edit-input--number { max-width: 130px; }
+.lt__edit-input--wide   { max-width: 200px; }
+
+/* Apply / Cancel buttons (appear when row is in edit mode) */
+.lt__action-btn--apply {
+  border-color: var(--color-positive);
+  color: var(--color-positive);
+}
+.lt__action-btn--apply:hover  { background: var(--color-positive-dim); }
+
+.lt__action-btn--cancel {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+.lt__action-btn--cancel:hover { border-color: var(--color-text-muted); color: var(--color-text); }
+
+/* Dirty (unsaved) indicator dot in the actions column */
+.lt__dirty-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  flex-shrink: 0;
+}
+
+/* Row highlight when it has dirty (unsaved) state */
+.lt__row--dirty .lt__td {
+  background: rgba(240, 180, 41, 0.04);
+}
+
+/* Light mode overrides for edit inputs */
+[data-theme="light"] .lt__edit-input,
+[data-theme="light"] .lt__edit-select {
+  background: #fff;
+  color: var(--color-text);
+}
+
 /* ── Bank logo cell helper ──────────────────────────────────── */
 .lt__bank-cell {
   display: flex;
