@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 
@@ -16,7 +17,8 @@ import {
   createCreditCard, updateCreditCard,
   createLoan, updateLoan,
   createInvestment, updateInvestment,
-  settlePendingItem,
+  createPendingItem, settlePendingItem, deletePendingItem,
+  createProperty, updateProperty, deleteProperty,
 } from '../../api/ledger';
 
 import { LedgerTable, type RowVariant } from '../../components/LedgerTable';
@@ -28,8 +30,8 @@ import type {
   CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
   InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
-  PendingItemResponseDto,
-  PropertyResponseDto,
+  PendingItemResponseDto, CreatePendingItemRequest,
+  PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
   BudgetCategoryResponseDto,
 } from '../../types/ledger';
 
@@ -93,8 +95,164 @@ function BatchSaveBar({
   );
 }
 
+// ── Deal signal helper ────────────────────────────────────────
+function getDealSignal(p: PropertyResponseDto): 'green' | 'yellow' | 'red' {
+  const annualNOI = (p.monthlyRent - p.monthlyExpenses) * 12;
+  const capRate = p.purchasePrice > 0 ? (annualNOI / p.purchasePrice) * 100 : 0;
+  if (p.monthlyCashFlow > 0 && capRate >= 5) return 'green';
+  if (p.monthlyCashFlow > 0 || capRate >= 4) return 'yellow';
+  return 'red';
+}
+
+const SIGNAL_LABEL = { green: '🟢 Strong Deal', yellow: '🟡 Marginal', red: '🔴 Weak Deal' };
+
+// ── PropertyCard ──────────────────────────────────────────────
+function PropertyCard({
+  property,
+  onAnalyze,
+  onDelete,
+  onSaved,
+}: {
+  property: PropertyResponseDto;
+  onAnalyze: (p: PropertyResponseDto) => void;
+  onDelete: (p: PropertyResponseDto) => void;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<UpdatePropertyRequest>({});
+  const [saving, setSaving] = useState(false);
+  const signal = getDealSignal(property);
+
+  function startEdit() {
+    setDraft({
+      address: property.address,
+      purchasePrice: property.purchasePrice,
+      currentEstimatedValue: property.currentEstimatedValue,
+      loanBalance: property.loanBalance,
+      monthlyRent: property.monthlyRent,
+      monthlyExpenses: property.monthlyExpenses,
+    });
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await updateProperty(property.id, draft);
+      onSaved();
+      setEditing(false);
+      setDraft({});
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function field(label: string, key: keyof UpdatePropertyRequest, prefix = '') {
+    const raw = draft[key] as number;
+    return (
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">{label}</span>
+        <input
+          className="acc-prop-edit-input"
+          type="number"
+          step="0.01"
+          min="0"
+          value={raw === 0 ? '' : raw}
+          placeholder="0.00"
+          onChange={(e) => setDraft((d) => ({ ...d, [key]: Number(e.target.value) }))}
+        />
+        {prefix && <span className="acc-prop-edit-suffix">{prefix}</span>}
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="acc-prop-card acc-prop-card--editing">
+        <div className="acc-prop-row">
+          <span className="acc-prop-label">Address</span>
+          <input
+            className="acc-prop-edit-input acc-prop-edit-input--wide"
+            value={draft.address ?? ''}
+            placeholder="Street address"
+            onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
+          />
+        </div>
+        {field('Purchase ($)', 'purchasePrice')}
+        {field('Est. Value ($)', 'currentEstimatedValue')}
+        {field('Loan Balance ($)', 'loanBalance')}
+        {field('Monthly Rent ($)', 'monthlyRent')}
+        {field('Monthly Expenses ($)', 'monthlyExpenses')}
+        <div className="acc-prop-card-actions">
+          <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+            onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+          <button className="acc-btn acc-btn--ghost acc-btn--sm" type="button"
+            onClick={() => { setEditing(false); setDraft({}); }}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="acc-prop-card">
+      <div className="acc-prop-header">
+        <div className="acc-prop-address">{property.address}</div>
+        <span className={`acc-prop-signal acc-prop-signal--${signal}`}>{SIGNAL_LABEL[signal]}</span>
+      </div>
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">Est. Value</span>
+        <span>{formatCurrency(property.currentEstimatedValue)}</span>
+      </div>
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">Equity</span>
+        <span className="acc-amount acc-amount--positive">{formatCurrency(property.equity)}</span>
+      </div>
+      <div className="acc-prop-divider" />
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">Rent</span>
+        <span>{formatCurrency(property.monthlyRent)}/mo</span>
+      </div>
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">Expenses</span>
+        <span>{formatCurrency(property.monthlyExpenses)}/mo</span>
+      </div>
+      <div className="acc-prop-row">
+        <span className="acc-prop-label">Cash Flow</span>
+        <span className={`acc-amount ${property.monthlyCashFlow >= 0 ? 'acc-amount--positive' : 'acc-amount--negative'}`}>
+          {property.monthlyCashFlow >= 0 ? '+' : ''}{formatCurrency(property.monthlyCashFlow)}/mo
+        </span>
+      </div>
+      <div className="acc-prop-card-actions">
+        <button className="acc-btn acc-btn--ghost acc-btn--sm" type="button" onClick={startEdit}>Edit</button>
+        <button className="acc-btn acc-btn--primary acc-btn--sm" type="button" onClick={() => onAnalyze(property)}>
+          Analyze →
+        </button>
+        <button className="acc-btn acc-btn--danger acc-btn--sm" type="button" onClick={() => onDelete(property)}>
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── PropertiesPanel ───────────────────────────────────────────
-function PropertiesPanel({ properties, isLoading }: { properties: PropertyResponseDto[]; isLoading: boolean }) {
+function PropertiesPanel({
+  properties,
+  isLoading,
+  onAnalyze,
+  onDelete,
+  onSaved,
+}: {
+  properties: PropertyResponseDto[];
+  isLoading: boolean;
+  onAnalyze: (p: PropertyResponseDto) => void;
+  onDelete: (p: PropertyResponseDto) => void;
+  onSaved: () => void;
+}) {
   if (isLoading) {
     return (
       <div className="acc-props-grid">
@@ -108,40 +266,13 @@ function PropertiesPanel({ properties, isLoading }: { properties: PropertyRespon
   return (
     <div className="acc-props-grid">
       {properties.map((p) => (
-        <div key={p.id} className="acc-prop-card">
-          <div className="acc-prop-address">{p.address}</div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Purchase</span>
-            <span>{formatCurrency(p.purchasePrice)}</span>
-          </div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Est. Value</span>
-            <span>{formatCurrency(p.currentEstimatedValue)}</span>
-          </div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Loan</span>
-            <span className="acc-amount acc-amount--negative">{formatCurrency(p.loanBalance)}</span>
-          </div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Equity</span>
-            <span className="acc-amount acc-amount--positive">{formatCurrency(p.equity)}</span>
-          </div>
-          <div className="acc-prop-divider" />
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Rent</span>
-            <span>{formatCurrency(p.monthlyRent)}/mo</span>
-          </div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Expenses</span>
-            <span>{formatCurrency(p.monthlyExpenses)}/mo</span>
-          </div>
-          <div className="acc-prop-row">
-            <span className="acc-prop-label">Cash Flow</span>
-            <span className={`acc-amount ${p.monthlyCashFlow >= 0 ? 'acc-amount--positive' : 'acc-amount--negative'}`}>
-              {p.monthlyCashFlow >= 0 ? '+' : ''}{formatCurrency(p.monthlyCashFlow)}/mo
-            </span>
-          </div>
-        </div>
+        <PropertyCard
+          key={p.id}
+          property={p}
+          onAnalyze={onAnalyze}
+          onDelete={onDelete}
+          onSaved={onSaved}
+        />
       ))}
     </div>
   );
@@ -160,6 +291,7 @@ export function AccountingPage() {
   const { data: properties, isLoading: loadingProperties } = useProperties();
   const { data: categories = [] } = useBudgetCategories();
 
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
   // ── Bank Accounts ─────────────────────────────────────────
@@ -167,6 +299,10 @@ export function AccountingPage() {
   const [acctEditId, setAcctEditId] = useState<string | null>(null);
   const [acctDraft, setAcctDraft] = useState<Partial<UpdateBankAccountRequest>>({});
   const [acctEditBank, setAcctEditBank] = useState<BankDto | null>(null);
+  const acctDraftRef = useRef(acctDraft);
+  acctDraftRef.current = acctDraft;
+  const acctEditBankRef = useRef(acctEditBank);
+  acctEditBankRef.current = acctEditBank;
 
   const [showAddAcct, setShowAddAcct] = useState(false);
   const [addAcctForm, setAddAcctForm] = useState<CreateBankAccountRequest>({
@@ -176,8 +312,9 @@ export function AccountingPage() {
   const [addingAcct, setAddingAcct] = useState(false);
 
   function startAcctEdit(row: BankAccountResponseDto) {
+    const existing = dirtyAccounts.get(row.id);
     setAcctEditId(row.id);
-    setAcctDraft({
+    setAcctDraft(existing ?? {
       customLabel: row.customLabel,
       balance: row.balance,
       accountType: row.accountType,
@@ -190,12 +327,13 @@ export function AccountingPage() {
   }
 
   function applyAcctEdit(row: BankAccountResponseDto) {
+    const d = acctDraftRef.current;
     const update: UpdateBankAccountRequest = {
-      customLabel: acctDraft.customLabel ?? row.customLabel,
-      balance: acctDraft.balance ?? row.balance,
-      accountType: acctDraft.accountType ?? row.accountType,
-      bankId: 'bankId' in acctDraft ? acctDraft.bankId : row.bankId,
-      budgetCategoryId: 'budgetCategoryId' in acctDraft ? acctDraft.budgetCategoryId : row.budgetCategoryId,
+      customLabel: d.customLabel ?? row.customLabel,
+      balance: d.balance ?? row.balance,
+      accountType: d.accountType ?? row.accountType,
+      bankId: 'bankId' in d ? d.bankId : row.bankId,
+      budgetCategoryId: 'budgetCategoryId' in d ? d.budgetCategoryId : row.budgetCategoryId,
     };
     setDirtyAccounts((prev) => new Map(prev).set(row.id, update));
     setAcctEditId(null);
@@ -236,6 +374,10 @@ export function AccountingPage() {
   const [cardEditId, setCardEditId] = useState<string | null>(null);
   const [cardDraft, setCardDraft] = useState<Partial<UpdateCreditCardRequest>>({});
   const [cardEditBank, setCardEditBank] = useState<BankDto | null>(null);
+  const cardDraftRef = useRef(cardDraft);
+  cardDraftRef.current = cardDraft;
+  const cardEditBankRef = useRef(cardEditBank);
+  cardEditBankRef.current = cardEditBank;
 
   const [showAddCard, setShowAddCard] = useState(false);
   const [addCardForm, setAddCardForm] = useState<CreateCreditCardRequest>({
@@ -245,8 +387,9 @@ export function AccountingPage() {
   const [addingCard, setAddingCard] = useState(false);
 
   function startCardEdit(row: CreditCardResponseDto) {
+    const existing = dirtyCards.get(row.id);
     setCardEditId(row.id);
-    setCardDraft({
+    setCardDraft(existing ?? {
       customLabel: row.customLabel,
       balance: row.balance,
       creditLimit: row.creditLimit,
@@ -259,12 +402,13 @@ export function AccountingPage() {
   }
 
   function applyCardEdit(row: CreditCardResponseDto) {
+    const d = cardDraftRef.current;
     const update: UpdateCreditCardRequest = {
-      customLabel: cardDraft.customLabel ?? row.customLabel,
-      balance: cardDraft.balance ?? row.balance,
-      creditLimit: cardDraft.creditLimit ?? row.creditLimit,
-      apr: cardDraft.apr ?? row.apr,
-      bankId: 'bankId' in cardDraft ? cardDraft.bankId : row.bankId,
+      customLabel: d.customLabel ?? row.customLabel,
+      balance: d.balance ?? row.balance,
+      creditLimit: d.creditLimit ?? row.creditLimit,
+      apr: d.apr ?? row.apr,
+      bankId: 'bankId' in d ? d.bankId : row.bankId,
     };
     setDirtyCards((prev) => new Map(prev).set(row.id, update));
     setCardEditId(null);
@@ -297,6 +441,8 @@ export function AccountingPage() {
   const [dirtyLoans, setDirtyLoans] = useState<Map<string, UpdateLoanRequest>>(new Map());
   const [loanEditId, setLoanEditId] = useState<string | null>(null);
   const [loanDraft, setLoanDraft] = useState<Partial<UpdateLoanRequest>>({});
+  const loanDraftRef = useRef(loanDraft);
+  loanDraftRef.current = loanDraft;
 
   const [showAddLoan, setShowAddLoan] = useState(false);
   const [addLoanForm, setAddLoanForm] = useState<CreateLoanRequest>({
@@ -305,8 +451,9 @@ export function AccountingPage() {
   const [addingLoan, setAddingLoan] = useState(false);
 
   function startLoanEdit(row: LoanResponseDto) {
+    const existing = dirtyLoans.get(row.id);
     setLoanEditId(row.id);
-    setLoanDraft({
+    setLoanDraft(existing ?? {
       customLabel: row.customLabel,
       lenderName: row.lenderName,
       balance: row.balance,
@@ -316,12 +463,13 @@ export function AccountingPage() {
   }
 
   function applyLoanEdit(row: LoanResponseDto) {
+    const d = loanDraftRef.current;
     const update: UpdateLoanRequest = {
-      customLabel: loanDraft.customLabel ?? row.customLabel,
-      lenderName: loanDraft.lenderName ?? row.lenderName,
-      balance: loanDraft.balance ?? row.balance,
-      interestRate: loanDraft.interestRate ?? row.interestRate,
-      loanType: loanDraft.loanType ?? row.loanType,
+      customLabel: d.customLabel ?? row.customLabel,
+      lenderName: d.lenderName ?? row.lenderName,
+      balance: d.balance ?? row.balance,
+      interestRate: d.interestRate ?? row.interestRate,
+      loanType: d.loanType ?? row.loanType,
     };
     setDirtyLoans((prev) => new Map(prev).set(row.id, update));
     setLoanEditId(null);
@@ -352,6 +500,10 @@ export function AccountingPage() {
   const [investEditId, setInvestEditId] = useState<string | null>(null);
   const [investDraft, setInvestDraft] = useState<Partial<UpdateInvestmentRequest>>({});
   const [investEditBank, setInvestEditBank] = useState<BankDto | null>(null);
+  const investDraftRef = useRef(investDraft);
+  investDraftRef.current = investDraft;
+  const investEditBankRef = useRef(investEditBank);
+  investEditBankRef.current = investEditBank;
 
   const [showAddInvest, setShowAddInvest] = useState(false);
   const [addInvestForm, setAddInvestForm] = useState<CreateInvestmentRequest>({
@@ -361,8 +513,9 @@ export function AccountingPage() {
   const [addingInvest, setAddingInvest] = useState(false);
 
   function startInvestEdit(row: InvestmentResponseDto) {
+    const existing = dirtyInvestments.get(row.id);
     setInvestEditId(row.id);
-    setInvestDraft({
+    setInvestDraft(existing ?? {
       customLabel: row.customLabel,
       currentValue: row.currentValue,
       investmentType: row.investmentType,
@@ -375,12 +528,13 @@ export function AccountingPage() {
   }
 
   function applyInvestEdit(row: InvestmentResponseDto) {
+    const d = investDraftRef.current;
     const update: UpdateInvestmentRequest = {
-      customLabel: investDraft.customLabel ?? row.customLabel,
-      currentValue: investDraft.currentValue ?? row.currentValue,
-      investmentType: investDraft.investmentType ?? row.investmentType,
-      ticker: 'ticker' in investDraft ? investDraft.ticker : row.ticker,
-      bankId: 'bankId' in investDraft ? investDraft.bankId : row.bankId,
+      customLabel: d.customLabel ?? row.customLabel,
+      currentValue: d.currentValue ?? row.currentValue,
+      investmentType: d.investmentType ?? row.investmentType,
+      ticker: 'ticker' in d ? d.ticker : row.ticker,
+      bankId: 'bankId' in d ? d.bankId : row.bankId,
     };
     setDirtyInvestments((prev) => new Map(prev).set(row.id, update));
     setInvestEditId(null);
@@ -426,7 +580,7 @@ export function AccountingPage() {
   }
 
   // ── Account columns (inline editing) ─────────────────────
-  const accountColumns: ColumnDef<BankAccountResponseDto, unknown>[] = [
+  const accountColumns = useMemo<ColumnDef<BankAccountResponseDto, unknown>[]>(() => [
     {
       id: 'bank',
       header: 'Bank',
@@ -435,7 +589,7 @@ export function AccountingPage() {
         if (acctEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={acctEditBank}
+              value={acctEditBankRef.current}
               onChange={(bank) => {
                 setAcctEditBank(bank);
                 setAcctDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
@@ -453,13 +607,14 @@ export function AccountingPage() {
         if (acctEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-acct-label`}
               className="lt__edit-input lt__edit-input--wide"
-              value={acctDraft.customLabel ?? row.original.customLabel}
+              defaultValue={acctDraft.customLabel ?? row.original.customLabel}
               onChange={(e) => setAcctDraft((d) => ({ ...d, customLabel: e.target.value }))}
             />
           );
         }
-        return row.original.customLabel;
+        return dirtyAccounts.get(row.original.id)?.customLabel ?? row.original.customLabel;
       },
     },
     {
@@ -477,7 +632,7 @@ export function AccountingPage() {
             </select>
           );
         }
-        return row.original.accountType;
+        return dirtyAccounts.get(row.original.id)?.accountType ?? row.original.accountType;
       },
     },
     {
@@ -487,15 +642,17 @@ export function AccountingPage() {
         if (acctEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-acct-balance`}
               className="lt__edit-input lt__edit-input--number"
               type="number"
               step="0.01"
-              value={acctDraft.balance ?? row.original.balance}
+              defaultValue={acctDraft.balance ?? row.original.balance}
               onChange={(e) => setAcctDraft((d) => ({ ...d, balance: Number(e.target.value) }))}
             />
           );
         }
-        return <span className="acc-amount acc-amount--positive">{formatCurrency(row.original.balance)}</span>;
+        const bal = dirtyAccounts.get(row.original.id)?.balance ?? row.original.balance;
+        return <span className="acc-amount acc-amount--positive">{formatCurrency(bal)}</span>;
       },
     },
     {
@@ -516,7 +673,8 @@ export function AccountingPage() {
             </select>
           );
         }
-        const cat = categories.find((c) => c.id === row.original.budgetCategoryId);
+        const catId = dirtyAccounts.get(row.original.id)?.budgetCategoryId ?? row.original.budgetCategoryId;
+        const cat = categories.find((c) => c.id === catId);
         return <CategoryPill cat={cat} />;
       },
     },
@@ -548,10 +706,11 @@ export function AccountingPage() {
         );
       },
     },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [acctEditId, dirtyAccounts, categories]);
 
   // ── Credit card columns (inline editing) ─────────────────
-  const cardColumns: ColumnDef<CreditCardResponseDto, unknown>[] = [
+  const cardColumns = useMemo<ColumnDef<CreditCardResponseDto, unknown>[]>(() => [
     {
       id: 'bank',
       header: 'Bank',
@@ -560,7 +719,7 @@ export function AccountingPage() {
         if (cardEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={cardEditBank}
+              value={cardEditBankRef.current}
               onChange={(bank) => {
                 setCardEditBank(bank);
                 setCardDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
@@ -578,13 +737,14 @@ export function AccountingPage() {
         if (cardEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-card-label`}
               className="lt__edit-input lt__edit-input--wide"
-              value={cardDraft.customLabel ?? row.original.customLabel}
+              defaultValue={cardDraft.customLabel ?? row.original.customLabel}
               onChange={(e) => setCardDraft((d) => ({ ...d, customLabel: e.target.value }))}
             />
           );
         }
-        return row.original.customLabel;
+        return dirtyCards.get(row.original.id)?.customLabel ?? row.original.customLabel;
       },
     },
     {
@@ -594,15 +754,17 @@ export function AccountingPage() {
         if (cardEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-card-balance`}
               className="lt__edit-input lt__edit-input--number"
               type="number"
               step="0.01"
-              value={cardDraft.balance ?? row.original.balance}
+              defaultValue={cardDraft.balance ?? row.original.balance}
               onChange={(e) => setCardDraft((d) => ({ ...d, balance: Number(e.target.value) }))}
             />
           );
         }
-        return <span className="acc-amount acc-amount--negative">{formatCurrency(row.original.balance)}</span>;
+        const bal = dirtyCards.get(row.original.id)?.balance ?? row.original.balance;
+        return <span className="acc-amount acc-amount--negative">{formatCurrency(bal)}</span>;
       },
     },
     {
@@ -612,15 +774,16 @@ export function AccountingPage() {
         if (cardEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-card-limit`}
               className="lt__edit-input lt__edit-input--number"
               type="number"
               step="0.01"
-              value={cardDraft.creditLimit ?? row.original.creditLimit}
+              defaultValue={cardDraft.creditLimit ?? row.original.creditLimit}
               onChange={(e) => setCardDraft((d) => ({ ...d, creditLimit: Number(e.target.value) }))}
             />
           );
         }
-        return formatCurrency(row.original.creditLimit);
+        return formatCurrency(dirtyCards.get(row.original.id)?.creditLimit ?? row.original.creditLimit);
       },
     },
     {
@@ -630,26 +793,34 @@ export function AccountingPage() {
         if (cardEditId === row.original.id) {
           return (
             <input
+              key={`${row.original.id}-card-apr`}
               className="lt__edit-input lt__edit-input--number"
               type="number"
               step="0.01"
               placeholder="%"
               style={{ maxWidth: 72 }}
-              value={Number(((cardDraft.apr ?? row.original.apr) * 100).toFixed(2))}
+              defaultValue={Number(((cardDraft.apr ?? row.original.apr) * 100).toFixed(2))}
               onChange={(e) => setCardDraft((d) => ({ ...d, apr: Number(e.target.value) / 100 }))}
             />
           );
         }
-        return `${(row.original.apr * 100).toFixed(0)}%`;
+        const apr = dirtyCards.get(row.original.id)?.apr ?? row.original.apr;
+        return `${(apr * 100).toFixed(0)}%`;
       },
     },
     {
       id: 'utilization',
       header: 'Util %',
       enableSorting: false,
-      cell: ({ row }) => (
-        <UtilBadge balance={row.original.balance} limit={row.original.creditLimit} />
-      ),
+      cell: ({ row }) => {
+        const dirty = dirtyCards.get(row.original.id);
+        return (
+          <UtilBadge
+            balance={dirty?.balance ?? row.original.balance}
+            limit={dirty?.creditLimit ?? row.original.creditLimit}
+          />
+        );
+      },
     },
     {
       id: '_actions',
@@ -677,22 +848,23 @@ export function AccountingPage() {
         );
       },
     },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [cardEditId, dirtyCards]);
 
   // ── Loan columns (inline editing) ────────────────────────
-  const loanColumns: ColumnDef<LoanResponseDto, unknown>[] = [
+  const loanColumns = useMemo<ColumnDef<LoanResponseDto, unknown>[]>(() => [
     {
       accessorKey: 'customLabel',
       header: 'Label',
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--wide"
-              value={loanDraft.customLabel ?? row.original.customLabel}
+            <input key={`${row.original.id}-loan-label`} className="lt__edit-input lt__edit-input--wide"
+              defaultValue={loanDraft.customLabel ?? row.original.customLabel}
               onChange={(e) => setLoanDraft((d) => ({ ...d, customLabel: e.target.value }))} />
           );
         }
-        return row.original.customLabel;
+        return dirtyLoans.get(row.original.id)?.customLabel ?? row.original.customLabel;
       },
     },
     {
@@ -701,12 +873,12 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--wide"
-              value={loanDraft.lenderName ?? row.original.lenderName}
+            <input key={`${row.original.id}-loan-lender`} className="lt__edit-input lt__edit-input--wide"
+              defaultValue={loanDraft.lenderName ?? row.original.lenderName}
               onChange={(e) => setLoanDraft((d) => ({ ...d, lenderName: e.target.value }))} />
           );
         }
-        return row.original.lenderName;
+        return dirtyLoans.get(row.original.id)?.lenderName ?? row.original.lenderName;
       },
     },
     {
@@ -722,7 +894,7 @@ export function AccountingPage() {
             </select>
           );
         }
-        return row.original.loanType;
+        return dirtyLoans.get(row.original.id)?.loanType ?? row.original.loanType;
       },
     },
     {
@@ -731,12 +903,14 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
-              value={loanDraft.balance ?? row.original.balance}
+            <input key={`${row.original.id}-loan-balance`} className="lt__edit-input lt__edit-input--number"
+              type="number" step="0.01" min="0"
+              defaultValue={loanDraft.balance ?? row.original.balance}
               onChange={(e) => setLoanDraft((d) => ({ ...d, balance: Number(e.target.value) }))} />
           );
         }
-        return <span className="acc-amount acc-amount--negative">-{formatCurrency(row.original.balance)}</span>;
+        const bal = dirtyLoans.get(row.original.id)?.balance ?? row.original.balance;
+        return <span className="acc-amount acc-amount--negative">-{formatCurrency(bal)}</span>;
       },
     },
     {
@@ -745,13 +919,14 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
-              style={{ maxWidth: 72 }}
-              value={Number(((loanDraft.interestRate ?? row.original.interestRate) * 100).toFixed(3))}
+            <input key={`${row.original.id}-loan-rate`} className="lt__edit-input lt__edit-input--number"
+              type="number" step="0.01" min="0" style={{ maxWidth: 72 }}
+              defaultValue={Number(((loanDraft.interestRate ?? row.original.interestRate) * 100).toFixed(3))}
               onChange={(e) => setLoanDraft((d) => ({ ...d, interestRate: Number(e.target.value) / 100 }))} />
           );
         }
-        return `${(row.original.interestRate * 100).toFixed(2)}%`;
+        const rate = dirtyLoans.get(row.original.id)?.interestRate ?? row.original.interestRate;
+        return `${(rate * 100).toFixed(2)}%`;
       },
     },
     {
@@ -780,10 +955,11 @@ export function AccountingPage() {
         );
       },
     },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [loanEditId, dirtyLoans]);
 
   // ── Investment columns (inline editing) ──────────────────
-  const investmentColumns: ColumnDef<InvestmentResponseDto, unknown>[] = [
+  const investmentColumns = useMemo<ColumnDef<InvestmentResponseDto, unknown>[]>(() => [
     {
       id: 'bank',
       header: 'Institution',
@@ -792,7 +968,7 @@ export function AccountingPage() {
         if (investEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={investEditBank}
+              value={investEditBankRef.current}
               onChange={(bank) => {
                 setInvestEditBank(bank);
                 setInvestDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
@@ -809,12 +985,14 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (investEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--wide"
-              value={investDraft.customLabel ?? row.original.customLabel}
+            <input
+              key={`${row.original.id}-invest-label`}
+              className="lt__edit-input lt__edit-input--wide"
+              defaultValue={investDraft.customLabel ?? row.original.customLabel}
               onChange={(e) => setInvestDraft((d) => ({ ...d, customLabel: e.target.value }))} />
           );
         }
-        return row.original.customLabel;
+        return dirtyInvestments.get(row.original.id)?.customLabel ?? row.original.customLabel;
       },
     },
     {
@@ -830,7 +1008,7 @@ export function AccountingPage() {
             </select>
           );
         }
-        return row.original.investmentType;
+        return dirtyInvestments.get(row.original.id)?.investmentType ?? row.original.investmentType;
       },
     },
     {
@@ -839,12 +1017,16 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (investEditId === row.original.id) {
           return (
-            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
-              value={investDraft.currentValue ?? row.original.currentValue}
+            <input
+              key={`${row.original.id}-invest-value`}
+              className="lt__edit-input lt__edit-input--number"
+              type="number" step="0.01" min="0"
+              defaultValue={investDraft.currentValue ?? row.original.currentValue}
               onChange={(e) => setInvestDraft((d) => ({ ...d, currentValue: Number(e.target.value) }))} />
           );
         }
-        return <span className="acc-amount acc-amount--positive">{formatCurrency(row.original.currentValue)}</span>;
+        const val = dirtyInvestments.get(row.original.id)?.currentValue ?? row.original.currentValue;
+        return <span className="acc-amount acc-amount--positive">{formatCurrency(val)}</span>;
       },
     },
     {
@@ -853,15 +1035,18 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (investEditId === row.original.id) {
           return (
-            <input className="lt__edit-input"
+            <input
+              key={`${row.original.id}-invest-ticker`}
+              className="lt__edit-input"
               style={{ maxWidth: 80, textTransform: 'uppercase' }}
-              value={investDraft.ticker ?? row.original.ticker ?? ''}
+              defaultValue={investDraft.ticker ?? row.original.ticker ?? ''}
               placeholder="e.g. VTI"
               onChange={(e) => setInvestDraft((d) => ({ ...d, ticker: e.target.value || null }))} />
           );
         }
-        return row.original.ticker
-          ? <span className="acc-ticker">{row.original.ticker}</span>
+        const ticker = dirtyInvestments.get(row.original.id)?.ticker ?? row.original.ticker;
+        return ticker
+          ? <span className="acc-ticker">{ticker}</span>
           : <span className="acc-amount" style={{ opacity: 0.4 }}>—</span>;
       },
     },
@@ -891,7 +1076,29 @@ export function AccountingPage() {
         );
       },
     },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [investEditId, dirtyInvestments]);
+
+  // ── Pending Items add form ────────────────────────────────
+  const [showAddPending, setShowAddPending] = useState(false);
+  const [addPendingForm, setAddPendingForm] = useState<CreatePendingItemRequest>({
+    description: '', counterparty: null, amount: 0, dueDate: null,
+  });
+  const [addingPending, setAddingPending] = useState(false);
+
+  async function handleAddPending() {
+    if (!addPendingForm.description.trim()) return;
+    setAddingPending(true);
+    try {
+      await createPendingItem(addPendingForm);
+      qc.invalidateQueries({ queryKey: ['pending'] });
+      qc.invalidateQueries({ queryKey: ['networth'] });
+      setAddPendingForm({ description: '', counterparty: null, amount: 0, dueDate: null });
+      setShowAddPending(false);
+    } finally {
+      setAddingPending(false);
+    }
+  }
 
   // ── Pending columns ───────────────────────────────────────
   const pendingColumns: ColumnDef<PendingItemResponseDto, unknown>[] = [
@@ -909,13 +1116,48 @@ export function AccountingPage() {
         );
       },
     },
-    { accessorKey: 'dueDate', header: 'Due Date' },
+    {
+      accessorKey: 'dueDate',
+      header: 'Due Date',
+      cell: ({ getValue }) => {
+        const d = getValue<string | null>();
+        return d ? new Date(d).toLocaleDateString() : <span style={{ opacity: 0.4 }}>—</span>;
+      },
+    },
     {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ getValue }) => {
         const s = getValue<string>();
         return <span className={`acc-badge acc-badge--${s.toLowerCase()}`}>{s}</span>;
+      },
+    },
+    {
+      id: '_actions',
+      header: '',
+      enableSorting: false,
+      size: 110,
+      cell: ({ row }) => {
+        if (row.original.status === 'Settled') {
+          return (
+            <button
+              className="lt__action-btn lt__action-btn--delete"
+              type="button"
+              onClick={() => handleDeletePending(row.original)}
+            >
+              Delete
+            </button>
+          );
+        }
+        return (
+          <button
+            className="lt__action-btn lt__action-btn--settle"
+            type="button"
+            onClick={() => handleSettlePending(row.original)}
+          >
+            Settle
+          </button>
+        );
       },
     },
   ];
@@ -947,11 +1189,53 @@ export function AccountingPage() {
     currentValue: <span className="acc-amount acc-amount--positive">{formatCurrency((investments ?? []).reduce((s, i) => s + i.currentValue, 0))}</span>,
   };
 
+  // ── Properties add form ───────────────────────────────────
+  const LOAN_PRODUCT_TYPES = ['Conventional', 'FHA', 'VA', 'DSCR', 'Cash'];
+  const [showAddProperty, setShowAddProperty] = useState(false);
+  const [addPropertyForm, setAddPropertyForm] = useState<CreatePropertyRequest>({
+    address: '', purchasePrice: 0, currentEstimatedValue: 0, loanBalance: 0,
+    interestRate: 0, loanType: 'Conventional', monthlyRent: 0, monthlyExpenses: 0,
+  });
+  const [addingProperty, setAddingProperty] = useState(false);
+
+  async function handleAddProperty() {
+    if (!addPropertyForm.address.trim()) return;
+    setAddingProperty(true);
+    try {
+      await createProperty(addPropertyForm);
+      qc.invalidateQueries({ queryKey: ['properties'] });
+      qc.invalidateQueries({ queryKey: ['networth'] });
+      setAddPropertyForm({
+        address: '', purchasePrice: 0, currentEstimatedValue: 0, loanBalance: 0,
+        interestRate: 0, loanType: 'Conventional', monthlyRent: 0, monthlyExpenses: 0,
+      });
+      setShowAddProperty(false);
+    } finally {
+      setAddingProperty(false);
+    }
+  }
+
   async function handleSettlePending(row: PendingItemResponseDto) {
-    if (row.status === 'Settled') return;
     if (!confirm(`Mark "${row.description}" as settled?`)) return;
     await settlePendingItem(row.id);
     qc.invalidateQueries({ queryKey: ['pending'] });
+    qc.invalidateQueries({ queryKey: ['networth'] });
+  }
+
+  async function handleDeletePending(row: PendingItemResponseDto) {
+    if (!confirm(`Delete "${row.description}"?`)) return;
+    await deletePendingItem(row.id);
+    qc.invalidateQueries({ queryKey: ['pending'] });
+  }
+
+  function handleAnalyzeProperty(p: PropertyResponseDto) {
+    navigate('/real-estate', { state: { prefillProperty: p } });
+  }
+
+  async function handleDeleteProperty(p: PropertyResponseDto) {
+    if (!confirm(`Delete property at "${p.address}"? This cannot be undone.`)) return;
+    await deleteProperty(p.id);
+    qc.invalidateQueries({ queryKey: ['properties'] });
     qc.invalidateQueries({ queryKey: ['networth'] });
   }
 
@@ -1325,23 +1609,139 @@ export function AccountingPage() {
         <div className="acc-section">
           <div className="acc-section-header">
             <span className="acc-section-title">Pending Items</span>
+            <button className="acc-btn-add" type="button" onClick={() => setShowAddPending((v) => !v)}>
+              {showAddPending ? '✕ Cancel' : '+ Add'}
+            </button>
           </div>
           <LedgerTable
-            data={pending ?? []}
+            data={(pending ?? []).filter((p) => p.status !== 'Settled')}
             columns={pendingColumns}
             getRowVariant={(row) => row.amount >= 0 ? 'asset' : 'liability'}
             isLoading={loadingPending}
             emptyMessage="No pending items."
-            onEditRow={handleSettlePending}
           />
+          {showAddPending && (
+            <div className="acc-add-form">
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Description *"
+                  value={addPendingForm.description}
+                  onChange={(e) => setAddPendingForm((f) => ({ ...f, description: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Counterparty (optional)"
+                  value={addPendingForm.counterparty ?? ''}
+                  onChange={(e) => setAddPendingForm((f) => ({ ...f, counterparty: e.target.value || null }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Amount ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01"
+                  value={addPendingForm.amount === 0 ? '' : addPendingForm.amount}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPendingForm((f) => ({ ...f, amount: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Due Date</span>
+                <input className="acc-add-input" type="date"
+                  value={addPendingForm.dueDate ?? ''}
+                  onChange={(e) => setAddPendingForm((f) => ({ ...f, dueDate: e.target.value || null }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+                  onClick={handleAddPending} disabled={addingPending}>
+                  {addingPending ? 'Adding…' : 'Add Item'}
+                </button>
+              </label>
+            </div>
+          )}
         </div>
 
         {/* ── Properties ────────────────────────────────── */}
         <div className="acc-section">
           <div className="acc-section-header">
             <span className="acc-section-title">Properties</span>
+            <button className="acc-btn-add" type="button" onClick={() => setShowAddProperty((v) => !v)}>
+              {showAddProperty ? '✕ Cancel' : '+ Add'}
+            </button>
           </div>
-          <PropertiesPanel properties={properties ?? []} isLoading={loadingProperties} />
+          {showAddProperty && (
+            <div className="acc-add-form">
+              <label className="acc-add-field" style={{ flex: '2 1 200px' }}>
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Address *"
+                  value={addPropertyForm.address}
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, address: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Purchase ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.purchasePrice === 0 ? '' : addPropertyForm.purchasePrice}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, purchasePrice: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Est. Value ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.currentEstimatedValue === 0 ? '' : addPropertyForm.currentEstimatedValue}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, currentEstimatedValue: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Loan Balance ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.loanBalance === 0 ? '' : addPropertyForm.loanBalance}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, loanBalance: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Rate (%)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.interestRate === 0 ? '' : Number((addPropertyForm.interestRate * 100).toFixed(3))}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, interestRate: Number(e.target.value) / 100 }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <select className="acc-add-select" value={addPropertyForm.loanType}
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, loanType: e.target.value }))}>
+                  {LOAN_PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Rent/mo ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.monthlyRent === 0 ? '' : addPropertyForm.monthlyRent}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, monthlyRent: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Expenses/mo ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addPropertyForm.monthlyExpenses === 0 ? '' : addPropertyForm.monthlyExpenses}
+                  placeholder="0.00"
+                  onChange={(e) => setAddPropertyForm((f) => ({ ...f, monthlyExpenses: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+                  onClick={handleAddProperty} disabled={addingProperty}>
+                  {addingProperty ? 'Adding…' : 'Add Property'}
+                </button>
+              </label>
+            </div>
+          )}
+          <PropertiesPanel
+            properties={properties ?? []}
+            isLoading={loadingProperties}
+            onAnalyze={handleAnalyzeProperty}
+            onDelete={handleDeleteProperty}
+            onSaved={() => {
+              qc.invalidateQueries({ queryKey: ['properties'] });
+              qc.invalidateQueries({ queryKey: ['networth'] });
+            }}
+          />
         </div>
 
       </div>

@@ -7,7 +7,7 @@ export type {
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
   InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto, CreatePendingItemRequest, UpdatePendingItemRequest,
-  PropertyResponseDto,
+  PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
 } from './ledger';
 
 export interface SpendingTrendPointDto {

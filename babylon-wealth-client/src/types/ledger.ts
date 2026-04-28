@@ -177,3 +177,23 @@ export interface PropertyResponseDto {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreatePropertyRequest {
+  address: string;
+  purchasePrice: number;
+  currentEstimatedValue: number;
+  loanBalance: number;
+  interestRate: number;
+  loanType: string;
+  monthlyRent: number;
+  monthlyExpenses: number;
+}
+
+export interface UpdatePropertyRequest {
+  address?: string;
+  purchasePrice?: number;
+  currentEstimatedValue?: number;
+  loanBalance?: number;
+  monthlyRent?: number;
+  monthlyExpenses?: number;
+}

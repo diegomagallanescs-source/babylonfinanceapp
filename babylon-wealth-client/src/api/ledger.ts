@@ -5,7 +5,7 @@ import type {
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
   InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto, CreatePendingItemRequest,
-  PropertyResponseDto,
+  PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
 } from '../types/ledger';
 
 // ── Bank Accounts ────────────────────────────────────────────
@@ -91,8 +91,26 @@ export async function settlePendingItem(id: string): Promise<void> {
   await apiClient.patch(`/pending/${id}/settle`);
 }
 
+export async function deletePendingItem(id: string): Promise<void> {
+  await apiClient.delete(`/pending/${id}`);
+}
+
 // ── Properties ───────────────────────────────────────────────
 export async function fetchProperties(): Promise<PropertyResponseDto[]> {
   const { data } = await apiClient.get<PropertyResponseDto[]>('/properties');
   return data;
+}
+
+export async function createProperty(body: CreatePropertyRequest): Promise<PropertyResponseDto> {
+  const { data } = await apiClient.post<PropertyResponseDto>('/properties', body);
+  return data;
+}
+
+export async function updateProperty(id: string, body: UpdatePropertyRequest): Promise<PropertyResponseDto> {
+  const { data } = await apiClient.put<PropertyResponseDto>(`/properties/${id}`, body);
+  return data;
+}
+
+export async function deleteProperty(id: string): Promise<void> {
+  await apiClient.delete(`/properties/${id}`);
 }
