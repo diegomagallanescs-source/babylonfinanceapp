@@ -1,0 +1,182 @@
+.lt__wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
+
+.lt__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.lt__thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-bg-elevated);
+}
+
+.lt__th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.lt__th--sortable {
+  cursor: pointer;
+}
+
+.lt__th--sortable:hover {
+  color: var(--color-text);
+}
+
+.lt__sort-icon {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+/* ── Body rows ──────────────────────────────────────────────── */
+.lt__td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.lt__row:last-child .lt__td {
+  border-bottom: none;
+}
+
+.lt__row:hover .lt__td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* asset rows: subtle green left border */
+.lt__row--asset .lt__td:first-child {
+  border-left: 3px solid var(--color-positive);
+  padding-left: 11px;
+}
+
+/* liability rows: subtle red left border */
+.lt__row--liability .lt__td:first-child {
+  border-left: 3px solid var(--color-negative);
+  padding-left: 11px;
+}
+
+/* ── Totals row ─────────────────────────────────────────────── */
+.lt__totals-row {
+  background: var(--color-bg-elevated);
+}
+
+.lt__totals-cell {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Action buttons ─────────────────────────────────────────── */
+.lt__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.lt__action-btn {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-weight: 500;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.lt__action-btn--edit {
+  border-color: var(--color-border);
+  color: var(--color-text-sub);
+}
+
+.lt__action-btn--edit:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.lt__action-btn--delete {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.lt__action-btn--delete:hover {
+  border-color: var(--color-negative);
+  color: var(--color-negative);
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.lt__empty {
+  padding: 32px 14px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ── Loading skeleton ───────────────────────────────────────── */
+.lt__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.lt__skeleton-row {
+  height: 42px;
+  background: var(--color-bg-card);
+  animation: lt-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes lt-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Bank logo cell helper ──────────────────────────────────── */
+.lt__bank-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lt__bank-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.lt__bank-logo-placeholder {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gold-dim);
+  color: var(--color-gold);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}

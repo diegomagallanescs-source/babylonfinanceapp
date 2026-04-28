@@ -1,4 +1,13 @@
 export type { NetWorthResponseDto, NetWorthHistoryPointDto, AnnualSummaryDto } from './netWorth';
+export type {
+  BankDto,
+  BankAccountResponseDto, CreateBankAccountRequest, UpdateBankAccountRequest,
+  CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
+  LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
+  InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
+  PendingItemResponseDto, CreatePendingItemRequest, UpdatePendingItemRequest,
+  PropertyResponseDto,
+} from './ledger';
 
 export interface SpendingTrendPointDto {
   year: number;

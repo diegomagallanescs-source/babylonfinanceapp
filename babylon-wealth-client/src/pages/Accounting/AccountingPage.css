@@ -1,0 +1,293 @@
+/* ── Page shell ─────────────────────────────────────────────── */
+.acc-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.acc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.acc-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+/* ── NW summary bar ─────────────────────────────────────────── */
+.acc-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 24px;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.acc-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.acc-summary-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--color-border);
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+.acc-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.acc-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.acc-summary-value--positive { color: var(--color-positive); }
+.acc-summary-value--negative { color: var(--color-negative); }
+
+/* ── Side-tab layout ────────────────────────────────────────── */
+.acc-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* ── Side tabs ──────────────────────────────────────────────── */
+.acc-sidetabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.acc-sidetab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text-sub);
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.acc-sidetab:hover {
+  background: var(--color-bg-card);
+  color: var(--color-text);
+}
+
+.acc-sidetab--active {
+  background: var(--color-gold-dim);
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.acc-dirty-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  flex-shrink: 0;
+}
+
+/* ── Content panel ──────────────────────────────────────────── */
+.acc-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Amount colors ──────────────────────────────────────────── */
+.acc-amount { font-weight: 600; }
+.acc-amount--positive { color: var(--color-positive); }
+.acc-amount--negative { color: var(--color-negative); }
+
+/* ── Status badge ───────────────────────────────────────────── */
+.acc-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.acc-badge--pending  { background: var(--color-gold-dim);     color: var(--color-gold); }
+.acc-badge--settled  { background: var(--color-positive-dim); color: var(--color-positive); }
+
+/* ── Batch save bar ─────────────────────────────────────────── */
+.acc-batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.acc-batch-info {
+  font-size: 13px;
+  color: var(--color-gold);
+  font-weight: 500;
+}
+
+.acc-batch-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.acc-btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.acc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.acc-btn--primary {
+  background: var(--color-gold);
+  color: #07080F;
+}
+
+.acc-btn--primary:hover:not(:disabled) {
+  background: var(--color-gold-hover);
+}
+
+.acc-btn--ghost {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+}
+
+.acc-btn--ghost:hover:not(:disabled) {
+  border-color: var(--color-text-sub);
+  color: var(--color-text);
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.acc-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* ── Properties grid ────────────────────────────────────────── */
+.acc-props-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.acc-prop-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acc-prop-card--skeleton {
+  height: 220px;
+  animation: lt-pulse 1.4s ease-in-out infinite;
+}
+
+.acc-prop-address {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.acc-prop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.acc-prop-label {
+  color: var(--color-text-muted);
+}
+
+.acc-prop-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .acc-page {
+    padding: 16px;
+  }
+
+  .acc-layout {
+    flex-direction: column;
+  }
+
+  .acc-sidetabs {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding-bottom: 4px;
+  }
+
+  .acc-sidetab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .acc-summary-bar {
+    gap: 12px;
+  }
+
+  .acc-summary-divider {
+    display: none;
+  }
+}
