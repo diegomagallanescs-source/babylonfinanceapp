@@ -11,7 +11,7 @@ import {
 import type { NetWorthHistoryPointDto, TimePeriod } from '../types';
 import { TimePeriodSelector } from './TimePeriodSelector';
 import { formatCurrency, formatDelta, formatPercent } from '../utils/format';
-import { useNetWorthHistory } from '../hooks/useNetWorth';
+import { useNetWorthHistory } from '../hooks/useNetWorthHistory';
 import './NetWorthChart.css';
 
 interface Props {
