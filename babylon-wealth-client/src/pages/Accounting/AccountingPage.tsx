@@ -14,7 +14,9 @@ import { useBudgetCategories } from '../../hooks/useBudgetCategories';
 import {
   createAccount, updateAccount, deleteAccount,
   createCreditCard, updateCreditCard,
-  updateLoan, updateInvestment, settlePendingItem,
+  createLoan, updateLoan,
+  createInvestment, updateInvestment,
+  settlePendingItem,
 } from '../../api/ledger';
 
 import { LedgerTable, type RowVariant } from '../../components/LedgerTable';
@@ -24,8 +26,8 @@ import type {
   BankDto,
   BankAccountResponseDto, CreateBankAccountRequest, UpdateBankAccountRequest,
   CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
-  LoanResponseDto, UpdateLoanRequest,
-  InvestmentResponseDto, UpdateInvestmentRequest,
+  LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
+  InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto,
   PropertyResponseDto,
   BudgetCategoryResponseDto,
@@ -36,6 +38,8 @@ import './AccountingPage.css';
 
 // ── Constants ─────────────────────────────────────────────────
 const ACCT_TYPES = ['Checking', 'Savings', 'Money Market', 'CD', 'Other'];
+const LOAN_TYPES = ['Mortgage', 'Auto', 'Student', 'Personal', 'HELOC', 'Business', 'Other'];
+const INVESTMENT_TYPES = ['Brokerage', '401k', 'IRA', 'Roth IRA', 'HSA', 'Crypto', 'Other'];
 
 // ── Small display helpers ─────────────────────────────────────
 function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | null }) {
@@ -289,9 +293,121 @@ export function AccountingPage() {
     }
   }
 
-  // ── Loans / Investments dirty maps (no inline edit yet) ───
+  // ── Loans ─────────────────────────────────────────────────
   const [dirtyLoans, setDirtyLoans] = useState<Map<string, UpdateLoanRequest>>(new Map());
+  const [loanEditId, setLoanEditId] = useState<string | null>(null);
+  const [loanDraft, setLoanDraft] = useState<Partial<UpdateLoanRequest>>({});
+
+  const [showAddLoan, setShowAddLoan] = useState(false);
+  const [addLoanForm, setAddLoanForm] = useState<CreateLoanRequest>({
+    customLabel: '', lenderName: '', balance: 0, interestRate: 0, loanType: 'Mortgage',
+  });
+  const [addingLoan, setAddingLoan] = useState(false);
+
+  function startLoanEdit(row: LoanResponseDto) {
+    setLoanEditId(row.id);
+    setLoanDraft({
+      customLabel: row.customLabel,
+      lenderName: row.lenderName,
+      balance: row.balance,
+      interestRate: row.interestRate,
+      loanType: row.loanType,
+    });
+  }
+
+  function applyLoanEdit(row: LoanResponseDto) {
+    const update: UpdateLoanRequest = {
+      customLabel: loanDraft.customLabel ?? row.customLabel,
+      lenderName: loanDraft.lenderName ?? row.lenderName,
+      balance: loanDraft.balance ?? row.balance,
+      interestRate: loanDraft.interestRate ?? row.interestRate,
+      loanType: loanDraft.loanType ?? row.loanType,
+    };
+    setDirtyLoans((prev) => new Map(prev).set(row.id, update));
+    setLoanEditId(null);
+    setLoanDraft({});
+  }
+
+  function cancelLoanEdit() {
+    setLoanEditId(null);
+    setLoanDraft({});
+  }
+
+  async function handleAddLoan() {
+    if (!addLoanForm.customLabel.trim()) return;
+    setAddingLoan(true);
+    try {
+      await createLoan(addLoanForm);
+      qc.invalidateQueries({ queryKey: ['loans'] });
+      qc.invalidateQueries({ queryKey: ['networth'] });
+      setAddLoanForm({ customLabel: '', lenderName: '', balance: 0, interestRate: 0, loanType: 'Mortgage' });
+      setShowAddLoan(false);
+    } finally {
+      setAddingLoan(false);
+    }
+  }
+
+  // ── Investments ───────────────────────────────────────────
   const [dirtyInvestments, setDirtyInvestments] = useState<Map<string, UpdateInvestmentRequest>>(new Map());
+  const [investEditId, setInvestEditId] = useState<string | null>(null);
+  const [investDraft, setInvestDraft] = useState<Partial<UpdateInvestmentRequest>>({});
+  const [investEditBank, setInvestEditBank] = useState<BankDto | null>(null);
+
+  const [showAddInvest, setShowAddInvest] = useState(false);
+  const [addInvestForm, setAddInvestForm] = useState<CreateInvestmentRequest>({
+    customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null,
+  });
+  const [addInvestBank, setAddInvestBank] = useState<BankDto | null>(null);
+  const [addingInvest, setAddingInvest] = useState(false);
+
+  function startInvestEdit(row: InvestmentResponseDto) {
+    setInvestEditId(row.id);
+    setInvestDraft({
+      customLabel: row.customLabel,
+      currentValue: row.currentValue,
+      investmentType: row.investmentType,
+      ticker: row.ticker,
+      bankId: row.bankId,
+    });
+    setInvestEditBank(
+      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
+    );
+  }
+
+  function applyInvestEdit(row: InvestmentResponseDto) {
+    const update: UpdateInvestmentRequest = {
+      customLabel: investDraft.customLabel ?? row.customLabel,
+      currentValue: investDraft.currentValue ?? row.currentValue,
+      investmentType: investDraft.investmentType ?? row.investmentType,
+      ticker: 'ticker' in investDraft ? investDraft.ticker : row.ticker,
+      bankId: 'bankId' in investDraft ? investDraft.bankId : row.bankId,
+    };
+    setDirtyInvestments((prev) => new Map(prev).set(row.id, update));
+    setInvestEditId(null);
+    setInvestDraft({});
+    setInvestEditBank(null);
+  }
+
+  function cancelInvestEdit() {
+    setInvestEditId(null);
+    setInvestDraft({});
+    setInvestEditBank(null);
+  }
+
+  async function handleAddInvestment() {
+    if (!addInvestForm.customLabel.trim()) return;
+    setAddingInvest(true);
+    try {
+      await createInvestment({ ...addInvestForm, bankId: addInvestBank?.id ?? null });
+      qc.invalidateQueries({ queryKey: ['investments'] });
+      qc.invalidateQueries({ queryKey: ['networth'] });
+      setAddInvestForm({ customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null });
+      setAddInvestBank(null);
+      setShowAddInvest(false);
+    } finally {
+      setAddingInvest(false);
+    }
+  }
 
   // ── Generic batch save ────────────────────────────────────
   async function saveAll(
@@ -563,43 +679,218 @@ export function AccountingPage() {
     },
   ];
 
-  // ── Loan columns ──────────────────────────────────────────
+  // ── Loan columns (inline editing) ────────────────────────
   const loanColumns: ColumnDef<LoanResponseDto, unknown>[] = [
-    { accessorKey: 'customLabel', header: 'Label' },
-    { accessorKey: 'lenderName', header: 'Lender' },
+    {
+      accessorKey: 'customLabel',
+      header: 'Label',
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--wide"
+              value={loanDraft.customLabel ?? row.original.customLabel}
+              onChange={(e) => setLoanDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+          );
+        }
+        return row.original.customLabel;
+      },
+    },
+    {
+      accessorKey: 'lenderName',
+      header: 'Lender',
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--wide"
+              value={loanDraft.lenderName ?? row.original.lenderName}
+              onChange={(e) => setLoanDraft((d) => ({ ...d, lenderName: e.target.value }))} />
+          );
+        }
+        return row.original.lenderName;
+      },
+    },
+    {
+      accessorKey: 'loanType',
+      header: 'Type',
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <select className="lt__edit-select"
+              value={loanDraft.loanType ?? row.original.loanType}
+              onChange={(e) => setLoanDraft((d) => ({ ...d, loanType: e.target.value }))}>
+              {LOAN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          );
+        }
+        return row.original.loanType;
+      },
+    },
     {
       accessorKey: 'balance',
       header: 'Balance',
-      cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--negative">-{formatCurrency(getValue<number>())}</span>
-      ),
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
+              value={loanDraft.balance ?? row.original.balance}
+              onChange={(e) => setLoanDraft((d) => ({ ...d, balance: Number(e.target.value) }))} />
+          );
+        }
+        return <span className="acc-amount acc-amount--negative">-{formatCurrency(row.original.balance)}</span>;
+      },
     },
     {
       accessorKey: 'interestRate',
       header: 'Rate',
-      cell: ({ getValue }) => `${(getValue<number>() * 100).toFixed(2)}%`,
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
+              style={{ maxWidth: 72 }}
+              value={Number(((loanDraft.interestRate ?? row.original.interestRate) * 100).toFixed(3))}
+              onChange={(e) => setLoanDraft((d) => ({ ...d, interestRate: Number(e.target.value) / 100 }))} />
+          );
+        }
+        return `${(row.original.interestRate * 100).toFixed(2)}%`;
+      },
     },
-    { accessorKey: 'loanType', header: 'Type' },
+    {
+      id: '_actions',
+      header: '',
+      enableSorting: false,
+      size: 130,
+      cell: ({ row }) => {
+        if (loanEditId === row.original.id) {
+          return (
+            <div className="lt__actions">
+              <button className="lt__action-btn lt__action-btn--apply" type="button"
+                onClick={() => applyLoanEdit(row.original)}>Apply</button>
+              <button className="lt__action-btn lt__action-btn--cancel" type="button"
+                onClick={cancelLoanEdit}>Cancel</button>
+            </div>
+          );
+        }
+        const isDirty = dirtyLoans.has(row.original.id);
+        return (
+          <div className="lt__actions">
+            {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
+            <button className="lt__action-btn lt__action-btn--edit" type="button"
+              onClick={() => startLoanEdit(row.original)}>Edit</button>
+          </div>
+        );
+      },
+    },
   ];
 
-  // ── Investment columns ────────────────────────────────────
+  // ── Investment columns (inline editing) ──────────────────
   const investmentColumns: ColumnDef<InvestmentResponseDto, unknown>[] = [
     {
       id: 'bank',
       header: 'Institution',
       accessorKey: 'bankName',
-      cell: ({ row }) => <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />,
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <BankSearchInput
+              value={investEditBank}
+              onChange={(bank) => {
+                setInvestEditBank(bank);
+                setInvestDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
+              }}
+            />
+          );
+        }
+        return <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />;
+      },
     },
-    { accessorKey: 'customLabel', header: 'Label' },
+    {
+      accessorKey: 'customLabel',
+      header: 'Label',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--wide"
+              value={investDraft.customLabel ?? row.original.customLabel}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+          );
+        }
+        return row.original.customLabel;
+      },
+    },
+    {
+      accessorKey: 'investmentType',
+      header: 'Type',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <select className="lt__edit-select"
+              value={investDraft.investmentType ?? row.original.investmentType}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, investmentType: e.target.value }))}>
+              {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          );
+        }
+        return row.original.investmentType;
+      },
+    },
     {
       accessorKey: 'currentValue',
       header: 'Value',
-      cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--positive">{formatCurrency(getValue<number>())}</span>
-      ),
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input lt__edit-input--number" type="number" step="0.01" min="0"
+              value={investDraft.currentValue ?? row.original.currentValue}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, currentValue: Number(e.target.value) }))} />
+          );
+        }
+        return <span className="acc-amount acc-amount--positive">{formatCurrency(row.original.currentValue)}</span>;
+      },
     },
-    { accessorKey: 'ticker', header: 'Ticker' },
-    { accessorKey: 'investmentType', header: 'Type' },
+    {
+      accessorKey: 'ticker',
+      header: 'Ticker',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <input className="lt__edit-input"
+              style={{ maxWidth: 80, textTransform: 'uppercase' }}
+              value={investDraft.ticker ?? row.original.ticker ?? ''}
+              placeholder="e.g. VTI"
+              onChange={(e) => setInvestDraft((d) => ({ ...d, ticker: e.target.value || null }))} />
+          );
+        }
+        return row.original.ticker
+          ? <span className="acc-ticker">{row.original.ticker}</span>
+          : <span className="acc-amount" style={{ opacity: 0.4 }}>—</span>;
+      },
+    },
+    {
+      id: '_actions',
+      header: '',
+      enableSorting: false,
+      size: 130,
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <div className="lt__actions">
+              <button className="lt__action-btn lt__action-btn--apply" type="button"
+                onClick={() => applyInvestEdit(row.original)}>Apply</button>
+              <button className="lt__action-btn lt__action-btn--cancel" type="button"
+                onClick={cancelInvestEdit}>Cancel</button>
+            </div>
+          );
+        }
+        const isDirty = dirtyInvestments.has(row.original.id);
+        return (
+          <div className="lt__actions">
+            {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
+            <button className="lt__action-btn lt__action-btn--edit" type="button"
+              onClick={() => startInvestEdit(row.original)}>Edit</button>
+          </div>
+        );
+      },
+    },
   ];
 
   // ── Pending columns ───────────────────────────────────────
@@ -880,15 +1171,63 @@ export function AccountingPage() {
         <div className="acc-section">
           <div className="acc-section-header">
             <span className="acc-section-title">Loans</span>
+            <button className="acc-btn-add" type="button" onClick={() => setShowAddLoan((v) => !v)}>
+              {showAddLoan ? '✕ Cancel' : '+ Add'}
+            </button>
           </div>
           <LedgerTable
             data={loans ?? []}
             columns={loanColumns}
             getRowVariant={() => 'liability' as RowVariant}
+            getRowClass={(row) => dirtyLoans.has(row.id) ? 'lt__row--dirty' : ''}
             totals={loanTotals}
             isLoading={loadingLoans}
             emptyMessage="No loans."
           />
+          {showAddLoan && (
+            <div className="acc-add-form">
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Label *"
+                  value={addLoanForm.customLabel}
+                  onChange={(e) => setAddLoanForm((f) => ({ ...f, customLabel: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Lender"
+                  value={addLoanForm.lenderName}
+                  onChange={(e) => setAddLoanForm((f) => ({ ...f, lenderName: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <select className="acc-add-select" value={addLoanForm.loanType}
+                  onChange={(e) => setAddLoanForm((f) => ({ ...f, loanType: e.target.value }))}>
+                  {LOAN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Balance ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addLoanForm.balance === 0 ? '' : addLoanForm.balance}
+                  placeholder="0.00"
+                  onChange={(e) => setAddLoanForm((f) => ({ ...f, balance: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Rate (%)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addLoanForm.interestRate === 0 ? '' : Number((addLoanForm.interestRate * 100).toFixed(3))}
+                  placeholder="0.00"
+                  onChange={(e) => setAddLoanForm((f) => ({ ...f, interestRate: Number(e.target.value) / 100 }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+                  onClick={handleAddLoan} disabled={addingLoan}>
+                  {addingLoan ? 'Adding…' : 'Add Loan'}
+                </button>
+              </label>
+            </div>
+          )}
           {dirtyLoans.size > 0 && (
             <BatchSaveBar
               dirtyCount={dirtyLoans.size}
@@ -899,7 +1238,7 @@ export function AccountingPage() {
                 () => setDirtyLoans(new Map()),
                 ['loans'],
               )}
-              onDiscard={() => setDirtyLoans(new Map())}
+              onDiscard={() => { setDirtyLoans(new Map()); cancelLoanEdit(); }}
             />
           )}
         </div>
@@ -908,15 +1247,65 @@ export function AccountingPage() {
         <div className="acc-section">
           <div className="acc-section-header">
             <span className="acc-section-title">Investments</span>
+            <button className="acc-btn-add" type="button" onClick={() => setShowAddInvest((v) => !v)}>
+              {showAddInvest ? '✕ Cancel' : '+ Add'}
+            </button>
           </div>
           <LedgerTable
             data={investments ?? []}
             columns={investmentColumns}
             getRowVariant={() => 'asset' as RowVariant}
+            getRowClass={(row) => dirtyInvestments.has(row.id) ? 'lt__row--dirty' : ''}
             totals={investmentTotals}
             isLoading={loadingInvestments}
             emptyMessage="No investments."
           />
+          {showAddInvest && (
+            <div className="acc-add-form">
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <BankSearchInput
+                  value={addInvestBank}
+                  onChange={(b) => { setAddInvestBank(b); setAddInvestForm((f) => ({ ...f, bankId: b?.id ?? null })); }}
+                  placeholder="Institution (optional)"
+                />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Label *"
+                  value={addInvestForm.customLabel}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, customLabel: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <select className="acc-add-select" value={addInvestForm.investmentType}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, investmentType: e.target.value }))}>
+                  {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Value ($)</span>
+                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
+                  value={addInvestForm.currentValue === 0 ? '' : addInvestForm.currentValue}
+                  placeholder="0.00"
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, currentValue: Number(e.target.value) }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input acc-add-input--ticker" placeholder="Ticker (optional)"
+                  value={addInvestForm.ticker ?? ''}
+                  style={{ textTransform: 'uppercase' }}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, ticker: e.target.value || null }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+                  onClick={handleAddInvestment} disabled={addingInvest}>
+                  {addingInvest ? 'Adding…' : 'Add Investment'}
+                </button>
+              </label>
+            </div>
+          )}
           {dirtyInvestments.size > 0 && (
             <BatchSaveBar
               dirtyCount={dirtyInvestments.size}
@@ -927,7 +1316,7 @@ export function AccountingPage() {
                 () => setDirtyInvestments(new Map()),
                 ['investments'],
               )}
-              onDiscard={() => setDirtyInvestments(new Map())}
+              onDiscard={() => { setDirtyInvestments(new Map()); cancelInvestEdit(); }}
             />
           )}
         </div>
