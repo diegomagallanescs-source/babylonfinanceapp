@@ -98,7 +98,12 @@
       "Bash(pkill -f \"dotnet.*BabylonWealth\")",
       "Bash(grep -E \"\\\\.\\(cs|json\\)$\")",
       "Bash(taskkill /PID 35516 /F)",
-      "PowerShell(Stop-Process -Id 35516 -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Id 35516 -Force -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\BabylonWealth.Core\\\\obj\\\\Debug\\\\net8.0\\\\BabylonWealth.Core.AssemblyInfoInputs.cache\" -ErrorAction SilentlyContinue)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(timeout 10 npm run dev)"
     ]
   }
 }

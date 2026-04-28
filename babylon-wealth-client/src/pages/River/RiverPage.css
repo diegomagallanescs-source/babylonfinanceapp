@@ -1,0 +1,115 @@
+.river-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 16px 32px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.river-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}
+
+.river-page__greeting {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.river-page__name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+
+/* Card container */
+.river-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.river-card__loading {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* Liquid / Total toggle */
+.river-card__toggle {
+  display: flex;
+  gap: 4px;
+  align-self: flex-start;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.toggle-btn {
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: all 0.15s ease;
+}
+
+.toggle-btn:hover { color: var(--color-text); }
+.toggle-btn--active {
+  background: var(--color-bg-surface);
+  color: var(--color-gold);
+}
+
+/* Stats row */
+.river-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border);
+}
+
+.river-card__stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.river-card__stat:first-child { padding-left: 0; }
+
+.river-card__stat-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.river-card__stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.river-card__stat-value--pos { color: var(--color-positive); }
+.river-card__stat-value--neg { color: var(--color-negative); }
+
+.river-card__stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}

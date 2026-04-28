@@ -18,4 +18,7 @@ public interface ISpendingRepository : IBaseRepository<SpendingTransaction, Guid
     /// Returns category ID + total — the raw data for BudgetAnalyticsService to compare against targets.
     /// </summary>
     Task<IEnumerable<(Guid CategoryId, decimal Total)>> GetCategoryTotalsForMonthAsync(Guid userId, int month, int year);
+
+    /// <summary>Monthly spending totals between two dates — feeds the home screen money-flow chart.</summary>
+    Task<IEnumerable<(int Year, int Month, decimal Total)>> GetMonthlyTrendAsync(Guid userId, DateTime from, DateTime to);
 }

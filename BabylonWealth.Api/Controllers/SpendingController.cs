@@ -121,6 +121,25 @@ public class SpendingController : ControllerBase
         return Ok(analytics);
     }
 
+    /// <summary>Returns monthly spending totals between two dates — used by the home screen money-flow chart.</summary>
+    /// <param name="from">Range start (UTC). Defaults to one year ago.</param>
+    /// <param name="to">Range end (UTC). Defaults to now.</param>
+    /// <response code="200">List of monthly totals.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpGet("trend")]
+    [ProducesResponseType(typeof(IEnumerable<SpendingTrendPointDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IEnumerable<SpendingTrendPointDto>>> GetTrend(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
+    {
+        var userId = GetUserId();
+        var effectiveFrom = DateTime.SpecifyKind(from ?? DateTime.UtcNow.AddYears(-1), DateTimeKind.Utc);
+        var effectiveTo   = DateTime.SpecifyKind(to   ?? DateTime.UtcNow,             DateTimeKind.Utc);
+        var trend = await _spendingService.GetMonthlyTrendAsync(userId, effectiveFrom, effectiveTo);
+        return Ok(trend);
+    }
+
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

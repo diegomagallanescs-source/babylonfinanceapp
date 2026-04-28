@@ -53,4 +53,18 @@ public class SpendingRepository : BaseRepository<SpendingTransaction, Guid>, ISp
 
         return rows.Select(r => (r.CategoryId, r.Total));
     }
+
+    public async Task<IEnumerable<(int Year, int Month, decimal Total)>> GetMonthlyTrendAsync(Guid userId, DateTime from, DateTime to)
+    {
+        var rows = await _dbSet
+            .Where(s => s.UserId == userId &&
+                        s.TransactionDate >= from &&
+                        s.TransactionDate <= to)
+            .GroupBy(s => new { s.TransactionDate.Year, s.TransactionDate.Month })
+            .Select(g => new { g.Key.Year, g.Key.Month, Total = g.Sum(s => s.Amount) })
+            .OrderBy(r => r.Year).ThenBy(r => r.Month)
+            .ToListAsync();
+
+        return rows.Select(r => (r.Year, r.Month, r.Total));
+    }
 }

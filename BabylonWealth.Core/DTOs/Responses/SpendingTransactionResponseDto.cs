@@ -1,5 +1,14 @@
 namespace BabylonWealth.Core.DTOs.Responses;
 
+/// <summary>One month's total spending — returned by GET /spending/trend.</summary>
+public record SpendingTrendPointDto
+{
+    public int Year { get; init; }
+    public int Month { get; init; }
+    public decimal Total { get; init; }
+    public string Label => new DateTime(Year, Month, 1).ToString("MMM yyyy");
+}
+
 public record SpendingTransactionResponseDto
 {
     public Guid Id { get; init; }

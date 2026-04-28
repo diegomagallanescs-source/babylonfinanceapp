@@ -22,4 +22,7 @@ public interface ISpendingService
 
     Task<IEnumerable<SpendingTransactionResponseDto>> GetByAccountAsync(Guid userId, Guid accountId);
     Task<IEnumerable<SpendingTransactionResponseDto>> GetByCategoryAsync(Guid userId, Guid categoryId);
+
+    /// <summary>Monthly spending totals for a date range — feeds the home screen money-flow chart.</summary>
+    Task<IEnumerable<SpendingTrendPointDto>> GetMonthlyTrendAsync(Guid userId, DateTime from, DateTime to);
 }

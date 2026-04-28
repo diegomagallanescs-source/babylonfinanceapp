@@ -64,6 +64,12 @@ public class SpendingService : ISpendingService
         return transactions.Select(ToDto);
     }
 
+    public async Task<IEnumerable<SpendingTrendPointDto>> GetMonthlyTrendAsync(Guid userId, DateTime from, DateTime to)
+    {
+        var rows = await _spendingRepo.GetMonthlyTrendAsync(userId, from, to);
+        return rows.Select(r => new SpendingTrendPointDto { Year = r.Year, Month = r.Month, Total = r.Total });
+    }
+
     private static SpendingTransactionResponseDto ToDto(SpendingTransaction t) => new()
     {
         Id = t.Id,
