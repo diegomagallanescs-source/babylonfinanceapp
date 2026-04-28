@@ -32,7 +32,7 @@ import type {
 import { formatCurrency } from '../../utils/format';
 import './AccountingPage.css';
 
-// ── Helpers ──────────────────────────────────────────────────
+// ── Bank logo cell ────────────────────────────────────────────
 function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | null }) {
   const label = name ?? 'Unknown';
   return (
@@ -47,20 +47,8 @@ function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | nu
   );
 }
 
-type Tab = 'accounts' | 'cards' | 'loans' | 'investments' | 'pending' | 'properties';
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'accounts',    label: 'Bank Accounts' },
-  { key: 'cards',       label: 'Credit Cards' },
-  { key: 'loans',       label: 'Loans' },
-  { key: 'investments', label: 'Investments' },
-  { key: 'pending',     label: 'Pending' },
-  { key: 'properties',  label: 'Properties' },
-];
-
-// ── Main component ───────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────
 export function AccountingPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('accounts');
   const qc = useQueryClient();
 
   const { data: nw } = useNetWorth();
@@ -76,54 +64,30 @@ export function AccountingPage() {
   const [dirtyCards, setDirtyCards]             = useState<Map<string, UpdateCreditCardRequest>>(new Map());
   const [dirtyLoans, setDirtyLoans]             = useState<Map<string, UpdateLoanRequest>>(new Map());
   const [dirtyInvestments, setDirtyInvestments] = useState<Map<string, UpdateInvestmentRequest>>(new Map());
-
   const [saving, setSaving] = useState(false);
 
-  // ── Save handlers ────────────────────────────────────────
-  async function saveAccounts() {
+  // ── Save handlers ─────────────────────────────────────────
+  async function saveAll(
+    map: Map<string, unknown>,
+    mutateFn: (id: string, ch: unknown) => Promise<unknown>,
+    clearFn: () => void,
+    queryKeys: string[],
+  ) {
+    if (map.size === 0) return;
     setSaving(true);
-    await Promise.all([...dirtyAccounts.entries()].map(([id, ch]) => updateAccount(id, ch)));
-    setDirtyAccounts(new Map());
-    qc.invalidateQueries({ queryKey: ['accounts'] });
+    await Promise.all([...map.entries()].map(([id, ch]) => mutateFn(id, ch)));
+    clearFn();
+    queryKeys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
     qc.invalidateQueries({ queryKey: ['networth'] });
     setSaving(false);
   }
 
-  async function saveCards() {
-    setSaving(true);
-    await Promise.all([...dirtyCards.entries()].map(([id, ch]) => updateCreditCard(id, ch)));
-    setDirtyCards(new Map());
-    qc.invalidateQueries({ queryKey: ['creditcards'] });
-    qc.invalidateQueries({ queryKey: ['networth'] });
-    setSaving(false);
-  }
-
-  async function saveLoans() {
-    setSaving(true);
-    await Promise.all([...dirtyLoans.entries()].map(([id, ch]) => updateLoan(id, ch)));
-    setDirtyLoans(new Map());
-    qc.invalidateQueries({ queryKey: ['loans'] });
-    qc.invalidateQueries({ queryKey: ['networth'] });
-    setSaving(false);
-  }
-
-  async function saveInvestments() {
-    setSaving(true);
-    await Promise.all([...dirtyInvestments.entries()].map(([id, ch]) => updateInvestment(id, ch)));
-    setDirtyInvestments(new Map());
-    qc.invalidateQueries({ queryKey: ['investments'] });
-    qc.invalidateQueries({ queryKey: ['networth'] });
-    setSaving(false);
-  }
-
-  // ── Column definitions ───────────────────────────────────
+  // ── Column definitions ────────────────────────────────────
   const accountColumns = useMemo<ColumnDef<BankAccountResponseDto, unknown>[]>(() => [
     {
       accessorKey: 'bankName',
       header: 'Bank',
-      cell: ({ row }) => (
-        <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />
-      ),
+      cell: ({ row }) => <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />,
     },
     { accessorKey: 'customLabel', header: 'Label' },
     { accessorKey: 'accountType', header: 'Type' },
@@ -131,42 +95,35 @@ export function AccountingPage() {
       accessorKey: 'balance',
       header: 'Balance',
       cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--positive">
-          {formatCurrency(getValue<number>())}
-        </span>
+        <span className="acc-amount acc-amount--positive">{formatCurrency(getValue<number>())}</span>
       ),
     },
   ], []);
 
-  const cardColumns = useMemo<ColumnDef<CreditCardResponseDto, unknown>[]>(() => [
+  const businessCardColumns = useMemo<ColumnDef<CreditCardResponseDto, unknown>[]>(() => [
     {
       accessorKey: 'bankName',
-      header: 'Bank',
-      cell: ({ row }) => (
-        <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />
-      ),
+      header: 'Card',
+      cell: ({ row }) => <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />,
     },
     { accessorKey: 'customLabel', header: 'Label' },
     {
       accessorKey: 'balance',
       header: 'Balance',
       cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--negative">
-          {formatCurrency(getValue<number>())}
-        </span>
+        <span className="acc-amount acc-amount--negative">{formatCurrency(getValue<number>())}</span>
       ),
-    },
-    {
-      accessorKey: 'creditLimit',
-      header: 'Limit',
-      cell: ({ getValue }) => formatCurrency(getValue<number>()),
     },
     {
       accessorKey: 'apr',
       header: 'APR',
-      cell: ({ getValue }) => `${getValue<number>().toFixed(2)}%`,
+      cell: ({ getValue }) => `${(getValue<number>() * 100).toFixed(0)}%`,
     },
-    { accessorKey: 'cardType', header: 'Type' },
+    {
+      accessorKey: 'creditLimit',
+      header: 'Credit Limit',
+      cell: ({ getValue }) => formatCurrency(getValue<number>()),
+    },
   ], []);
 
   const loanColumns = useMemo<ColumnDef<LoanResponseDto, unknown>[]>(() => [
@@ -176,15 +133,13 @@ export function AccountingPage() {
       accessorKey: 'balance',
       header: 'Balance',
       cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--negative">
-          {formatCurrency(getValue<number>())}
-        </span>
+        <span className="acc-amount acc-amount--negative">-{formatCurrency(getValue<number>())}</span>
       ),
     },
     {
       accessorKey: 'interestRate',
       header: 'Rate',
-      cell: ({ getValue }) => `${getValue<number>().toFixed(2)}%`,
+      cell: ({ getValue }) => `${(getValue<number>() * 100).toFixed(2)}%`,
     },
     { accessorKey: 'loanType', header: 'Type' },
   ], []);
@@ -193,18 +148,14 @@ export function AccountingPage() {
     {
       accessorKey: 'bankName',
       header: 'Institution',
-      cell: ({ row }) => (
-        <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />
-      ),
+      cell: ({ row }) => <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />,
     },
     { accessorKey: 'customLabel', header: 'Label' },
     {
       accessorKey: 'currentValue',
       header: 'Value',
       cell: ({ getValue }) => (
-        <span className="acc-amount acc-amount--positive">
-          {formatCurrency(getValue<number>())}
-        </span>
+        <span className="acc-amount acc-amount--positive">{formatCurrency(getValue<number>())}</span>
       ),
     },
     { accessorKey: 'ticker', header: 'Ticker' },
@@ -237,72 +188,39 @@ export function AccountingPage() {
     },
   ], []);
 
+  // ── Split cards by type ───────────────────────────────────
+  const businessCards = useMemo(() => cards?.filter((c) => c.cardType === 'Business') ?? [], [cards]);
+  const personalCards = useMemo(() => cards?.filter((c) => c.cardType === 'Personal') ?? [], [cards]);
+
   // ── Totals ────────────────────────────────────────────────
   const accountTotals = useMemo(() => ({
     customLabel: 'Total',
-    balance: (
-      <span className="acc-amount acc-amount--positive">
-        {formatCurrency(accounts?.reduce((s, a) => s + a.balance, 0) ?? 0)}
-      </span>
-    ),
+    balance: <span className="acc-amount acc-amount--positive">{formatCurrency(accounts?.reduce((s, a) => s + a.balance, 0) ?? 0)}</span>,
   }), [accounts]);
 
-  const cardTotals = useMemo(() => ({
+  const bizCardTotals = useMemo(() => ({
     customLabel: 'Total',
-    balance: (
-      <span className="acc-amount acc-amount--negative">
-        {formatCurrency(cards?.reduce((s, c) => s + c.balance, 0) ?? 0)}
-      </span>
-    ),
-  }), [cards]);
+    balance: <span className="acc-amount acc-amount--negative">{formatCurrency(businessCards.reduce((s, c) => s + c.balance, 0))}</span>,
+    creditLimit: formatCurrency(businessCards.reduce((s, c) => s + c.creditLimit, 0)),
+  }), [businessCards]);
+
+  const persCardTotals = useMemo(() => ({
+    customLabel: 'Total',
+    balance: <span className="acc-amount acc-amount--negative">{formatCurrency(personalCards.reduce((s, c) => s + c.balance, 0))}</span>,
+    creditLimit: formatCurrency(personalCards.reduce((s, c) => s + c.creditLimit, 0)),
+  }), [personalCards]);
 
   const loanTotals = useMemo(() => ({
     customLabel: 'Total',
-    balance: (
-      <span className="acc-amount acc-amount--negative">
-        {formatCurrency(loans?.reduce((s, l) => s + l.balance, 0) ?? 0)}
-      </span>
-    ),
+    balance: <span className="acc-amount acc-amount--negative">-{formatCurrency(loans?.reduce((s, l) => s + l.balance, 0) ?? 0)}</span>,
   }), [loans]);
 
   const investmentTotals = useMemo(() => ({
     customLabel: 'Total',
-    currentValue: (
-      <span className="acc-amount acc-amount--positive">
-        {formatCurrency(investments?.reduce((s, i) => s + i.currentValue, 0) ?? 0)}
-      </span>
-    ),
+    currentValue: <span className="acc-amount acc-amount--positive">{formatCurrency(investments?.reduce((s, i) => s + i.currentValue, 0) ?? 0)}</span>,
   }), [investments]);
 
-  // ── Dirty counts ─────────────────────────────────────────
-  const dirtyCount = {
-    accounts: dirtyAccounts.size,
-    cards: dirtyCards.size,
-    loans: dirtyLoans.size,
-    investments: dirtyInvestments.size,
-  };
-
-  const activeDirtyCount =
-    activeTab === 'accounts'    ? dirtyCount.accounts    :
-    activeTab === 'cards'       ? dirtyCount.cards        :
-    activeTab === 'loans'       ? dirtyCount.loans        :
-    activeTab === 'investments' ? dirtyCount.investments  : 0;
-
-  function handleSaveAll() {
-    if (activeTab === 'accounts')    return saveAccounts();
-    if (activeTab === 'cards')       return saveCards();
-    if (activeTab === 'loans')       return saveLoans();
-    if (activeTab === 'investments') return saveInvestments();
-  }
-
-  function handleDiscard() {
-    if (activeTab === 'accounts')    setDirtyAccounts(new Map());
-    if (activeTab === 'cards')       setDirtyCards(new Map());
-    if (activeTab === 'loans')       setDirtyLoans(new Map());
-    if (activeTab === 'investments') setDirtyInvestments(new Map());
-  }
-
-  // ── Delete handlers ───────────────────────────────────────
+  // ── Delete / settle handlers ──────────────────────────────
   async function handleDeleteAccount(row: BankAccountResponseDto) {
     if (!confirm(`Delete "${row.customLabel}"?`)) return;
     await deleteAccount(row.id);
@@ -321,12 +239,11 @@ export function AccountingPage() {
   // ── Render ────────────────────────────────────────────────
   return (
     <div className="acc-page">
-      {/* Page header */}
       <div className="acc-header">
         <h1 className="acc-title">Accounting</h1>
       </div>
 
-      {/* Net worth summary bar */}
+      {/* NW summary bar */}
       {nw && (
         <div className="acc-summary-bar">
           <div className="acc-summary-item">
@@ -352,133 +269,147 @@ export function AccountingPage() {
         </div>
       )}
 
-      {/* Side-tab layout */}
-      <div className="acc-layout">
-        {/* Side tabs */}
-        <nav className="acc-sidetabs">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              className={`acc-sidetab ${activeTab === t.key ? 'acc-sidetab--active' : ''}`}
-              onClick={() => setActiveTab(t.key)}
-            >
-              {t.label}
-              {dirtyCount[t.key as keyof typeof dirtyCount] > 0 && (
-                <span className="acc-dirty-dot" />
-              )}
-            </button>
-          ))}
-        </nav>
+      {/* All sections visible at once — Excel-style scroll */}
+      <div className="acc-sections">
 
-        {/* Content panel */}
-        <div className="acc-panel">
-          {/* ── Bank Accounts ── */}
-          {activeTab === 'accounts' && (
-            <>
-              <LedgerTable
-                data={accounts ?? []}
-                columns={accountColumns}
-                getRowVariant={() => 'asset' as RowVariant}
-                totals={accountTotals}
-                isLoading={loadingAccounts}
-                emptyMessage="No bank accounts yet. Add one below."
-                onDeleteRow={handleDeleteAccount}
-              />
-              <BatchSaveBar
-                dirtyCount={activeDirtyCount}
-                saving={saving}
-                onSave={handleSaveAll}
-                onDiscard={handleDiscard}
-              />
-            </>
-          )}
-
-          {/* ── Credit Cards ── */}
-          {activeTab === 'cards' && (
-            <>
-              <LedgerTable
-                data={cards ?? []}
-                columns={cardColumns}
-                getRowVariant={() => 'liability' as RowVariant}
-                totals={cardTotals}
-                isLoading={loadingCards}
-                emptyMessage="No credit cards yet."
-              />
-              <BatchSaveBar
-                dirtyCount={activeDirtyCount}
-                saving={saving}
-                onSave={handleSaveAll}
-                onDiscard={handleDiscard}
-              />
-            </>
-          )}
-
-          {/* ── Loans ── */}
-          {activeTab === 'loans' && (
-            <>
-              <LedgerTable
-                data={loans ?? []}
-                columns={loanColumns}
-                getRowVariant={() => 'liability' as RowVariant}
-                totals={loanTotals}
-                isLoading={loadingLoans}
-                emptyMessage="No loans yet."
-              />
-              <BatchSaveBar
-                dirtyCount={activeDirtyCount}
-                saving={saving}
-                onSave={handleSaveAll}
-                onDiscard={handleDiscard}
-              />
-            </>
-          )}
-
-          {/* ── Investments ── */}
-          {activeTab === 'investments' && (
-            <>
-              <LedgerTable
-                data={investments ?? []}
-                columns={investmentColumns}
-                getRowVariant={() => 'asset' as RowVariant}
-                totals={investmentTotals}
-                isLoading={loadingInvestments}
-                emptyMessage="No investments yet."
-              />
-              <BatchSaveBar
-                dirtyCount={activeDirtyCount}
-                saving={saving}
-                onSave={handleSaveAll}
-                onDiscard={handleDiscard}
-              />
-            </>
-          )}
-
-          {/* ── Pending Items ── */}
-          {activeTab === 'pending' && (
-            <LedgerTable
-              data={pending ?? []}
-              columns={pendingColumns}
-              getRowVariant={(row) => row.amount >= 0 ? 'asset' : 'liability'}
-              isLoading={loadingPending}
-              emptyMessage="No pending items."
-              onEditRow={handleSettlePending}
-            />
-          )}
-
-          {/* ── Properties ── */}
-          {activeTab === 'properties' && (
-            <PropertiesPanel
-              properties={properties ?? []}
-              isLoading={loadingProperties}
+        {/* ── Bank Accounts ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Bank Accounts</span>
+          </div>
+          <LedgerTable
+            data={accounts ?? []}
+            columns={accountColumns}
+            getRowVariant={() => 'asset' as RowVariant}
+            totals={accountTotals}
+            isLoading={loadingAccounts}
+            emptyMessage="No bank accounts yet."
+            onDeleteRow={handleDeleteAccount}
+          />
+          {dirtyAccounts.size > 0 && (
+            <BatchSaveBar
+              dirtyCount={dirtyAccounts.size}
+              saving={saving}
+              onSave={() => saveAll(dirtyAccounts as Map<string, unknown>, updateAccount as (id: string, ch: unknown) => Promise<unknown>, () => setDirtyAccounts(new Map()), ['accounts'])}
+              onDiscard={() => setDirtyAccounts(new Map())}
             />
           )}
         </div>
+
+        {/* ── Credit Cards — Business / Personal side by side ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Credit Cards</span>
+          </div>
+          <div className="acc-section-tables">
+            <div className="acc-section">
+              <span className="acc-section-title" style={{ fontSize: 11 }}>Business Cards</span>
+              <LedgerTable
+                data={businessCards}
+                columns={businessCardColumns}
+                getRowVariant={() => 'liability' as RowVariant}
+                totals={bizCardTotals}
+                isLoading={loadingCards}
+                emptyMessage="No business cards."
+              />
+            </div>
+            <div className="acc-section">
+              <span className="acc-section-title" style={{ fontSize: 11 }}>Personal Cards</span>
+              <LedgerTable
+                data={personalCards}
+                columns={businessCardColumns}
+                getRowVariant={() => 'liability' as RowVariant}
+                totals={persCardTotals}
+                isLoading={loadingCards}
+                emptyMessage="No personal cards."
+              />
+            </div>
+          </div>
+          {dirtyCards.size > 0 && (
+            <BatchSaveBar
+              dirtyCount={dirtyCards.size}
+              saving={saving}
+              onSave={() => saveAll(dirtyCards as Map<string, unknown>, updateCreditCard as (id: string, ch: unknown) => Promise<unknown>, () => setDirtyCards(new Map()), ['creditcards'])}
+              onDiscard={() => setDirtyCards(new Map())}
+            />
+          )}
+        </div>
+
+        {/* ── Loans ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Loans</span>
+          </div>
+          <LedgerTable
+            data={loans ?? []}
+            columns={loanColumns}
+            getRowVariant={() => 'liability' as RowVariant}
+            totals={loanTotals}
+            isLoading={loadingLoans}
+            emptyMessage="No loans."
+          />
+          {dirtyLoans.size > 0 && (
+            <BatchSaveBar
+              dirtyCount={dirtyLoans.size}
+              saving={saving}
+              onSave={() => saveAll(dirtyLoans as Map<string, unknown>, updateLoan as (id: string, ch: unknown) => Promise<unknown>, () => setDirtyLoans(new Map()), ['loans'])}
+              onDiscard={() => setDirtyLoans(new Map())}
+            />
+          )}
+        </div>
+
+        {/* ── Investments ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Investments</span>
+          </div>
+          <LedgerTable
+            data={investments ?? []}
+            columns={investmentColumns}
+            getRowVariant={() => 'asset' as RowVariant}
+            totals={investmentTotals}
+            isLoading={loadingInvestments}
+            emptyMessage="No investments."
+          />
+          {dirtyInvestments.size > 0 && (
+            <BatchSaveBar
+              dirtyCount={dirtyInvestments.size}
+              saving={saving}
+              onSave={() => saveAll(dirtyInvestments as Map<string, unknown>, updateInvestment as (id: string, ch: unknown) => Promise<unknown>, () => setDirtyInvestments(new Map()), ['investments'])}
+              onDiscard={() => setDirtyInvestments(new Map())}
+            />
+          )}
+        </div>
+
+        {/* ── Pending Items ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Pending Items</span>
+          </div>
+          <LedgerTable
+            data={pending ?? []}
+            columns={pendingColumns}
+            getRowVariant={(row) => row.amount >= 0 ? 'asset' : 'liability'}
+            isLoading={loadingPending}
+            emptyMessage="No pending items."
+            onEditRow={handleSettlePending}
+          />
+        </div>
+
+        {/* ── Properties ── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Properties</span>
+          </div>
+          <PropertiesPanel properties={properties ?? []} isLoading={loadingProperties} />
+        </div>
+
       </div>
     </div>
   );
 }
 
-// ── BatchSaveBar ─────────────────────────────────────────────
+// ── BatchSaveBar ──────────────────────────────────────────────
 function BatchSaveBar({
   dirtyCount,
   saving,
@@ -490,7 +421,6 @@ function BatchSaveBar({
   onSave: () => void;
   onDiscard: () => void;
 }) {
-  if (dirtyCount === 0) return null;
   return (
     <div className="acc-batch-bar">
       <span className="acc-batch-info">
@@ -508,32 +438,18 @@ function BatchSaveBar({
   );
 }
 
-// ── PropertiesPanel ──────────────────────────────────────────
-function PropertiesPanel({
-  properties,
-  isLoading,
-}: {
-  properties: PropertyResponseDto[];
-  isLoading: boolean;
-}) {
+// ── PropertiesPanel ───────────────────────────────────────────
+function PropertiesPanel({ properties, isLoading }: { properties: PropertyResponseDto[]; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="acc-props-grid">
-        {[1, 2].map((i) => (
-          <div key={i} className="acc-prop-card acc-prop-card--skeleton" />
-        ))}
+        {[1, 2].map((i) => <div key={i} className="acc-prop-card acc-prop-card--skeleton" />)}
       </div>
     );
   }
-
   if (properties.length === 0) {
-    return (
-      <div className="acc-empty">
-        <span>No properties saved yet.</span>
-      </div>
-    );
+    return <div className="acc-empty">No properties saved yet.</div>;
   }
-
   return (
     <div className="acc-props-grid">
       {properties.map((p) => (

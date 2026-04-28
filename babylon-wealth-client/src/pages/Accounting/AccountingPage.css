@@ -69,62 +69,39 @@
 .acc-summary-value--positive { color: var(--color-positive); }
 .acc-summary-value--negative { color: var(--color-negative); }
 
-/* ── Side-tab layout ────────────────────────────────────────── */
-.acc-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-/* ── Side tabs ──────────────────────────────────────────────── */
-.acc-sidetabs {
+/* ── Sections layout (all tables visible, Excel-style) ─────── */
+.acc-sections {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: 160px;
-  flex-shrink: 0;
+  gap: 32px;
 }
 
-.acc-sidetab {
+/* Two-column grid for paired tables (e.g. Business / Personal cards) */
+.acc-section-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Per-section wrapper ────────────────────────────────────── */
+.acc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acc-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--color-text-sub);
-  text-align: left;
-  transition: background 0.12s, color 0.12s;
 }
 
-.acc-sidetab:hover {
-  background: var(--color-bg-card);
-  color: var(--color-text);
-}
-
-.acc-sidetab--active {
-  background: var(--color-gold-dim);
-  color: var(--color-gold);
-  font-weight: 600;
-}
-
-.acc-dirty-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  flex-shrink: 0;
-}
-
-/* ── Content panel ──────────────────────────────────────────── */
-.acc-panel {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.acc-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 /* ── Amount colors ──────────────────────────────────────────── */
@@ -259,28 +236,15 @@
   margin: 4px 0;
 }
 
+/* ── Light mode overrides ───────────────────────────────────── */
+[data-theme="light"] .acc-amount--positive       { color: #1A8040; }
+[data-theme="light"] .acc-summary-value--positive { color: #1A8040; }
+[data-theme="light"] .acc-batch-info             { color: #7A6200; }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .acc-page {
     padding: 16px;
-  }
-
-  .acc-layout {
-    flex-direction: column;
-  }
-
-  .acc-sidetabs {
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    gap: 4px;
-    padding-bottom: 4px;
-  }
-
-  .acc-sidetab {
-    white-space: nowrap;
-    flex-shrink: 0;
   }
 
   .acc-summary-bar {
@@ -289,5 +253,9 @@
 
   .acc-summary-divider {
     display: none;
+  }
+
+  .acc-section-tables {
+    grid-template-columns: 1fr;
   }
 }
