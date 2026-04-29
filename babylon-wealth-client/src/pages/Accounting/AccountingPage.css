@@ -286,8 +286,8 @@
 }
 
 .acc-btn-add:hover {
-  border-color: var(--color-gold);
-  color: var(--color-gold);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--color-text);
 }
 
 /* ── Add row form ───────────────────────────────────────────── */

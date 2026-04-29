@@ -72,7 +72,7 @@
   font-family: var(--font-display);
   font-size: 36px;
   font-weight: 800;
-  color: var(--color-gold);
+  color: var(--color-text);
   letter-spacing: -0.03em;
   line-height: 1;
 }
@@ -128,7 +128,7 @@
 .inv-crud-form__field input:focus,
 .inv-crud-form__field select:focus {
   outline: none;
-  border-color: var(--color-gold);
+  border-color: var(--color-river);
 }
 
 .inv-crud-form__actions {
@@ -248,7 +248,7 @@
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 800;
-  color: var(--color-gold);
+  color: var(--color-text);
 }
 
 /* ── Icon buttons ─────────────────────────────────────────────── */
@@ -269,8 +269,8 @@
 }
 
 .inv-icon-btn:hover {
-  border-color: var(--color-gold);
-  color: var(--color-gold);
+  border-color: var(--color-river);
+  color: var(--color-river);
 }
 
 .inv-icon-btn--danger:hover {
@@ -285,6 +285,13 @@
 }
 
 /* ── Buttons ──────────────────────────────────────────────────── */
+
+/* Blue palette tokens (dark mode defaults) */
+/* --inv-blue-solid : filled primary blue                         */
+/* --inv-blue-border: outline / secondary blue                    */
+/* --inv-blue-text  : text on outlined buttons                    */
+/* --inv-blue-dim   : hover tint on outlined buttons              */
+
 .inv-btn {
   display: inline-flex;
   align-items: center;
@@ -293,50 +300,94 @@
   font-size: 13px;
   font-weight: 600;
   padding: 8px 18px;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   white-space: nowrap;
 }
 
 .inv-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
+/* ── Primary — gold fill */
 .inv-btn--primary {
   background: var(--color-gold);
   color: #0D0D0D;
+  border-color: transparent;
 }
-
 .inv-btn--primary:hover:not(:disabled) {
   background: var(--color-gold-hover);
 }
 
+/* ── Secondary — gold outline */
 .inv-btn--secondary {
   background: transparent;
-  border: 1px solid var(--color-gold);
+  border-color: var(--color-gold);
   color: var(--color-gold);
 }
-
 .inv-btn--secondary:hover:not(:disabled) {
   background: var(--color-gold-dim);
+  border-color: var(--color-gold-hover);
 }
 
+/* ── Ghost — muted outline, for Cancel */
 .inv-btn--ghost {
   background: transparent;
-  border: 1px solid var(--color-border);
+  border-color: rgba(255, 255, 255, 0.1);
   color: var(--color-text-muted);
 }
-
 .inv-btn--ghost:hover:not(:disabled) {
-  border-color: var(--color-text-sub);
-  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-sub);
+}
+
+/* ── Blue-wave (See Projection) — same navy, static, slightly more prominent */
+.inv-btn--blue-wave {
+  background: #1A3F9C;
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(26, 63, 156, 0.35);
+}
+.inv-btn--blue-wave:hover:not(:disabled) {
+  background: #2252B8;
+  box-shadow: 0 0 20px rgba(34, 82, 184, 0.5);
 }
 
 .inv-btn--sm {
   font-size: 12px;
   padding: 5px 12px;
+}
+
+/* ── Add variant — matches accounting tab "+ Add" style */
+.inv-btn--add {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+}
+.inv-btn--add:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--color-text);
+}
+
+/* ── Light mode overrides ─────────────────────────────────────── */
+[data-theme="light"] .inv-btn--ghost {
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #3A4260;
+}
+[data-theme="light"] .inv-btn--ghost:hover:not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.25);
+  color: #0D1017;
+}
+
+[data-theme="light"] .inv-btn--blue-wave {
+  background: #2563EB;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
+}
+[data-theme="light"] .inv-btn--blue-wave:hover:not(:disabled) {
+  background: #1D4ED8;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
 }
 
 /* ── Form error ───────────────────────────────────────────────── */
@@ -464,7 +515,60 @@
 .inv-entry-form__field input:focus,
 .inv-entry-form__field select:focus {
   outline: none;
-  border-color: var(--color-gold);
+  border-color: var(--color-river);
+}
+
+/* ── Multi-row entry form additions ──────────────────────────── */
+.inv-entry-form__monthrow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inv-entry-form__catrows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inv-entry-form__catrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.inv-entry-form__catrow--passive {
+  /* passive rows have an extra type column — same layout, just wider */
+}
+
+.inv-entry-form__catrow-index {
+  width: 18px;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-bottom: 8px;          /* align with input baseline */
+  align-self: flex-end;
+}
+
+.inv-entry-form__field--amount {
+  min-width: 90px;
+  max-width: 110px;
+}
+
+.inv-entry-form__field--type {
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.inv-entry-form__catrow-remove {
+  flex-shrink: 0;
+  margin-bottom: 1px;           /* fine-align with input */
+}
+
+.inv-entry-form__addrow {
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 /* ── Entry list (collapsible manage panel) ────────────────────── */
@@ -570,7 +674,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
-  align-items: end;
+  align-items: start;   /* top-align so labels + inputs line up across all cells */
 }
 
 .inv-projector__control {
@@ -601,7 +705,7 @@
 }
 
 .inv-projector__input-wrap:focus-within {
-  border-color: var(--color-gold);
+  border-color: var(--color-river);
 }
 
 .inv-projector__input-wrap--readonly {
@@ -631,10 +735,14 @@
   cursor: default;
 }
 
+/* Reserve identical space below every control so all input-wraps stay aligned.
+   The starting value shows real text; the others show nothing but take the same height. */
 .inv-projector__hint {
   font-size: 10px;
   color: var(--color-text-muted);
   font-style: italic;
+  min-height: 16px;   /* same height whether text is present or not */
+  display: block;
 }
 
 .inv-projector__cta {
@@ -691,7 +799,9 @@
   letter-spacing: -0.02em;
 }
 
-.inv-projector__summary-value--gold     { color: var(--color-gold); }
+/* "In X years" total → white like the home page NW value */
+.inv-projector__summary-value--gold     { color: var(--color-text); }
+/* Compound gain → green */
 .inv-projector__summary-value--positive { color: var(--color-positive); }
 
 /* ── Tooltip ──────────────────────────────────────────────────── */

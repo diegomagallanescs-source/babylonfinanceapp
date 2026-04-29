@@ -735,18 +735,7 @@
 }
 
 /* ── See Optimal River button ─────────────────────────── */
-.btn-optimal {
-  padding: 11px 28px;
-  border: 1.5px solid rgba(0, 229, 204, 0.4);
-  border-radius: 10px;
-  color: var(--color-river);
-  font-size: 13.5px;
-  font-weight: 600;
-  background: rgba(0, 229, 204, 0.05);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  letter-spacing: 0.3px;
-}
+/* .btn-optimal base styles merged into .btn-meaning, .btn-optimal block above */
 
 /* ── River panel button row ──────────────────────────── */
 .river-panel__btn-row {
@@ -757,23 +746,56 @@
   flex-wrap: wrap;
 }
 
-.btn-meaning {
-  padding: 11px 20px;
-  border: 1.5px solid rgba(240, 180, 41, 0.35);
+/* Blue shimmer sweep shared by both river buttons */
+@keyframes riverBtnShimmer {
+  0%   { left: -70%; }
+  100% { left: 130%; }
+}
+
+.btn-meaning,
+.btn-optimal {
+  position: relative;
+  overflow: hidden;
+  padding: 11px 24px;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  color: var(--color-gold);
+  color: var(--color-text-sub);
   font-size: 13px;
   font-weight: 600;
-  background: rgba(240, 180, 41, 0.05);
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
   letter-spacing: 0.2px;
 }
 
-.btn-meaning:hover {
-  background: rgba(240, 180, 41, 0.12);
-  border-color: var(--color-gold);
-  box-shadow: 0 0 20px rgba(240, 180, 41, 0.2);
+/* The travelling blue light */
+.btn-meaning::before,
+.btn-optimal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -70%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(74, 158, 255, 0.13) 50%,
+    transparent 100%
+  );
+  animation: riverBtnShimmer 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Stagger the second button so they don't pulse in sync */
+.btn-optimal::before {
+  animation-delay: 1.6s;
+}
+
+.btn-meaning:hover,
+.btn-optimal:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--color-text);
   transform: translateY(-1px);
 }
 
@@ -918,12 +940,7 @@
   margin-top: -6px;
 }
 
-.btn-optimal:hover {
-  background: rgba(0, 229, 204, 0.12);
-  border-color: var(--color-river);
-  box-shadow: 0 0 20px rgba(0, 229, 204, 0.2);
-  transform: translateY(-1px);
-}
+/* .btn-optimal hover merged into shared block above */
 
 /* ═══════════════════════════════════════════════════════
    OPTIMAL RIVER MODAL

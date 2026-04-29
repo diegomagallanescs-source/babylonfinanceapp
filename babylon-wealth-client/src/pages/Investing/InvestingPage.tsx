@@ -32,8 +32,8 @@ const INVESTMENT_TYPES: { value: string; label: string }[] = [
 
 const INCOME_TYPES = ['Dividend','Interest','Rental','Royalty','Other'];
 
-// Up to 6 distinct category colors
-const CAT_COLORS = ['#F0B429','#00E676','#00E5CC','#6B8CFF','#FF9A3C','#C084FC'];
+// Green-family palette — shades distinct enough to read in stacked bars
+const CAT_COLORS = ['#00E676','#00E5CC','#69F0AE','#1DE9B6','#26C6DA','#B2FF59'];
 
 const PORTFOLIO_ENTRIES_KEY = 'babylon-portfolio-entries';
 
@@ -281,32 +281,59 @@ export function InvestingPage() {
   const [portfolioEntries, setPortfolioEntries] = useState<PortfolioEntry[]>(loadPortfolioEntries);
 
   const now = new Date();
-  const [showPortEntry, setShowPortEntry]   = useState(false);
-  const [portMonth, setPortMonth]           = useState(now.getMonth() + 1);
-  const [portYear, setPortYear]             = useState(now.getFullYear());
-  const [portCategory, setPortCategory]     = useState('');
-  const [portAmount, setPortAmount]         = useState('');
-  const [portError, setPortError]           = useState<string | null>(null);
+
+  // Multi-row form state
+  interface PortRow { id: string; category: string; amount: string; }
+  const newPortRow = (): PortRow => ({ id: genId(), category: '', amount: '' });
+
+  const [showPortEntry, setShowPortEntry] = useState(false);
+  const [portMonth,     setPortMonth]     = useState(now.getMonth() + 1);
+  const [portYear,      setPortYear]      = useState(now.getFullYear());
+  const [portRows,      setPortRows]      = useState<PortRow[]>([newPortRow()]);
+  const [portError,     setPortError]     = useState<string | null>(null);
 
   const portfolioChart = useMemo(() => buildStackedPortfolio(portfolioEntries), [portfolioEntries]);
 
-  const handleAddPortEntry = () => {
-    setPortError(null);
-    if (!portCategory.trim()) { setPortError('Category name is required.'); return; }
-    const amount = parseFloat(portAmount);
-    if (isNaN(amount) || amount <= 0) { setPortError('Enter a valid amount.'); return; }
-    const cats = [...new Set(portfolioEntries.map(e => e.category))];
-    if (!cats.includes(portCategory) && cats.length >= 6) {
+  const addPortRow = () => {
+    const existingCats  = [...new Set(portfolioEntries.map(e => e.category))];
+    const pendingNewCats = [...new Set(portRows.map(r => r.category.trim()).filter(Boolean))]
+      .filter(c => !existingCats.includes(c));
+    if (existingCats.length + pendingNewCats.length >= 6) {
       setPortError('Maximum 6 categories reached.'); return;
     }
-    const next: PortfolioEntry[] = [
-      ...portfolioEntries,
-      { id: genId(), month: portMonth, year: portYear, category: portCategory.trim(), amount },
-    ];
+    setPortRows(rows => [...rows, newPortRow()]);
+  };
+
+  const removePortRow = (id: string) =>
+    setPortRows(rows => rows.length > 1 ? rows.filter(r => r.id !== id) : rows);
+
+  const updatePortRow = (id: string, field: keyof Omit<PortRow, 'id'>, value: string) =>
+    setPortRows(rows => rows.map(r => r.id === id ? { ...r, [field]: value } : r));
+
+  const handleSavePortEntries = () => {
+    setPortError(null);
+    const validRows = portRows.filter(r => r.category.trim() && parseFloat(r.amount) > 0);
+    if (validRows.length === 0) { setPortError('Add at least one category with a valid amount.'); return; }
+    const badAmount = portRows.find(r => r.category.trim() && (isNaN(parseFloat(r.amount)) || parseFloat(r.amount) <= 0));
+    if (badAmount) { setPortError(`Enter a valid amount for "${badAmount.category}".`); return; }
+
+    const existingCats = [...new Set(portfolioEntries.map(e => e.category))];
+    const newCats      = [...new Set(validRows.map(r => r.category.trim()))].filter(c => !existingCats.includes(c));
+    if (existingCats.length + newCats.length > 6) {
+      setPortError('Adding these entries would exceed 6 categories.'); return;
+    }
+
+    const toAdd: PortfolioEntry[] = validRows.map(r => ({
+      id:       genId(),
+      month:    portMonth,
+      year:     portYear,
+      category: r.category.trim(),
+      amount:   parseFloat(r.amount),
+    }));
+    const next = [...portfolioEntries, ...toAdd];
     setPortfolioEntries(next);
     savePortfolioEntries(next);
-    setPortCategory('');
-    setPortAmount('');
+    setPortRows([newPortRow()]);
     setShowPortEntry(false);
   };
 
@@ -319,39 +346,63 @@ export function InvestingPage() {
   // ─────────────────────────────────────────────────────────────
   // Section 2 — Passive Income Over Time (DB)
   // ─────────────────────────────────────────────────────────────
+
+  // Multi-row form state
+  interface PassiveRow { id: string; source: string; type: string; amount: string; }
+  const newPassiveRow = (): PassiveRow => ({ id: genId(), source: '', type: 'Dividend', amount: '' });
+
   const [showPassiveEntry, setShowPassiveEntry] = useState(false);
-  const [passiveMonth, setPassiveMonth]         = useState(now.getMonth() + 1);
-  const [passiveYear, setPassiveYear]           = useState(now.getFullYear());
-  const [passiveSource, setPassiveSource]       = useState('');
-  const [passiveType, setPassiveType]           = useState('Dividend');
-  const [passiveAmount, setPassiveAmount]       = useState('');
-  const [passiveError, setPassiveError]         = useState<string | null>(null);
+  const [passiveMonth,     setPassiveMonth]     = useState(now.getMonth() + 1);
+  const [passiveYear,      setPassiveYear]      = useState(now.getFullYear());
+  const [passiveRows,      setPassiveRows]      = useState<PassiveRow[]>([newPassiveRow()]);
+  const [passiveError,     setPassiveError]     = useState<string | null>(null);
 
   const passiveChart = useMemo(() => buildStackedPassive(incomeAll), [incomeAll]);
 
-  const handleAddPassiveEntry = async () => {
-    setPassiveError(null);
-    if (!passiveSource.trim()) { setPassiveError('Source / category name is required.'); return; }
-    const amount = parseFloat(passiveAmount);
-    if (isNaN(amount) || amount <= 0) { setPassiveError('Enter a valid amount.'); return; }
-    const existingCats = [...new Set(incomeAll.map(r => r.sourceName))];
-    if (!existingCats.includes(passiveSource.trim()) && existingCats.length >= 6) {
+  const addPassiveRow = () => {
+    const existingCats   = [...new Set(incomeAll.map(r => r.sourceName))];
+    const pendingNewCats = [...new Set(passiveRows.map(r => r.source.trim()).filter(Boolean))]
+      .filter(c => !existingCats.includes(c));
+    if (existingCats.length + pendingNewCats.length >= 6) {
       setPassiveError('Maximum 6 categories reached.'); return;
     }
-    const payload: CreateInvestmentIncomeRequest = {
-      sourceName:   passiveSource.trim(),
-      type:         passiveType,
-      amount,
-      receivedDate: new Date(passiveYear, passiveMonth - 1, 1).toISOString(),
-    };
+    setPassiveRows(rows => [...rows, newPassiveRow()]);
+  };
+
+  const removePassiveRow = (id: string) =>
+    setPassiveRows(rows => rows.length > 1 ? rows.filter(r => r.id !== id) : rows);
+
+  const updatePassiveRow = (id: string, field: keyof Omit<PassiveRow, 'id'>, value: string) =>
+    setPassiveRows(rows => rows.map(r => r.id === id ? { ...r, [field]: value } : r));
+
+  const handleSavePassiveEntries = async () => {
+    setPassiveError(null);
+    const validRows = passiveRows.filter(r => r.source.trim() && r.amount.trim() !== '' && !isNaN(parseFloat(r.amount)) && parseFloat(r.amount) >= 0);
+    if (validRows.length === 0) { setPassiveError('Add at least one source with an amount (0 is allowed).'); return; }
+    const badAmount = passiveRows.find(r => r.source.trim() && (r.amount.trim() === '' || isNaN(parseFloat(r.amount)) || parseFloat(r.amount) < 0));
+    if (badAmount) { setPassiveError(`Enter a valid amount for "${badAmount.source}" (0 or more).`); return; }
+
+    const existingCats = [...new Set(incomeAll.map(r => r.sourceName))];
+    const newCats      = [...new Set(validRows.map(r => r.source.trim()))].filter(c => !existingCats.includes(c));
+    if (existingCats.length + newCats.length > 6) {
+      setPassiveError('Adding these entries would exceed 6 sources.'); return;
+    }
+
     try {
-      await createIncome.mutateAsync(payload);
-      setPassiveSource('');
-      setPassiveAmount('');
-      setPassiveType('Dividend');
+      await Promise.all(
+        validRows.map(r =>
+          createIncome.mutateAsync({
+            sourceName:   r.source.trim(),
+            type:         r.type,
+            amount:       parseFloat(r.amount),
+            receivedDate: new Date(passiveYear, passiveMonth - 1, 1).toISOString(),
+          })
+        )
+      );
+      setPassiveRows([newPassiveRow()]);
       setShowPassiveEntry(false);
     } catch {
-      setPassiveError('Failed to save. Please try again.');
+      setPassiveError('Failed to save one or more entries. Please try again.');
     }
   };
 
@@ -385,7 +436,7 @@ export function InvestingPage() {
             </div>
           </div>
           <button
-            className="inv-btn inv-btn--primary"
+            className="inv-btn inv-btn--add"
             onClick={() => { setShowAddInv(v => !v); setEditingId(null); resetInvForm(); }}
           >
             {showAddInv ? 'Cancel' : '+ Add Account'}
@@ -580,8 +631,12 @@ export function InvestingPage() {
                 <span className="inv-chart-card__sub">Monthly value by category</span>
               </div>
               <button
-                className="inv-btn inv-btn--secondary inv-btn--sm"
-                onClick={() => setShowPortEntry(v => !v)}
+                className="inv-btn inv-btn--add inv-btn--sm"
+                onClick={() => {
+                  setShowPortEntry(v => !v);
+                  setPortRows([newPortRow()]);
+                  setPortError(null);
+                }}
               >
                 {showPortEntry ? 'Cancel' : '+ Add Entry'}
               </button>
@@ -590,7 +645,8 @@ export function InvestingPage() {
             {/* Add entry form */}
             {showPortEntry && (
               <div className="inv-entry-form">
-                <div className="inv-entry-form__row">
+                {/* Month / Year shared for all rows */}
+                <div className="inv-entry-form__monthrow">
                   <div className="inv-entry-form__field">
                     <label>Month</label>
                     <select value={portMonth} onChange={e => setPortMonth(+e.target.value)}>
@@ -603,29 +659,55 @@ export function InvestingPage() {
                       {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
-                  <div className="inv-entry-form__field inv-entry-form__field--grow">
-                    <label>Category</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 401k, Brokerage, Crypto"
-                      value={portCategory}
-                      onChange={e => setPortCategory(e.target.value)}
-                    />
-                  </div>
-                  <div className="inv-entry-form__field">
-                    <label>Amount ($)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      value={portAmount}
-                      onChange={e => setPortAmount(e.target.value)}
-                    />
-                  </div>
                 </div>
+
+                {/* Category rows */}
+                <div className="inv-entry-form__catrows">
+                  {portRows.map((row, i) => (
+                    <div key={row.id} className="inv-entry-form__catrow">
+                      <div className="inv-entry-form__catrow-index">{i + 1}</div>
+                      <div className="inv-entry-form__field inv-entry-form__field--grow">
+                        {i === 0 && <label>Category</label>}
+                        <input
+                          type="text"
+                          placeholder="e.g. 401k, Brokerage, Crypto"
+                          value={row.category}
+                          onChange={e => updatePortRow(row.id, 'category', e.target.value)}
+                        />
+                      </div>
+                      <div className="inv-entry-form__field inv-entry-form__field--amount">
+                        {i === 0 && <label>Amount ($)</label>}
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={row.amount}
+                          onChange={e => updatePortRow(row.id, 'amount', e.target.value)}
+                        />
+                      </div>
+                      <button
+                        className="inv-icon-btn inv-icon-btn--danger inv-entry-form__catrow-remove"
+                        style={{ visibility: portRows.length > 1 ? 'visible' : 'hidden', marginTop: i === 0 ? 16 : 0 }}
+                        onClick={() => removePortRow(row.id)}
+                        title="Remove"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  className="inv-btn inv-btn--ghost inv-btn--sm inv-entry-form__addrow"
+                  onClick={addPortRow}
+                >
+                  + Add Category
+                </button>
+
                 {portError && <div className="inv-form-error">{portError}</div>}
-                <button className="inv-btn inv-btn--primary inv-btn--sm" onClick={handleAddPortEntry}>
-                  Save Entry
+
+                <button className="inv-btn inv-btn--primary inv-btn--sm" onClick={handleSavePortEntries}>
+                  Save {portRows.filter(r => r.category.trim()).length > 1
+                    ? `${portRows.filter(r => r.category.trim()).length} Entries`
+                    : 'Entry'}
                 </button>
               </div>
             )}
@@ -690,8 +772,12 @@ export function InvestingPage() {
                 <span className="inv-chart-card__sub">Monthly dividends, interest &amp; distributions</span>
               </div>
               <button
-                className="inv-btn inv-btn--secondary inv-btn--sm"
-                onClick={() => setShowPassiveEntry(v => !v)}
+                className="inv-btn inv-btn--add inv-btn--sm"
+                onClick={() => {
+                  setShowPassiveEntry(v => !v);
+                  setPassiveRows([newPassiveRow()]);
+                  setPassiveError(null);
+                }}
               >
                 {showPassiveEntry ? 'Cancel' : '+ Add Entry'}
               </button>
@@ -700,7 +786,8 @@ export function InvestingPage() {
             {/* Add entry form */}
             {showPassiveEntry && (
               <div className="inv-entry-form">
-                <div className="inv-entry-form__row">
+                {/* Month / Year shared for all rows */}
+                <div className="inv-entry-form__monthrow">
                   <div className="inv-entry-form__field">
                     <label>Month</label>
                     <select value={passiveMonth} onChange={e => setPassiveMonth(+e.target.value)}>
@@ -713,39 +800,67 @@ export function InvestingPage() {
                       {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
-                  <div className="inv-entry-form__field inv-entry-form__field--grow">
-                    <label>Source / Category</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. SCHD Dividend, Bond Interest"
-                      value={passiveSource}
-                      onChange={e => setPassiveSource(e.target.value)}
-                    />
-                  </div>
-                  <div className="inv-entry-form__field">
-                    <label>Type</label>
-                    <select value={passiveType} onChange={e => setPassiveType(e.target.value)}>
-                      {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                  <div className="inv-entry-form__field">
-                    <label>Amount ($)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      value={passiveAmount}
-                      onChange={e => setPassiveAmount(e.target.value)}
-                    />
-                  </div>
                 </div>
+
+                {/* Source rows */}
+                <div className="inv-entry-form__catrows">
+                  {passiveRows.map((row, i) => (
+                    <div key={row.id} className="inv-entry-form__catrow inv-entry-form__catrow--passive">
+                      <div className="inv-entry-form__catrow-index">{i + 1}</div>
+                      <div className="inv-entry-form__field inv-entry-form__field--grow">
+                        {i === 0 && <label>Source / Category</label>}
+                        <input
+                          type="text"
+                          placeholder="e.g. SCHD Dividend, Bond Interest"
+                          value={row.source}
+                          onChange={e => updatePassiveRow(row.id, 'source', e.target.value)}
+                        />
+                      </div>
+                      <div className="inv-entry-form__field inv-entry-form__field--type">
+                        {i === 0 && <label>Type</label>}
+                        <select value={row.type} onChange={e => updatePassiveRow(row.id, 'type', e.target.value)}>
+                          {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div className="inv-entry-form__field inv-entry-form__field--amount">
+                        {i === 0 && <label>Amount ($)</label>}
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={row.amount}
+                          onChange={e => updatePassiveRow(row.id, 'amount', e.target.value)}
+                        />
+                      </div>
+                      <button
+                        className="inv-icon-btn inv-icon-btn--danger inv-entry-form__catrow-remove"
+                        style={{ visibility: passiveRows.length > 1 ? 'visible' : 'hidden', marginTop: i === 0 ? 16 : 0 }}
+                        onClick={() => removePassiveRow(row.id)}
+                        title="Remove"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  className="inv-btn inv-btn--ghost inv-btn--sm inv-entry-form__addrow"
+                  onClick={addPassiveRow}
+                >
+                  + Add Source
+                </button>
+
                 {passiveError && <div className="inv-form-error">{passiveError}</div>}
+
                 <button
                   className="inv-btn inv-btn--primary inv-btn--sm"
-                  onClick={handleAddPassiveEntry}
+                  onClick={handleSavePassiveEntries}
                   disabled={createIncome.isPending}
                 >
-                  {createIncome.isPending ? 'Saving…' : 'Save Entry'}
+                  {createIncome.isPending
+                    ? 'Saving…'
+                    : `Save ${passiveRows.filter(r => r.source.trim()).length > 1
+                        ? `${passiveRows.filter(r => r.source.trim()).length} Entries`
+                        : 'Entry'}`}
                 </button>
               </div>
             )}
@@ -826,6 +941,7 @@ export function InvestingPage() {
                   onChange={e => setProjMonthly(parseFloat(e.target.value) || 0)}
                 />
               </div>
+              <span className="inv-projector__hint" />
             </div>
 
             {/* Annual return */}
@@ -842,6 +958,7 @@ export function InvestingPage() {
                 />
                 <span>%</span>
               </div>
+              <span className="inv-projector__hint" />
             </div>
 
             {/* Time horizon */}
@@ -858,10 +975,11 @@ export function InvestingPage() {
                 />
                 <span>years</span>
               </div>
+              <span className="inv-projector__hint" />
             </div>
           </div>
 
-          <button className="inv-btn inv-btn--primary inv-projector__cta" onClick={handleSeeProjection}>
+          <button className="inv-btn inv-btn--blue-wave inv-projector__cta" onClick={handleSeeProjection}>
             See Projection →
           </button>
 
@@ -894,10 +1012,10 @@ export function InvestingPage() {
                       type="monotone"
                       dataKey="totalValue"
                       name="Total w/ Growth"
-                      stroke="var(--color-gold)"
+                      stroke="var(--color-positive)"
                       strokeWidth={2.5}
                       dot={false}
-                      activeDot={{ r: 5, fill: 'var(--color-gold)' }}
+                      activeDot={{ r: 5, fill: 'var(--color-positive)' }}
                     />
                     <Line
                       type="monotone"
