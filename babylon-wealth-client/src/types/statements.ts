@@ -2,9 +2,21 @@
 
 export interface SelectedPeriod {
   mode: 'monthly' | 'year-end';
-  month: number | null; // 1–12; null for year-end
+  month: number | null;
   year: number;
-  label: string; // e.g. "January 2025" or "2025 Year-End"
+  label: string;
+}
+
+// ── Annual Financial Summary ──────────────────────────────────
+
+export interface AnnualFinancialSummaryDto {
+  year: number;
+  totalMoneyIn: number;
+  totalCheckingOut: number;
+  totalCreditCardSpend: number;
+  netSavings: number;
+  checkingMonthsRecorded: number;
+  creditCardMonthsRecorded: number;
 }
 
 // ── Checking (Money In) ───────────────────────────────────────

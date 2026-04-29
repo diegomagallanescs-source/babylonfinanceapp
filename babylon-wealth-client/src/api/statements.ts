@@ -6,6 +6,7 @@ import type {
   StatementAnalysisResponseDto,
   StatementSummaryResponseDto,
   SaveStatementRequest,
+  AnnualFinancialSummaryDto,
 } from '../types/statements';
 
 // ── Checking (Money In) ───────────────────────────────────────
@@ -79,5 +80,10 @@ export async function updateStatement(
 
 export async function fetchStatementHistory(): Promise<StatementSummaryResponseDto[]> {
   const { data } = await apiClient.get<StatementSummaryResponseDto[]>('/statements/history');
+  return data;
+}
+
+export async function fetchStatementAnnualSummary(): Promise<AnnualFinancialSummaryDto[]> {
+  const { data } = await apiClient.get<AnnualFinancialSummaryDto[]>('/statements/annual-summary');
   return data;
 }
