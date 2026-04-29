@@ -10,6 +10,14 @@ public class StatementImport : BaseEntity<Guid>
     public string AccountsIncluded { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
 
+    // Optional per-category spend breakdown (manually entered by the user)
+    public decimal? NecessitiesSpend { get; private set; }
+    public decimal? TravelSpend { get; private set; }
+    public decimal? SavingsSpend { get; private set; }
+    public decimal? ShoppingSpend { get; private set; }
+    public decimal? InvestmentsSpend { get; private set; }
+    public decimal? OtherSpend { get; private set; }
+
     private StatementImport() { }
 
     public static StatementImport Create(
@@ -19,7 +27,13 @@ public class StatementImport : BaseEntity<Guid>
         decimal totalSpend,
         int transactionCount,
         string accountsIncluded,
-        string? notes = null)
+        string? notes = null,
+        decimal? necessitiesSpend = null,
+        decimal? travelSpend = null,
+        decimal? savingsSpend = null,
+        decimal? shoppingSpend = null,
+        decimal? investmentsSpend = null,
+        decimal? otherSpend = null)
     {
         return new StatementImport
         {
@@ -30,16 +44,38 @@ public class StatementImport : BaseEntity<Guid>
             TotalSpend = totalSpend,
             TransactionCount = transactionCount,
             AccountsIncluded = accountsIncluded,
-            Notes = notes
+            Notes = notes,
+            NecessitiesSpend = necessitiesSpend,
+            TravelSpend = travelSpend,
+            SavingsSpend = savingsSpend,
+            ShoppingSpend = shoppingSpend,
+            InvestmentsSpend = investmentsSpend,
+            OtherSpend = otherSpend,
         };
     }
 
-    public void Update(decimal totalSpend, int transactionCount, string accountsIncluded, string? notes)
+    public void Update(
+        decimal totalSpend,
+        int transactionCount,
+        string accountsIncluded,
+        string? notes,
+        decimal? necessitiesSpend,
+        decimal? travelSpend,
+        decimal? savingsSpend,
+        decimal? shoppingSpend,
+        decimal? investmentsSpend,
+        decimal? otherSpend)
     {
         TotalSpend = totalSpend;
         TransactionCount = transactionCount;
         AccountsIncluded = accountsIncluded;
         Notes = notes;
+        NecessitiesSpend = necessitiesSpend;
+        TravelSpend = travelSpend;
+        SavingsSpend = savingsSpend;
+        ShoppingSpend = shoppingSpend;
+        InvestmentsSpend = investmentsSpend;
+        OtherSpend = otherSpend;
         Touch();
     }
 }

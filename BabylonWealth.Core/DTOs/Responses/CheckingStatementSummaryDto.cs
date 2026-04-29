@@ -12,6 +12,13 @@ public record CheckingStatementSummaryDto
     public string AccountsIncluded { get; init; } = string.Empty;
     public string? Notes { get; init; }
     public DateTime CreatedAt { get; init; }
+    public List<IncomeCategoryItemResponseDto> IncomeCategories { get; init; } = [];
+}
+
+public record IncomeCategoryItemResponseDto
+{
+    public string Name { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
 }
 
 public record AnnualFinancialSummaryDto

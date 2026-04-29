@@ -110,20 +110,20 @@ public class CheckingStatementAnalyzerService : ICheckingStatementAnalyzerServic
             }
         }
 
-        var moneyIn  = allTransactions.Where(t => t.Amount > 0).ToList();
-        var moneyOut = allTransactions.Where(t => t.Amount < 0).ToList();
-
-        // Exclude self-Zelle transfers (money moved between own accounts) from the Money In total
-        // and re-tag them so the UI can show them as neutral self-transfers.
+        // Re-tag self-Zelle transfers on allTransactions so the full transaction list
+        // also reflects the correct category (not just the totals/breakdown).
         var selfTransferPattern = new System.Text.RegularExpressions.Regex(
-            @"\bDIEGO\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            @"\bDIEGO\b|\bMAGALLANES\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-        moneyIn = moneyIn.Select(t =>
+        allTransactions = allTransactions.Select(t =>
         {
-            if (t.Category == "Zelle Received" && selfTransferPattern.IsMatch(t.Description))
+            if (t.Amount > 0 && t.Category == "Zelle Received" && selfTransferPattern.IsMatch(t.Description))
                 return t with { Category = "Self Transfer" };
             return t;
         }).ToList();
+
+        var moneyIn  = allTransactions.Where(t => t.Amount > 0).ToList();
+        var moneyOut = allTransactions.Where(t => t.Amount < 0).ToList();
 
         var totalIn  = moneyIn.Where(t => t.Category != "Self Transfer").Sum(t => t.Amount);
         var totalOut = Math.Abs(moneyOut.Sum(t => t.Amount));

@@ -53,6 +53,11 @@ export interface CheckingStatementResponseDto {
   parseWarnings: string[];
 }
 
+export interface IncomeCategoryItem {
+  name: string;
+  amount: number;
+}
+
 export interface SaveCheckingStatementRequest {
   month: number;
   year: number;
@@ -61,6 +66,7 @@ export interface SaveCheckingStatementRequest {
   transactionCount: number;
   accountsIncluded: string;
   notes?: string;
+  incomeCategories?: IncomeCategoryItem[];
 }
 
 export interface CheckingStatementSummaryDto {
@@ -74,6 +80,7 @@ export interface CheckingStatementSummaryDto {
   accountsIncluded: string;
   notes: string | null;
   createdAt: string;
+  incomeCategories: IncomeCategoryItem[];
 }
 
 // ── Credit Card (Money Out) ───────────────────────────────────
@@ -84,6 +91,7 @@ export interface ParsedTransactionDto {
   amount: number;
   category: string;
   accountLast4?: string;
+  merchant?: string;
 }
 
 export interface CategoryBreakdownDto {
@@ -129,6 +137,12 @@ export interface SaveStatementRequest {
   transactionCount: number;
   accountsIncluded: string;
   notes?: string;
+  necessitiesSpend?: number | null;
+  travelSpend?: number | null;
+  savingsSpend?: number | null;
+  shoppingSpend?: number | null;
+  investmentsSpend?: number | null;
+  otherSpend?: number | null;
 }
 
 export interface StatementSummaryResponseDto {
@@ -140,4 +154,10 @@ export interface StatementSummaryResponseDto {
   accountsIncluded: string;
   notes: string | null;
   createdAt: string;
+  necessitiesSpend: number | null;
+  travelSpend: number | null;
+  savingsSpend: number | null;
+  shoppingSpend: number | null;
+  investmentsSpend: number | null;
+  otherSpend: number | null;
 }

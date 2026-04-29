@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-  AreaChart, Area, XAxis, YAxis,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
 } from 'recharts';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -19,6 +19,7 @@ import type {
   CheckingTransactionDto,
   AnnualFinancialSummaryDto,
   SaveCheckingStatementRequest,
+  IncomeCategoryItem,
   SelectedPeriod,
 } from '../../types/statements';
 import './MoneyInPage.css';
@@ -131,30 +132,56 @@ function MoneyInDonutChart({ breakdown }: { breakdown: CheckingCategoryBreakdown
   );
 }
 
-// ── MoneyInAreaChart ──────────────────────────────────────────
+// ── MoneyInHistoryChart ───────────────────────────────────────
+
+const CAT_PALETTE = ['#00E676','#6B8CFF','#F0B429','#C084FC','#FF9A3C','#22D3EE','#F472B6','#4CAF7D'];
 
 function historyLabel(r: CheckingStatementSummaryDto): string {
   return `${MONTH_SHORT[r.month - 1]} '${String(r.year).slice(2)}`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HistoryTooltip({ active, payload, label }: any) {
+function MoneyInHistoryTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const r: CheckingStatementSummaryDto = payload[0].payload.raw;
+  const hasCats = payload.some((p: any) => p.dataKey !== 'moneyIn' && p.value > 0);
   return (
     <div className="mi-tooltip">
       <div className="mi-tooltip__name">{label}</div>
-      <div className="mi-tooltip__row"><span>Money In</span><span>{formatCurrency(r.totalMoneyIn)}</span></div>
-      <div className="mi-tooltip__row"><span>Net Flow</span><span>{r.netFlow >= 0 ? '+' : ''}{formatCurrency(r.netFlow)}</span></div>
+      {hasCats
+        ? payload.filter((p: any) => p.value > 0).map((p: any) => (
+            <div key={p.dataKey} className="mi-tooltip__row">
+              <span style={{ color: p.fill }}>{p.name}</span>
+              <span>{formatCurrency(p.value)}</span>
+            </div>
+          ))
+        : payload.map((p: any) => (
+            <div key={p.dataKey} className="mi-tooltip__row">
+              <span>Money In</span><span>{formatCurrency(p.value)}</span>
+            </div>
+          ))
+      }
     </div>
   );
 }
 
-function MoneyInAreaChart({ history }: { history: CheckingStatementSummaryDto[] }) {
+function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto[] }) {
   const sorted = [...history].sort((a, b) =>
     a.year !== b.year ? a.year - b.year : a.month - b.month,
   );
-  const data = sorted.map(r => ({ label: historyLabel(r), moneyIn: r.totalMoneyIn, raw: r }));
+
+  // Collect all unique category names across all records
+  const allCatNames = Array.from(
+    new Set(sorted.flatMap(r => (r.incomeCategories ?? []).map(c => c.name)))
+  );
+  const hasCategoryData = allCatNames.length > 0;
+
+  const data = sorted.map(r => {
+    const base: Record<string, unknown> = { label: historyLabel(r), moneyIn: r.totalMoneyIn };
+    allCatNames.forEach(name => {
+      base[name] = r.incomeCategories.find(c => c.name === name)?.amount ?? 0;
+    });
+    return base;
+  });
 
   if (data.length === 0) {
     return (
@@ -168,25 +195,49 @@ function MoneyInAreaChart({ history }: { history: CheckingStatementSummaryDto[] 
     );
   }
 
+  if (!hasCategoryData) {
+    return (
+      <div className="mi-chart-card">
+        <div className="mi-chart-card__title">Money In History</div>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="moneyInGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00E676" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#00E676" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false}
+              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
+            <Tooltip content={<MoneyInHistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
+            <Area type="monotone" dataKey="moneyIn" stroke="#00E676" strokeWidth={2}
+              fill="url(#moneyInGrad)" dot={false} activeDot={{ r: 4, fill: '#00E676' }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
   return (
     <div className="mi-chart-card">
-      <div className="mi-chart-card__title">Money In History</div>
-      <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
-          <defs>
-            <linearGradient id="moneyInGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00E676" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#00E676" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
+      <div className="mi-chart-card__title">Money In by Category</div>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false}
             tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
-          <Tooltip content={<HistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
-          <Area type="monotone" dataKey="moneyIn" stroke="#00E676" strokeWidth={2}
-            fill="url(#moneyInGrad)" dot={false}
-            activeDot={{ r: 4, fill: '#00E676', stroke: '#07080F', strokeWidth: 2 }} />
-        </AreaChart>
+          <Tooltip content={<MoneyInHistoryTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <Legend
+            wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+            formatter={(value) => <span style={{ color: 'var(--color-text-sub)' }}>{value}</span>}
+          />
+          {allCatNames.map((name, i) => (
+            <Bar key={name} dataKey={name} name={name} stackId="a"
+              fill={CAT_PALETTE[i % CAT_PALETTE.length]} fillOpacity={0.9}
+              radius={i === allCatNames.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]} />
+          ))}
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
@@ -250,6 +301,8 @@ interface CheckingSavePeriodButtonProps {
   onError: (msg: string) => void;
 }
 
+const EMPTY_CAT = (): IncomeCategoryItem => ({ name: '', amount: 0 });
+
 function CheckingSavePeriodButton({
   period,
   result,
@@ -258,13 +311,13 @@ function CheckingSavePeriodButton({
   onError,
 }: CheckingSavePeriodButtonProps) {
   const [progress, setProgress] = useState<string | null>(null);
+  const [cats, setCats] = useState<IncomeCategoryItem[]>([EMPTY_CAT()]);
   const saveMutation = useSaveChecking();
   const updateMutation = useUpdateChecking();
   const queryClient = useQueryClient();
 
   const busy = saveMutation.isPending || updateMutation.isPending || progress !== null;
 
-  // Year-end: count how many unique months are in the transaction list
   const yearEndMonthCount = period.mode === 'year-end'
     ? new Set(result.transactions.map(t => extractYearMonth(t.date)).filter(Boolean)).size
     : 0;
@@ -276,7 +329,36 @@ function CheckingSavePeriodButton({
         ? `Update ${period.label} →`
         : `Save ${period.label} →`);
 
+  function validCats(): IncomeCategoryItem[] {
+    return cats.filter(c => c.name.trim() !== '' && c.amount > 0);
+  }
+
+  function filledTotal(): number {
+    return cats.reduce((s, c) => s + (c.amount || 0), 0);
+  }
+
+  function handleFillRest() {
+    const remainder = Math.max(0, result.totalMoneyIn - filledTotal());
+    // Find first row with no amount, or add a new row
+    const idx = cats.findIndex(c => c.amount === 0);
+    if (idx !== -1) {
+      setCats(prev => prev.map((c, i) => i === idx ? { ...c, amount: remainder } : c));
+    } else if (cats.length < 5) {
+      setCats(prev => [...prev, { name: 'Other', amount: remainder }]);
+    }
+  }
+
+  function canFillRest(): boolean {
+    const remainder = result.totalMoneyIn - filledTotal();
+    return remainder > 0 && (cats.some(c => c.amount === 0) || cats.length < 5);
+  }
+
   const handleMonthlySave = async () => {
+    const valid = validCats();
+    if (valid.length === 0 && cats.some(c => c.name.trim() !== '' || c.amount > 0)) {
+      onError('Each category needs both a name and an amount greater than zero.');
+      return;
+    }
     const payload: SaveCheckingStatementRequest = {
       month: period.month!,
       year: period.year,
@@ -284,6 +366,7 @@ function CheckingSavePeriodButton({
       totalMoneyOut: result.totalMoneyOut,
       transactionCount: result.transactionCount,
       accountsIncluded: result.accountsDetected.join(', '),
+      incomeCategories: valid.length > 0 ? valid : undefined,
     };
     if (existingRecord) {
       const ok = window.confirm(
@@ -299,7 +382,6 @@ function CheckingSavePeriodButton({
   };
 
   const handleYearEndSave = async () => {
-    // Group transactions by YYYY-MM
     const byMonth = new Map<string, { moneyIn: number; moneyOut: number; count: number }>();
     (result.transactions as CheckingTransactionDto[]).forEach(t => {
       const key = extractYearMonth(t.date);
@@ -338,26 +420,74 @@ function CheckingSavePeriodButton({
 
   const handleClick = async () => {
     try {
-      if (period.mode === 'year-end') {
-        await handleYearEndSave();
-      } else {
-        await handleMonthlySave();
-      }
+      if (period.mode === 'year-end') await handleYearEndSave();
+      else await handleMonthlySave();
     } catch {
       onError('Save failed. Please try again.');
     }
   };
 
   return (
-    <div className="mi-save-row">
-      <button
-        type="button"
-        className="btn btn--primary mi-save-btn"
-        disabled={busy}
-        onClick={handleClick}
-      >
-        {label}
-      </button>
+    <div className="mi-save-section">
+      {period.mode === 'monthly' && (
+        <div className="mi-cat-inputs">
+          <div className="mi-cat-inputs__header">
+            <div className="mi-cat-inputs__label">Income Breakdown <span>(optional)</span></div>
+            <div className="mi-cat-inputs__actions">
+              <button
+                type="button"
+                className="mi-cat-btn mi-cat-btn--fill"
+                disabled={!canFillRest()}
+                onClick={handleFillRest}
+                title={`Remainder: ${formatCurrency(Math.max(0, result.totalMoneyIn - filledTotal()))}`}
+              >
+                Fill the Rest ({formatCurrency(Math.max(0, result.totalMoneyIn - filledTotal()))})
+              </button>
+              {cats.length < 5 && (
+                <button type="button" className="mi-cat-btn" onClick={() => setCats(p => [...p, EMPTY_CAT()])}>
+                  + Add Category
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="mi-cat-rows">
+            {cats.map((cat, i) => (
+              <div key={i} className="mi-cat-row">
+                <span className="mi-cat-row__num">{i + 1}</span>
+                <input
+                  className="mi-cat-row__name"
+                  type="text"
+                  placeholder="Category name…"
+                  value={cat.name}
+                  onChange={e => setCats(p => p.map((c, j) => j === i ? { ...c, name: e.target.value } : c))}
+                />
+                <input
+                  className="mi-cat-row__amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={cat.amount || ''}
+                  onChange={e => setCats(p => p.map((c, j) => j === i ? { ...c, amount: parseFloat(e.target.value) || 0 } : c))}
+                />
+                <button
+                  type="button"
+                  className="mi-cat-row__remove"
+                  disabled={cats.length === 1}
+                  onClick={() => setCats(p => p.filter((_, j) => j !== i))}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="mi-save-row">
+        <button type="button" className="btn btn--primary mi-save-btn" disabled={busy} onClick={handleClick}>
+          {label}
+        </button>
+      </div>
     </div>
   );
 }
@@ -458,7 +588,7 @@ export function MoneyInPage() {
         ) : historyError ? (
           <div className="banner banner--error">Failed to load money-in history. Please refresh.</div>
         ) : (
-          <MoneyInAreaChart history={history ?? []} />
+          <MoneyInHistoryChart history={history ?? []} />
         )}
         {annualLoading ? (
           <div className="skel skel--table" />

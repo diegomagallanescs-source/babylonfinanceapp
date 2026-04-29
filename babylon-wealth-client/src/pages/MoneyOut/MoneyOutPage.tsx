@@ -3,7 +3,7 @@ import {
   AreaChart, Area,
   BarChart, Bar,
   XAxis, YAxis,
-  ResponsiveContainer, Tooltip, Cell, LabelList,
+  ResponsiveContainer, Tooltip, Cell, LabelList, Legend,
 } from 'recharts';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -20,6 +20,7 @@ import type {
   AnnualFinancialSummaryDto,
   CategoryBreakdownDto,
   TopMerchantDto,
+  ParsedTransactionDto,
   MonthlySpendDto,
   SelectedPeriod,
   SaveStatementRequest,
@@ -102,31 +103,102 @@ function CategoryBarChart({ breakdown }: { breakdown: CategoryBreakdownDto[] }) 
   );
 }
 
+// ── MerchantModal ─────────────────────────────────────────────
+
+function MerchantModal({
+  merchant,
+  transactions,
+  onClose,
+}: {
+  merchant: TopMerchantDto;
+  transactions: ParsedTransactionDto[];
+  onClose: () => void;
+}) {
+  const rows = transactions
+    .filter(t => t.merchant === merchant.name)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return (
+    <div className="mo-merchant-overlay" onClick={onClose}>
+      <div className="mo-merchant-modal" onClick={e => e.stopPropagation()}>
+        <div className="mo-merchant-modal__header">
+          <div className="mo-merchant-modal__title">{merchant.name}</div>
+          <div className="mo-merchant-modal__meta">
+            {rows.length} transaction{rows.length !== 1 ? 's' : ''}
+            &nbsp;·&nbsp;
+            <span style={{ color: 'var(--color-negative)' }}>{formatCurrency(merchant.total)}</span>
+          </div>
+          <button className="mo-merchant-modal__close" type="button" onClick={onClose}>✕</button>
+        </div>
+        <div className="mo-merchant-modal__body">
+          <table className="mo-merchant-txn-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th className="mo-merchant-txn-table__num">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((t, i) => (
+                <tr key={i}>
+                  <td className="mo-merchant-txn-table__date">{t.date}</td>
+                  <td>{t.description}</td>
+                  <td className="mo-merchant-txn-table__num mo-merchant-txn-table__amount">
+                    {formatCurrency(t.amount)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── TopMerchantsTable ─────────────────────────────────────────
 
-function TopMerchantsTable({ merchants }: { merchants: TopMerchantDto[] }) {
+function TopMerchantsTable({
+  merchants,
+  transactions,
+}: {
+  merchants: TopMerchantDto[];
+  transactions: ParsedTransactionDto[];
+}) {
+  const [selected, setSelected] = useState<TopMerchantDto | null>(null);
+
   return (
-    <div className="mo-chart-card">
-      <div className="mo-chart-card__title">Top Merchants</div>
-      <table className="mo-merchants-table">
-        <thead>
-          <tr>
-            <th>Merchant</th>
-            <th className="mo-merchants-table__num">Total</th>
-            <th className="mo-merchants-table__num">Transactions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {merchants.map((m, i) => (
-            <tr key={i}>
-              <td>{m.name}</td>
-              <td className="mo-merchants-table__num">{formatCurrency(m.total)}</td>
-              <td className="mo-merchants-table__num mo-merchants-table__count">{m.count}</td>
+    <>
+      <div className="mo-chart-card">
+        <div className="mo-chart-card__title">Top Merchants</div>
+        <table className="mo-merchants-table">
+          <thead>
+            <tr>
+              <th>Merchant</th>
+              <th className="mo-merchants-table__num">Total</th>
+              <th className="mo-merchants-table__num">Transactions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {merchants.map((m, i) => (
+              <tr key={i} className="mo-merchants-table__row--clickable" onClick={() => setSelected(m)}>
+                <td>{m.name}</td>
+                <td className="mo-merchants-table__num">{formatCurrency(m.total)}</td>
+                <td className="mo-merchants-table__num mo-merchants-table__count">{m.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {selected && (
+        <MerchantModal
+          merchant={selected}
+          transactions={transactions}
+          onClose={() => setSelected(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -161,32 +233,66 @@ function MonthlyBreakdownBarChart({ breakdown }: { breakdown: MonthlySpendDto[] 
   );
 }
 
-// ── SpendHistoryAreaChart ─────────────────────────────────────
+// ── SpendHistoryChart ─────────────────────────────────────────
+
+const CAT_COLORS: Record<string, string> = {
+  necessities:  '#E05555',
+  travel:       '#6B8CFF',
+  savings:      '#4CAF7D',
+  shopping:     '#F0B429',
+  investments:  '#C084FC',
+  other:        '#8A8070',
+  total:        '#FF4458',
+};
 
 function historyLabel(r: StatementSummaryResponseDto): string {
   return `${MONTH_SHORT[r.month - 1]} '${String(r.year).slice(2)}`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HistoryTooltip({ active, payload, label }: any) {
+function SpendHistoryTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
+  const hasCats = payload.some((p: any) => p.dataKey !== 'total' && p.value > 0);
   return (
     <div className="mo-tooltip">
       <div className="mo-tooltip__name">{label}</div>
-      <div className="mo-tooltip__row"><span>Spend</span><span>{formatCurrency(payload[0].value)}</span></div>
+      {hasCats
+        ? payload
+            .filter((p: any) => p.value > 0)
+            .map((p: any) => (
+              <div key={p.dataKey} className="mo-tooltip__row">
+                <span style={{ color: p.fill }}>{p.name}</span>
+                <span>{formatCurrency(p.value)}</span>
+              </div>
+            ))
+        : <div className="mo-tooltip__row"><span>Total Spend</span><span>{formatCurrency(payload[0].value)}</span></div>
+      }
     </div>
   );
 }
 
-function SpendHistoryAreaChart({ history }: { history: StatementSummaryResponseDto[] }) {
+function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[] }) {
   const sorted = [...history].sort((a, b) =>
     a.year !== b.year ? a.year - b.year : a.month - b.month,
   );
-  const data = sorted.map(r => ({ label: historyLabel(r), total: r.totalSpend }));
+
+  const hasCategoryData = sorted.some(r => r.necessitiesSpend != null);
+
+  const data = sorted.map(r => ({
+    label: historyLabel(r),
+    total: r.totalSpend,
+    necessities:  r.necessitiesSpend ?? 0,
+    travel:       r.travelSpend ?? 0,
+    savings:      r.savingsSpend ?? 0,
+    shopping:     r.shoppingSpend ?? 0,
+    investments:  r.investmentsSpend ?? 0,
+    other:        r.otherSpend ?? 0,
+    hasCats:      r.necessitiesSpend != null,
+  }));
 
   if (data.length === 0) {
     return (
-      <div className="mo-chart-card mo-history-empty">
+      <div className="mo-chart-card">
         <div className="mo-chart-card__title">Spend History</div>
         <div className="mo-empty-state">
           <span>📄</span>
@@ -196,30 +302,45 @@ function SpendHistoryAreaChart({ history }: { history: StatementSummaryResponseD
     );
   }
 
+  if (!hasCategoryData) {
+    return (
+      <div className="mo-chart-card">
+        <div className="mo-chart-card__title">Spend History</div>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FF4458" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#F0B429" stopOpacity={0.04} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
+            <Tooltip content={<SpendHistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
+            <Area type="monotone" dataKey="total" stroke="#FF4458" strokeWidth={2} fill="url(#spendGrad)" dot={false} activeDot={{ r: 4, fill: '#FF4458' }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
   return (
     <div className="mo-chart-card">
-      <div className="mo-chart-card__title">Spend History</div>
-      <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
-          <defs>
-            <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FF4458" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#F0B429" stopOpacity={0.04} />
-            </linearGradient>
-          </defs>
+      <div className="mo-chart-card__title">Spend History by Category</div>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
-          <Tooltip content={<HistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
-          <Area
-            type="monotone"
-            dataKey="total"
-            stroke="#FF4458"
-            strokeWidth={2}
-            fill="url(#spendGrad)"
-            dot={false}
-            activeDot={{ r: 4, fill: '#FF4458', stroke: '#07080F', strokeWidth: 2 }}
+          <Tooltip content={<SpendHistoryTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <Legend
+            wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+            formatter={(value) => <span style={{ color: 'var(--color-text-sub)' }}>{value.charAt(0).toUpperCase() + value.slice(1)}</span>}
           />
-        </AreaChart>
+          {(['necessities', 'travel', 'savings', 'shopping', 'investments', 'other'] as const).map((cat, i) => (
+            <Bar key={cat} dataKey={cat} name={cat} stackId="a" fill={CAT_COLORS[cat]}
+              fillOpacity={0.9} radius={i === 5 ? [3, 3, 0, 0] : [0, 0, 0, 0]} />
+          ))}
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
@@ -295,6 +416,7 @@ function SavePeriodButton({
   onError,
 }: SavePeriodButtonProps) {
   const [progress, setProgress] = useState<string | null>(null);
+  const [cats, setCats] = useState({ necessities: '', travel: '', savings: '', shopping: '', investments: '', other: '' });
   const saveMutation = useSaveStatement();
   const updateMutation = useUpdateStatement();
   const queryClient = useQueryClient();
@@ -308,6 +430,11 @@ function SavePeriodButton({
         ? `Update ${period.label} →`
         : `Save ${period.label} →`);
 
+  function parseOptional(val: string): number | null {
+    const n = parseFloat(val);
+    return val.trim() === '' || isNaN(n) ? null : n;
+  }
+
   const handleMonthlySave = async () => {
     const payload: SaveStatementRequest = {
       month: period.month!,
@@ -315,6 +442,12 @@ function SavePeriodButton({
       totalSpend: result.totalPurchases,
       transactionCount: result.transactionCount,
       accountsIncluded: result.accountsDetected.join(', '),
+      necessitiesSpend:  parseOptional(cats.necessities),
+      travelSpend:       parseOptional(cats.travel),
+      savingsSpend:      parseOptional(cats.savings),
+      shoppingSpend:     parseOptional(cats.shopping),
+      investmentsSpend:  parseOptional(cats.investments),
+      otherSpend:        parseOptional(cats.other),
     };
 
     if (existingRecord) {
@@ -365,16 +498,69 @@ function SavePeriodButton({
     }
   };
 
+  function filledTotal() {
+    return ['necessities', 'travel', 'savings', 'shopping', 'investments']
+      .reduce((sum, k) => sum + (parseOptional(cats[k as keyof typeof cats]) ?? 0), 0);
+  }
+
+  function handleFillRest() {
+    const remainder = Math.max(0, result.totalPurchases - filledTotal());
+    setCats(c => ({ ...c, other: remainder.toFixed(2) }));
+  }
+
+  const canFillRest =
+    period.mode === 'monthly' &&
+    result.totalPurchases > filledTotal() &&
+    cats.other === '';
+
   return (
-    <div className="mo-save-row">
-      <button
-        type="button"
-        className="btn btn--primary mo-save-btn"
-        disabled={busy}
-        onClick={handleClick}
-      >
-        {label}
-      </button>
+    <div className="mo-save-section">
+      {period.mode === 'monthly' && (
+        <div className="mo-cat-inputs">
+          <div className="mo-cat-inputs__header">
+            <span className="mo-cat-inputs__label">Category Breakdown <span>(optional)</span></span>
+            {canFillRest && (
+              <button type="button" className="mo-cat-btn mo-cat-btn--fill" onClick={handleFillRest}>
+                Fill the Rest
+              </button>
+            )}
+          </div>
+          <div className="mo-cat-inputs__grid">
+            {([
+              { key: 'necessities',  label: 'Necessities',  color: '#E05555' },
+              { key: 'travel',       label: 'Travel',       color: '#6B8CFF' },
+              { key: 'savings',      label: 'Savings',      color: '#4CAF7D' },
+              { key: 'shopping',     label: 'Shopping',     color: '#F0B429' },
+              { key: 'investments',  label: 'Investments',  color: '#C084FC' },
+              { key: 'other',        label: 'Other',        color: '#8A8070' },
+            ] as const).map(({ key, label: catLabel, color }) => (
+              <label key={key} className="mo-cat-input">
+                <span className="mo-cat-input__dot" style={{ background: color }} />
+                <span className="mo-cat-input__label">{catLabel}</span>
+                <input
+                  className="mo-cat-input__field"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={cats[key]}
+                  onChange={e => setCats(c => ({ ...c, [key]: e.target.value }))}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="mo-save-row">
+        <button
+          type="button"
+          className="btn btn--primary mo-save-btn"
+          disabled={busy}
+          onClick={handleClick}
+        >
+          {label}
+        </button>
+      </div>
     </div>
   );
 }
@@ -442,7 +628,7 @@ export function MoneyOutPage() {
 
           <SpendSummaryCard result={analysisResult} period={period} />
           <CategoryBarChart breakdown={analysisResult.categoryBreakdown} />
-          <TopMerchantsTable merchants={analysisResult.topMerchants} />
+          <TopMerchantsTable merchants={analysisResult.topMerchants} transactions={analysisResult.transactions} />
           {analysisResult.reportType === 'YearEnd' && (
             <MonthlyBreakdownBarChart breakdown={analysisResult.monthlyBreakdown} />
           )}
@@ -471,7 +657,7 @@ export function MoneyOutPage() {
         ) : historyError ? (
           <div className="banner banner--error">Failed to load spend history. Please refresh.</div>
         ) : (
-          <SpendHistoryAreaChart history={history ?? []} />
+          <SpendHistoryChart history={history ?? []} />
         )}
         {annualLoading ? (
           <div className="skel skel--table" />

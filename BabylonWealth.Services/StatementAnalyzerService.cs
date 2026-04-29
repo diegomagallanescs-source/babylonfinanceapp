@@ -191,7 +191,9 @@ public class StatementAnalyzerService : IStatementAnalyzerService
             TotalPurchases = Math.Round(totalPurchases, 2),
             TransactionCount = allTransactions.Count,
             HasTransactions = allTransactions.Count > 0,
-            Transactions = allTransactions.OrderBy(t => t.Date).ToList(),
+            Transactions = allTransactions.OrderBy(t => t.Date)
+                .Select(t => t with { Merchant = NormalizeMerchantName(t.Description) })
+                .ToList(),
             CategoryBreakdown = categoryBreakdown,
             TopMerchants = topMerchants,
             MonthlyBreakdown = monthlyBreakdown,

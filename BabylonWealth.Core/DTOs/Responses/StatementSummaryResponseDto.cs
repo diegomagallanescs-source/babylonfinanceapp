@@ -10,4 +10,10 @@ public record StatementSummaryResponseDto
     public string AccountsIncluded { get; init; } = string.Empty;
     public string? Notes { get; init; }
     public DateTime CreatedAt { get; init; }
+    public decimal? NecessitiesSpend { get; init; }
+    public decimal? TravelSpend { get; init; }
+    public decimal? SavingsSpend { get; init; }
+    public decimal? ShoppingSpend { get; init; }
+    public decimal? InvestmentsSpend { get; init; }
+    public decimal? OtherSpend { get; init; }
 }

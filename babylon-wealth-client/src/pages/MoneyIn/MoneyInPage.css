@@ -252,6 +252,133 @@
 .mi-annual-table__neg    { color: var(--color-negative) !important; }
 .mi-annual-table__months { color: var(--color-text-muted) !important; font-size: 12px; }
 
+/* ── Save section (category inputs) ─────────────────────────── */
+.mi-save-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mi-cat-inputs {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mi-cat-inputs__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mi-cat-inputs__label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+}
+
+.mi-cat-inputs__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mi-cat-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.mi-cat-btn--fill {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+.mi-cat-btn--fill:hover {
+  background: rgba(201, 168, 76, 0.08);
+}
+.mi-cat-btn--add {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+.mi-cat-btn--add:hover {
+  border-color: var(--color-text-sub);
+  color: var(--color-text-sub);
+}
+
+.mi-cat-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mi-cat-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 140px 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.mi-cat-row__num {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.mi-cat-row__name,
+.mi-cat-row__amount {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  padding: 6px 10px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.mi-cat-row__name:focus,
+.mi-cat-row__amount:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+.mi-cat-row__name::placeholder,
+.mi-cat-row__amount::placeholder {
+  color: var(--color-text-muted);
+}
+
+.mi-cat-row__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+.mi-cat-row__remove:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-dim);
+}
+
 /* ── Toast notification ──────────────────────────────────────── */
 .mi-toast {
   position: fixed;

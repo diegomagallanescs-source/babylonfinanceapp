@@ -27,7 +27,13 @@ public class StatementImportService : IStatementImportService
             request.TotalSpend,
             request.TransactionCount,
             request.AccountsIncluded,
-            request.Notes);
+            request.Notes,
+            request.NecessitiesSpend,
+            request.TravelSpend,
+            request.SavingsSpend,
+            request.ShoppingSpend,
+            request.InvestmentsSpend,
+            request.OtherSpend);
 
         var saved = await _repo.CreateAsync(entity);
         return MapToDto(saved);
@@ -40,7 +46,17 @@ public class StatementImportService : IStatementImportService
         var entity = await _repo.GetByIdAsync(id, userId)
             ?? throw new NotFoundException("StatementImport", id);
 
-        entity.Update(request.TotalSpend, request.TransactionCount, request.AccountsIncluded, request.Notes);
+        entity.Update(
+            request.TotalSpend,
+            request.TransactionCount,
+            request.AccountsIncluded,
+            request.Notes,
+            request.NecessitiesSpend,
+            request.TravelSpend,
+            request.SavingsSpend,
+            request.ShoppingSpend,
+            request.InvestmentsSpend,
+            request.OtherSpend);
         await _repo.UpdateAsync(entity);
         return MapToDto(entity);
     }
@@ -84,6 +100,12 @@ public class StatementImportService : IStatementImportService
             TransactionCount = entity.TransactionCount,
             AccountsIncluded = entity.AccountsIncluded,
             Notes = entity.Notes,
-            CreatedAt = entity.CreatedAt
+            CreatedAt = entity.CreatedAt,
+            NecessitiesSpend = entity.NecessitiesSpend,
+            TravelSpend = entity.TravelSpend,
+            SavingsSpend = entity.SavingsSpend,
+            ShoppingSpend = entity.ShoppingSpend,
+            InvestmentsSpend = entity.InvestmentsSpend,
+            OtherSpend = entity.OtherSpend,
         };
 }

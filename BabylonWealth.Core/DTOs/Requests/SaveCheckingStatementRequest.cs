@@ -9,4 +9,11 @@ public record SaveCheckingStatementRequest
     public int TransactionCount { get; init; }
     public string AccountsIncluded { get; init; } = string.Empty;
     public string? Notes { get; init; }
+    public List<IncomeCategoryItemDto>? IncomeCategories { get; init; }
+}
+
+public record IncomeCategoryItemDto
+{
+    public string Name { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
 }

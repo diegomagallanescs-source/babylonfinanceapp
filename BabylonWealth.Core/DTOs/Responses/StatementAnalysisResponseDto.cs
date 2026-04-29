@@ -27,6 +27,7 @@ public record ParsedTransactionDto
     public string Category { get; init; } = string.Empty;
     public string? AccountLast4 { get; init; }
     public string? SourceFile { get; init; }
+    public string? Merchant { get; init; }
 }
 
 public record StatementCategoryDto

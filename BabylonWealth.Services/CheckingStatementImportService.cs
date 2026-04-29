@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BabylonWealth.Core.DTOs.Requests;
 using BabylonWealth.Core.DTOs.Responses;
 using BabylonWealth.Core.Entities;
@@ -11,6 +12,8 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 {
     private readonly ICheckingStatementImportRepository _checkingRepo;
     private readonly IStatementImportRepository _creditCardRepo;
+
+    private static readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
 
     public CheckingStatementImportService(
         ICheckingStatementImportRepository checkingRepo,
@@ -32,7 +35,8 @@ public class CheckingStatementImportService : ICheckingStatementImportService
             request.TotalMoneyOut,
             request.TransactionCount,
             request.AccountsIncluded,
-            request.Notes);
+            request.Notes,
+            SerializeCategories(request.IncomeCategories));
 
         var saved = await _checkingRepo.CreateAsync(entity);
         return MapToDto(saved);
@@ -45,7 +49,14 @@ public class CheckingStatementImportService : ICheckingStatementImportService
         var entity = await _checkingRepo.GetByIdAsync(id, userId)
             ?? throw new NotFoundException("CheckingStatementImport", id);
 
-        entity.Update(request.TotalMoneyIn, request.TotalMoneyOut, request.TransactionCount, request.AccountsIncluded, request.Notes);
+        entity.Update(
+            request.TotalMoneyIn,
+            request.TotalMoneyOut,
+            request.TransactionCount,
+            request.AccountsIncluded,
+            request.Notes,
+            SerializeCategories(request.IncomeCategories));
+
         await _checkingRepo.UpdateAsync(entity);
         return MapToDto(entity);
     }
@@ -58,10 +69,9 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
     public async Task<IEnumerable<AnnualFinancialSummaryDto>> GetAnnualSummaryAsync(Guid userId)
     {
-        var checkingRecords    = (await _checkingRepo.GetHistoryAsync(userId)).ToList();
-        var creditCardRecords  = (await _creditCardRepo.GetHistoryAsync(userId)).ToList();
+        var checkingRecords   = (await _checkingRepo.GetHistoryAsync(userId)).ToList();
+        var creditCardRecords = (await _creditCardRepo.GetHistoryAsync(userId)).ToList();
 
-        // Collect all years that appear in either dataset
         var years = checkingRecords.Select(c => c.Year)
             .Union(creditCardRecords.Select(s => s.Year))
             .Distinct()
@@ -69,8 +79,8 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
         return years.Select(year =>
         {
-            var checkingYear  = checkingRecords.Where(c => c.Year == year).ToList();
-            var creditYear    = creditCardRecords.Where(s => s.Year == year).ToList();
+            var checkingYear = checkingRecords.Where(c => c.Year == year).ToList();
+            var creditYear   = creditCardRecords.Where(s => s.Year == year).ToList();
 
             var totalIn       = checkingYear.Sum(c => c.TotalMoneyIn);
             var totalCheckOut = checkingYear.Sum(c => c.TotalMoneyOut);
@@ -78,12 +88,12 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
             return new AnnualFinancialSummaryDto
             {
-                Year                    = year,
-                TotalMoneyIn            = Math.Round(totalIn, 2),
-                TotalCheckingOut        = Math.Round(totalCheckOut, 2),
-                TotalCreditCardSpend    = Math.Round(totalCC, 2),
-                NetSavings              = Math.Round(totalIn - totalCC, 2),
-                CheckingMonthsRecorded  = checkingYear.Count,
+                Year                     = year,
+                TotalMoneyIn             = Math.Round(totalIn, 2),
+                TotalCheckingOut         = Math.Round(totalCheckOut, 2),
+                TotalCreditCardSpend     = Math.Round(totalCC, 2),
+                NetSavings               = Math.Round(totalIn - totalCC, 2),
+                CheckingMonthsRecorded   = checkingYear.Count,
                 CreditCardMonthsRecorded = creditYear.Count,
             };
         });
@@ -112,6 +122,26 @@ public class CheckingStatementImportService : ICheckingStatementImportService
             throw new ValidationException("Both Money In and Money Out are zero — the PDF could not be parsed correctly. Data was not saved.");
     }
 
+    private static string? SerializeCategories(List<IncomeCategoryItemDto>? cats)
+    {
+        if (cats == null || cats.Count == 0) return null;
+        var valid = cats.Where(c => !string.IsNullOrWhiteSpace(c.Name) && c.Amount > 0).ToList();
+        return valid.Count > 0 ? JsonSerializer.Serialize(valid) : null;
+    }
+
+    private static List<IncomeCategoryItemResponseDto> DeserializeCategories(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return [];
+        try
+        {
+            return JsonSerializer.Deserialize<List<IncomeCategoryItemResponseDto>>(json, _json) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
     private static CheckingStatementSummaryDto MapToDto(CheckingStatementImport e) => new()
     {
         Id               = e.Id,
@@ -124,5 +154,6 @@ public class CheckingStatementImportService : ICheckingStatementImportService
         AccountsIncluded = e.AccountsIncluded,
         Notes            = e.Notes,
         CreatedAt        = e.CreatedAt,
+        IncomeCategories = DeserializeCategories(e.IncomeCategoriesJson),
     };
 }
