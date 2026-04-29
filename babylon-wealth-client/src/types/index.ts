@@ -40,6 +40,29 @@ export interface InvestmentIncomeResponseDto {
   createdAt: string;
 }
 
+export interface CreateInvestmentIncomeRequest {
+  sourceName: string;
+  type: string;
+  amount: number;
+  receivedDate: string;
+  notes?: string;
+}
+
+// Matches GET /investmentincome/summary
+export interface PassiveIncomeTrendPoint {
+  year: number;
+  month: number;
+  total: number;
+  label: string; // e.g. "Apr 2026"
+}
+
+export interface PassiveIncomeSummaryDto {
+  currentMonthTotal: number;
+  currentYearTotal: number;
+  passiveToExpensesRatio: number | null; // null if no spending data
+  twelveMonthTrend: PassiveIncomeTrendPoint[];
+}
+
 // Matches UserProfileResponseDto from GET /users/me
 export interface UserDto {
   id: string;

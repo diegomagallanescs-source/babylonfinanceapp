@@ -76,6 +76,10 @@ export async function updateInvestment(id: string, body: UpdateInvestmentRequest
   return data;
 }
 
+export async function deleteInvestment(id: string): Promise<void> {
+  await apiClient.delete(`/investments/${id}`);
+}
+
 // ── Pending Items ────────────────────────────────────────────
 export async function fetchPendingItems(): Promise<PendingItemResponseDto[]> {
   const { data } = await apiClient.get<PendingItemResponseDto[]>('/pending');

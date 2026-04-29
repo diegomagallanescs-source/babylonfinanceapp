@@ -1,0 +1,779 @@
+/* ══════════════════════════════════════════════════════
+   INVESTING PAGE
+   ══════════════════════════════════════════════════════ */
+
+/* ── Page shell ───────────────────────────────────────────────── */
+.inv-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Sections ─────────────────────────────────────────────────── */
+.inv-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inv-section--charts {
+  padding: 20px;
+}
+
+.inv-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inv-section-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.inv-section-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ══ Section 1: Portfolio header ══════════════════════════════════ */
+.inv-portfolio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.inv-portfolio-header__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.inv-portfolio-header__total {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-gold);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ── CRUD Form ────────────────────────────────────────────────── */
+.inv-crud-form {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inv-crud-form__row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inv-crud-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+}
+
+.inv-crud-form__field--grow {
+  flex: 2;
+}
+
+.inv-crud-form__field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inv-crud-form__field input,
+.inv-crud-form__field select {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: var(--font-body);
+  padding: 7px 10px;
+  transition: border-color 0.2s;
+}
+
+.inv-crud-form__field input:focus,
+.inv-crud-form__field select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+.inv-crud-form__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ── Investment list ──────────────────────────────────────────── */
+.inv-list {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.inv-list__head,
+.inv-list__row,
+.inv-list__total-row {
+  display: grid;
+  grid-template-columns: 1fr 140px 160px 80px;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
+}
+
+.inv-list__head {
+  background: var(--color-bg-elevated);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inv-list__row {
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.inv-list__row:hover {
+  background: var(--color-bg-elevated);
+}
+
+.inv-list__row:last-of-type {
+  border-bottom: none;
+}
+
+.inv-list__edit-row {
+  border-bottom: 1px solid var(--color-border-glow);
+  background: var(--color-gold-dim);
+}
+
+.inv-list__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.inv-list__logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.inv-list__ticker {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  letter-spacing: 0.05em;
+}
+
+.inv-list__type {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inv-list__value {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.inv-list__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.inv-list__total-row {
+  background: var(--color-bg-elevated);
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.inv-list__total-row span:first-child {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inv-list__total-row span:nth-child(3) {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-gold);
+}
+
+/* ── Icon buttons ─────────────────────────────────────────────── */
+.inv-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: all 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inv-icon-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.inv-icon-btn--danger:hover {
+  border-color: var(--color-negative);
+  color: var(--color-negative);
+  background: var(--color-negative-dim);
+}
+
+.inv-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.inv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  transition: background 0.15s, opacity 0.15s;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.inv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inv-btn--primary {
+  background: var(--color-gold);
+  color: #0D0D0D;
+}
+
+.inv-btn--primary:hover:not(:disabled) {
+  background: var(--color-gold-hover);
+}
+
+.inv-btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+}
+
+.inv-btn--secondary:hover:not(:disabled) {
+  background: var(--color-gold-dim);
+}
+
+.inv-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.inv-btn--ghost:hover:not(:disabled) {
+  border-color: var(--color-text-sub);
+  color: var(--color-text);
+}
+
+.inv-btn--sm {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+/* ── Form error ───────────────────────────────────────────────── */
+.inv-form-error {
+  font-size: 12px;
+  color: var(--color-negative);
+  padding: 2px 0;
+}
+
+/* ══ Section 2: Side-by-side charts ══════════════════════════════ */
+.inv-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 780px) {
+  .inv-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inv-chart-card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inv-chart-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inv-chart-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.inv-chart-card__sub {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ── Category legend ──────────────────────────────────────────── */
+.inv-cat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.inv-cat-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--color-text-sub);
+}
+
+.inv-cat-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Entry form (compact, inside chart card) ──────────────────── */
+.inv-entry-form {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inv-entry-form__row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inv-entry-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 90px;
+}
+
+.inv-entry-form__field--grow {
+  flex: 2;
+  min-width: 130px;
+}
+
+.inv-entry-form__field label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inv-entry-form__field input,
+.inv-entry-form__field select {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: var(--font-body);
+  padding: 6px 8px;
+  transition: border-color 0.2s;
+}
+
+.inv-entry-form__field input:focus,
+.inv-entry-form__field select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+/* ── Entry list (collapsible manage panel) ────────────────────── */
+.inv-entry-list {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.inv-entry-list__toggle {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.inv-entry-list__toggle::-webkit-details-marker { display: none; }
+
+.inv-entry-list__toggle:hover {
+  color: var(--color-text-sub);
+}
+
+.inv-entry-list__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.inv-entry-list__row {
+  display: grid;
+  grid-template-columns: 70px 1fr 90px 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.inv-entry-list__row:last-child {
+  border-bottom: none;
+}
+
+.inv-entry-list__period {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.inv-entry-list__cat {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inv-entry-list__amt {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-positive);
+  text-align: right;
+}
+
+/* ── Chart empty / skeleton ───────────────────────────────────── */
+.inv-chart-empty {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 0 16px;
+  line-height: 1.6;
+}
+
+.inv-chart-skeleton {
+  height: 260px;
+  background: linear-gradient(90deg, var(--color-bg-card) 25%, var(--color-bg-elevated) 50%, var(--color-bg-card) 75%);
+  background-size: 200% 100%;
+  animation: invShimmer 1.6s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes invShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ══ Section 3: Compound Growth Projector ═════════════════════════ */
+.inv-projector {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inv-projector__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.inv-projector__control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inv-projector__control label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inv-projector__input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  transition: border-color 0.2s;
+}
+
+.inv-projector__input-wrap:focus-within {
+  border-color: var(--color-gold);
+}
+
+.inv-projector__input-wrap--readonly {
+  border-color: var(--color-border);
+  opacity: 0.75;
+}
+
+.inv-projector__input-wrap--readonly:focus-within {
+  border-color: var(--color-border);
+}
+
+.inv-projector__input-wrap input {
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+
+.inv-projector__input-wrap input:focus { outline: none; }
+
+.inv-projector__input-wrap input[readonly] {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.inv-projector__hint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.inv-projector__cta {
+  align-self: flex-start;
+  padding: 10px 28px;
+  font-size: 14px;
+}
+
+.inv-projector__chart-wrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 8px 8px;
+  background: var(--color-bg-elevated);
+}
+
+/* ── Projection summary ───────────────────────────────────────── */
+.inv-projector__summary {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+.inv-projector__summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 24px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.inv-projector__summary-divider {
+  width: 1px;
+  background: var(--color-border);
+  align-self: stretch;
+}
+
+.inv-projector__summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inv-projector__summary-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.inv-projector__summary-value--gold     { color: var(--color-gold); }
+.inv-projector__summary-value--positive { color: var(--color-positive); }
+
+/* ── Tooltip ──────────────────────────────────────────────────── */
+.inv-tooltip {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  font-size: 12px;
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+  min-width: 150px;
+}
+
+.inv-tooltip__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.inv-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.inv-tooltip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.inv-tooltip__total {
+  border-top: 1px solid var(--color-border);
+  margin-top: 5px;
+  padding-top: 5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ── Empty / skeleton ─────────────────────────────────────────── */
+.inv-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 28px;
+  line-height: 1.6;
+}
+
+.inv-skeleton-row {
+  height: 60px;
+  background: linear-gradient(90deg, var(--color-bg-card) 25%, var(--color-bg-elevated) 50%, var(--color-bg-card) 75%);
+  background-size: 200% 100%;
+  animation: invShimmer 1.6s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Light mode ───────────────────────────────────────────────── */
+[data-theme="light"] .inv-crud-form__field input,
+[data-theme="light"] .inv-crud-form__field select,
+[data-theme="light"] .inv-entry-form__field input,
+[data-theme="light"] .inv-entry-form__field select {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .inv-projector__input-wrap {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .inv-projector__chart-wrap {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .inv-chart-card {
+  background: var(--color-bg-surface);
+}
+
+[data-theme="light"] .inv-list__row:hover {
+  background: var(--color-bg-surface);
+}
