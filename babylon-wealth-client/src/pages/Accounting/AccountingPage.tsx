@@ -7,7 +7,6 @@ import { useNetWorth } from '../../hooks/useNetWorth';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCreditCards } from '../../hooks/useCreditCards';
 import { useLoans } from '../../hooks/useLoans';
-import { useInvestments } from '../../hooks/useInvestments';
 import { usePendingItems } from '../../hooks/usePendingItems';
 import { useProperties } from '../../hooks/useProperties';
 import { useBudgetCategories } from '../../hooks/useBudgetCategories';
@@ -16,7 +15,6 @@ import {
   createAccount, updateAccount, deleteAccount,
   createCreditCard, updateCreditCard,
   createLoan, updateLoan,
-  createInvestment, updateInvestment,
   createPendingItem, settlePendingItem, deletePendingItem,
   createProperty, updateProperty, deleteProperty,
 } from '../../api/ledger';
@@ -29,7 +27,6 @@ import type {
   BankAccountResponseDto, CreateBankAccountRequest, UpdateBankAccountRequest,
   CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
-  InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto, CreatePendingItemRequest,
   PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
   BudgetCategoryResponseDto,
@@ -41,7 +38,6 @@ import './AccountingPage.css';
 // ── Constants ─────────────────────────────────────────────────
 const ACCT_TYPES = ['Checking', 'Savings', 'Money Market', 'CD', 'Other'];
 const LOAN_TYPES = ['Mortgage', 'Auto', 'Student', 'Personal', 'HELOC', 'Business', 'Other'];
-const INVESTMENT_TYPES = ['Brokerage', '401k', 'IRA', 'Roth IRA', 'HSA', 'Crypto', 'Other'];
 
 // ── Small display helpers ─────────────────────────────────────
 function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | null }) {
@@ -286,7 +282,6 @@ export function AccountingPage() {
   const { data: accounts, isLoading: loadingAccounts } = useAccounts();
   const { data: cards, isLoading: loadingCards } = useCreditCards();
   const { data: loans, isLoading: loadingLoans } = useLoans();
-  const { data: investments, isLoading: loadingInvestments } = useInvestments();
   const { data: pending, isLoading: loadingPending } = usePendingItems();
   const { data: properties, isLoading: loadingProperties } = useProperties();
   const { data: categories = [] } = useBudgetCategories();
@@ -492,74 +487,6 @@ export function AccountingPage() {
       setShowAddLoan(false);
     } finally {
       setAddingLoan(false);
-    }
-  }
-
-  // ── Investments ───────────────────────────────────────────
-  const [dirtyInvestments, setDirtyInvestments] = useState<Map<string, UpdateInvestmentRequest>>(new Map());
-  const [investEditId, setInvestEditId] = useState<string | null>(null);
-  const [investDraft, setInvestDraft] = useState<Partial<UpdateInvestmentRequest>>({});
-  const [investEditBank, setInvestEditBank] = useState<BankDto | null>(null);
-  const investDraftRef = useRef(investDraft);
-  investDraftRef.current = investDraft;
-  const investEditBankRef = useRef(investEditBank);
-  investEditBankRef.current = investEditBank;
-
-  const [showAddInvest, setShowAddInvest] = useState(false);
-  const [addInvestForm, setAddInvestForm] = useState<CreateInvestmentRequest>({
-    customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null,
-  });
-  const [addInvestBank, setAddInvestBank] = useState<BankDto | null>(null);
-  const [addingInvest, setAddingInvest] = useState(false);
-
-  function startInvestEdit(row: InvestmentResponseDto) {
-    const existing = dirtyInvestments.get(row.id);
-    setInvestEditId(row.id);
-    setInvestDraft(existing ?? {
-      customLabel: row.customLabel,
-      currentValue: row.currentValue,
-      investmentType: row.investmentType,
-      ticker: row.ticker,
-      bankId: row.bankId,
-    });
-    setInvestEditBank(
-      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
-    );
-  }
-
-  function applyInvestEdit(row: InvestmentResponseDto) {
-    const d = investDraftRef.current;
-    const update: UpdateInvestmentRequest = {
-      customLabel: d.customLabel ?? row.customLabel,
-      currentValue: d.currentValue ?? row.currentValue,
-      investmentType: d.investmentType ?? row.investmentType,
-      ticker: 'ticker' in d ? d.ticker : row.ticker,
-      bankId: 'bankId' in d ? d.bankId : row.bankId,
-    };
-    setDirtyInvestments((prev) => new Map(prev).set(row.id, update));
-    setInvestEditId(null);
-    setInvestDraft({});
-    setInvestEditBank(null);
-  }
-
-  function cancelInvestEdit() {
-    setInvestEditId(null);
-    setInvestDraft({});
-    setInvestEditBank(null);
-  }
-
-  async function handleAddInvestment() {
-    if (!addInvestForm.customLabel.trim()) return;
-    setAddingInvest(true);
-    try {
-      await createInvestment({ ...addInvestForm, bankId: addInvestBank?.id ?? null });
-      qc.invalidateQueries({ queryKey: ['investments'] });
-      qc.invalidateQueries({ queryKey: ['networth'] });
-      setAddInvestForm({ customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null });
-      setAddInvestBank(null);
-      setShowAddInvest(false);
-    } finally {
-      setAddingInvest(false);
     }
   }
 
@@ -958,106 +885,6 @@ export function AccountingPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [loanEditId, dirtyLoans]);
 
-  // ── Investment columns (inline editing) ──────────────────
-  const investmentColumns = useMemo<ColumnDef<InvestmentResponseDto, unknown>[]>(() => [
-    {
-      id: 'bank',
-      header: 'Institution',
-      accessorKey: 'bankName',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <BankSearchInput
-              value={investEditBankRef.current}
-              onChange={(bank) => {
-                setInvestEditBank(bank);
-                setInvestDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
-              }}
-            />
-          );
-        }
-        return <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />;
-      },
-    },
-    {
-      accessorKey: 'customLabel',
-      header: 'Label',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <input
-              key={`${row.original.id}-invest-label`}
-              className="lt__edit-input lt__edit-input--wide"
-              defaultValue={investDraft.customLabel ?? row.original.customLabel}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, customLabel: e.target.value }))} />
-          );
-        }
-        return dirtyInvestments.get(row.original.id)?.customLabel ?? row.original.customLabel;
-      },
-    },
-    {
-      accessorKey: 'investmentType',
-      header: 'Type',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <select className="lt__edit-select"
-              value={investDraft.investmentType ?? row.original.investmentType}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, investmentType: e.target.value }))}>
-              {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          );
-        }
-        return dirtyInvestments.get(row.original.id)?.investmentType ?? row.original.investmentType;
-      },
-    },
-    {
-      accessorKey: 'currentValue',
-      header: 'Value',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <input
-              key={`${row.original.id}-invest-value`}
-              className="lt__edit-input lt__edit-input--number"
-              type="number" step="0.01" min="0"
-              defaultValue={investDraft.currentValue ?? row.original.currentValue}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, currentValue: Number(e.target.value) }))} />
-          );
-        }
-        const val = dirtyInvestments.get(row.original.id)?.currentValue ?? row.original.currentValue;
-        return <span className="acc-amount acc-amount--positive">{formatCurrency(val)}</span>;
-      },
-    },
-    {
-      id: '_actions',
-      header: '',
-      enableSorting: false,
-      size: 130,
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <div className="lt__actions">
-              <button className="lt__action-btn lt__action-btn--apply" type="button"
-                onClick={() => applyInvestEdit(row.original)}>Apply</button>
-              <button className="lt__action-btn lt__action-btn--cancel" type="button"
-                onClick={cancelInvestEdit}>Cancel</button>
-            </div>
-          );
-        }
-        const isDirty = dirtyInvestments.has(row.original.id);
-        return (
-          <div className="lt__actions">
-            {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
-            <button className="lt__action-btn lt__action-btn--edit" type="button"
-              onClick={() => startInvestEdit(row.original)}>Edit</button>
-          </div>
-        );
-      },
-    },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [investEditId, dirtyInvestments]);
-
   // ── Pending Items add form ────────────────────────────────
   const [showAddPending, setShowAddPending] = useState(false);
   const [addPendingForm, setAddPendingForm] = useState<CreatePendingItemRequest>({
@@ -1163,10 +990,6 @@ export function AccountingPage() {
     customLabel: 'Total',
     balance: <span className="acc-amount acc-amount--negative">-{formatCurrency((loans ?? []).reduce((s, l) => s + l.balance, 0))}</span>,
   };
-  const investmentTotals = {
-    customLabel: 'Total',
-    currentValue: <span className="acc-amount acc-amount--positive">{formatCurrency((investments ?? []).reduce((s, i) => s + i.currentValue, 0))}</span>,
-  };
 
   // ── Properties add form ───────────────────────────────────
   const LOAN_PRODUCT_TYPES = ['Conventional', 'FHA', 'VA', 'DSCR', 'Cash'];
@@ -1251,7 +1074,7 @@ export function AccountingPage() {
         {/* ── Bank Accounts ──────────────────────────────── */}
         <div className="acc-section">
           <div className="acc-section-header">
-            <span className="acc-section-title">Bank Accounts</span>
+            <span className="acc-section-title">Bank & Investment Accounts</span>
             <button className="acc-btn-add" type="button" onClick={() => setShowAddAcct((v) => !v)}>
               {showAddAcct ? '✕ Cancel' : '+ Add'}
             </button>
@@ -1502,77 +1325,6 @@ export function AccountingPage() {
                 ['loans'],
               )}
               onDiscard={() => { setDirtyLoans(new Map()); cancelLoanEdit(); }}
-            />
-          )}
-        </div>
-
-        {/* ── Investments ───────────────────────────────── */}
-        <div className="acc-section">
-          <div className="acc-section-header">
-            <span className="acc-section-title">Investments</span>
-            <button className="acc-btn-add" type="button" onClick={() => setShowAddInvest((v) => !v)}>
-              {showAddInvest ? '✕ Cancel' : '+ Add'}
-            </button>
-          </div>
-          <LedgerTable
-            data={investments ?? []}
-            columns={investmentColumns}
-            getRowVariant={() => 'asset' as RowVariant}
-            getRowClass={(row) => dirtyInvestments.has(row.id) ? 'lt__row--dirty' : ''}
-            totals={investmentTotals}
-            isLoading={loadingInvestments}
-            emptyMessage="No investments."
-          />
-          {showAddInvest && (
-            <div className="acc-add-form">
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <BankSearchInput
-                  value={addInvestBank}
-                  onChange={(b) => { setAddInvestBank(b); setAddInvestForm((f) => ({ ...f, bankId: b?.id ?? null })); }}
-                  placeholder="Institution (optional)"
-                />
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <input className="acc-add-input" placeholder="Label *"
-                  value={addInvestForm.customLabel}
-                  onChange={(e) => setAddInvestForm((f) => ({ ...f, customLabel: e.target.value }))} />
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <select className="acc-add-select" value={addInvestForm.investmentType}
-                  onChange={(e) => setAddInvestForm((f) => ({ ...f, investmentType: e.target.value }))}>
-                  {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">Value ($)</span>
-                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
-                  value={addInvestForm.currentValue === 0 ? '' : addInvestForm.currentValue}
-                  placeholder="0.00"
-                  onChange={(e) => setAddInvestForm((f) => ({ ...f, currentValue: Number(e.target.value) }))} />
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
-                  onClick={handleAddInvestment} disabled={addingInvest}>
-                  {addingInvest ? 'Adding…' : 'Add Investment'}
-                </button>
-              </label>
-            </div>
-          )}
-          {dirtyInvestments.size > 0 && (
-            <BatchSaveBar
-              dirtyCount={dirtyInvestments.size}
-              saving={saving}
-              onSave={() => saveAll(
-                dirtyInvestments as Map<string, unknown>,
-                updateInvestment as (id: string, ch: unknown) => Promise<unknown>,
-                () => setDirtyInvestments(new Map()),
-                ['investments'],
-              )}
-              onDiscard={() => { setDirtyInvestments(new Map()); cancelInvestEdit(); }}
             />
           )}
         </div>
