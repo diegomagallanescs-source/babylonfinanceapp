@@ -393,8 +393,8 @@ export function MoneyOutPage() {
   const [period, setPeriod] = useState<SelectedPeriod | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  const { data: history } = useStatementHistory();
-  const { data: annualSummary } = useStatementAnnualSummary();
+  const { data: history, isLoading: historyLoading, isError: historyError } = useStatementHistory();
+  const { data: annualSummary, isLoading: annualLoading, isError: annualError } = useStatementAnnualSummary();
 
   const showToast = useCallback((type: ToastState['type'], message: string) => {
     setToast({ type, message });
@@ -466,8 +466,20 @@ export function MoneyOutPage() {
 
       {/* History section — always visible */}
       <section className="mo-history-section">
-        <SpendHistoryAreaChart history={history ?? []} />
-        <AnnualSummaryTable data={annualSummary} />
+        {historyLoading ? (
+          <div className="skel skel--chart" />
+        ) : historyError ? (
+          <div className="banner banner--error">Failed to load spend history. Please refresh.</div>
+        ) : (
+          <SpendHistoryAreaChart history={history ?? []} />
+        )}
+        {annualLoading ? (
+          <div className="skel skel--table" />
+        ) : annualError ? (
+          <div className="banner banner--error">Failed to load annual summary. Please refresh.</div>
+        ) : (
+          <AnnualSummaryTable data={annualSummary} />
+        )}
       </section>
     </div>
   );
