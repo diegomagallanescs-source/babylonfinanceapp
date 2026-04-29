@@ -236,7 +236,7 @@ public class PropertiesAnalyzeIntegrationTests : IClassFixture<BabylonWebApplica
     {
         PurchasePrice            = 200_000m,
         DownPaymentAmount        = 40_000m,
-        LoanType                 = LoanType.Other,
+        LoanType                 = "Other",
         InterestRate             = 0.07m,
         LoanTermYears            = 30,
         MonthlyPropertyTax       = 200m,
@@ -255,7 +255,7 @@ public class PropertiesAnalyzeIntegrationTests : IClassFixture<BabylonWebApplica
     {
         PurchasePrice            = 500_000m,
         DownPaymentAmount        = 100_000m,
-        LoanType                 = LoanType.Other,
+        LoanType                 = "Other",
         InterestRate             = 0.07m,
         LoanTermYears            = 30,
         MonthlyPropertyTax       = 600m,
@@ -274,7 +274,7 @@ public class PropertiesAnalyzeIntegrationTests : IClassFixture<BabylonWebApplica
     {
         PurchasePrice            = 500_000m,
         DownPaymentAmount        = 75_000m,
-        LoanType                 = LoanType.Other,
+        LoanType                 = "Other",
         InterestRate             = 0.035m,
         LoanTermYears            = 30,
         MonthlyPropertyTax       = 500m,

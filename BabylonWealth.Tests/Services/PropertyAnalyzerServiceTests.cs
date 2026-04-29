@@ -177,6 +177,128 @@ public class PropertyAnalyzerServiceTests
         Assert.True(result.BreakEvenRent > 0m);
     }
 
+    // ── Yellow signal ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task AnalyzeAsync_YellowSignal_WhenPositiveCashFlowButCapRateBelow5Percent()
+    {
+        // Large down payment keeps PI tiny → cash flow positive, but NOI/price < 5%
+        var request = BuildRequest(
+            purchasePrice: 500_000m,
+            downPayment:   450_000m,   // loan = $50k → tiny PI
+            interestRate:  0.07m,
+            monthlyRent:   2_000m,
+            vacancyRate:   0.05m,
+            monthlyTax:    250m,
+            monthlyInsurance: 100m,
+            monthlyHoa:    0m,
+            maintenanceReserve: 0.01m);
+
+        var result = await _service.AnalyzeAsync(request);
+
+        Assert.True(result.MonthlyCashFlow > 0, "Expected positive cash flow");
+        Assert.True(result.CapRatePercent < 5m,  "Expected cap rate below 5%");
+        Assert.Equal(DealSignal.Yellow, result.DealSignal);
+    }
+
+    // ── Derived metrics ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task AnalyzeAsync_LoanAmount_IsPurchasePriceMinusDownPayment()
+    {
+        var request = BuildRequest(purchasePrice: 350_000m, downPayment: 70_000m);
+        var result  = await _service.AnalyzeAsync(request);
+
+        Assert.Equal(280_000m, result.LoanAmount);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_TotalMonthlyExpenses_SumsAllExpenseComponents()
+    {
+        // Zero-rate loan → PI = principal / months (exact, no floating-point noise)
+        // Zero maintenance reserve so monthly maintenance = 0
+        var request = BuildRequest(
+            purchasePrice:    120_000m,
+            downPayment:      0m,          // loan = $120k
+            interestRate:     0m,          // PI = 120,000 / 120 = $1,000
+            termYears:        10,
+            monthlyRent:      2_000m,
+            vacancyRate:      0m,
+            monthlyTax:       200m,
+            monthlyInsurance: 80m,
+            monthlyHoa:       50m,
+            maintenanceReserve: 0m);
+
+        var result = await _service.AnalyzeAsync(request);
+
+        // 1,000 (PI) + 200 (tax) + 80 (ins) + 50 (HOA) + 0 (maint) = 1,330
+        Assert.Equal(1_330m, result.TotalMonthlyExpenses);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_CashOnCashReturnPercent_IsAnnualCashFlowOverDownPayment()
+    {
+        // 100% cash purchase → no PI; zero vacancy and zero maintenance for clean arithmetic
+        var request = BuildRequest(
+            purchasePrice:    200_000m,
+            downPayment:      200_000m,    // loan = 0 → PI = 0
+            interestRate:     0.07m,
+            monthlyRent:      1_500m,
+            vacancyRate:      0m,
+            monthlyTax:       100m,
+            monthlyInsurance: 50m,
+            monthlyHoa:       0m,
+            maintenanceReserve: 0m);
+
+        var result = await _service.AnalyzeAsync(request);
+
+        // Cash flow = 1,500 − 150 = 1,350/mo → 16,200/yr
+        // CashOnCash = 16,200 / 200,000 × 100 = 8.10%
+        Assert.Equal(8.10m, result.CashOnCashReturnPercent);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_DebtServiceCoverageRatio_IsNOIOverAnnualDebtService()
+    {
+        // Same zero-rate setup: PI = 1,000/mo → annual debt service = 12,000
+        // NOI = (effectiveRent − tax − ins − HOA − maint) × 12
+        //     = (1,500 − 200 − 80 − 50 − 0) × 12 = 1,170 × 12 = 14,040
+        // DSCR = 14,040 / 12,000 = 1.17
+        var request = BuildRequest(
+            purchasePrice:    120_000m,
+            downPayment:      0m,
+            interestRate:     0m,
+            termYears:        10,
+            monthlyRent:      1_500m,
+            vacancyRate:      0m,
+            monthlyTax:       200m,
+            monthlyInsurance: 80m,
+            monthlyHoa:       50m,
+            maintenanceReserve: 0m);
+
+        var result = await _service.AnalyzeAsync(request);
+
+        Assert.Equal(1.17m, result.DebtServiceCoverageRatio);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_EstimatedTotalInterest_IsZeroForZeroRateLoan()
+    {
+        // At 0% rate: total paid = principal exactly; interest = 0
+        var request = BuildRequest(
+            purchasePrice: 120_000m,
+            downPayment:   0m,
+            interestRate:  0m,
+            termYears:     10,
+            monthlyRent:   1_500m,
+            vacancyRate:   0m,
+            maintenanceReserve: 0m);
+
+        var result = await _service.AnalyzeAsync(request);
+
+        Assert.Equal(0m, result.EstimatedTotalInterest);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────
 
     private static PropertyAnalysisRequestDto BuildRequest(
