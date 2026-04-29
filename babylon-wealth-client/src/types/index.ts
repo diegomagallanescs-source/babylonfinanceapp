@@ -1,4 +1,5 @@
 export type { NetWorthResponseDto, NetWorthHistoryPointDto, AnnualSummaryDto } from './netWorth';
+export type { PropertyAnalysisRequest, PropertyAnalysisResponseDto, AmortizationRowDto } from './realEstate';
 export type {
   BankDto,
   BudgetCategoryResponseDto,

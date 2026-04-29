@@ -1,0 +1,405 @@
+/* ══════════════════════════════════════════════════════════════
+   REAL ESTATE ANALYZER — Page Styles
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ─────────────────────────────────────────────── */
+.re-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  max-width: 1140px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.re-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.re-page-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.re-page-sub {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ── Main grid ───────────────────────────────────────────────── */
+.re-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .re-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Form card ───────────────────────────────────────────────── */
+.re-form-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.re-form-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.re-form-card__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+/* Breathing pulse dot — shown while analyzing */
+@keyframes rePulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+.re-form__pulse {
+  font-size: 10px;
+  color: var(--color-gold);
+  animation: rePulse 1.2s ease-in-out infinite;
+  line-height: 1;
+}
+
+/* ── Fieldsets ───────────────────────────────────────────────── */
+.re-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.re-legend {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  display: block;
+  width: 100%;
+}
+
+/* ── Field grid ──────────────────────────────────────────────── */
+.re-field-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.re-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+  flex: 1;
+}
+
+.re-field--grow {
+  flex: 2;
+}
+
+.re-field--full {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.re-field--narrow {
+  flex: 0 0 130px;
+  min-width: 130px;
+}
+
+/* ── Labels ──────────────────────────────────────────────────── */
+.re-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.re-label__hint {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ── Input wraps ─────────────────────────────────────────────── */
+.re-input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.re-input-wrap:focus-within {
+  border-color: var(--color-gold);
+}
+
+.re-input-wrap > span {
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  background: var(--color-bg-surface);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.re-input-wrap--prefix > span:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.re-input-wrap--suffix > span:last-child {
+  border-left: 1px solid var(--color-border);
+}
+
+.re-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.re-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+/* Chrome removes spinner on number; keep minimal */
+.re-input[type='number']::-webkit-inner-spin-button,
+.re-input[type='number']::-webkit-outer-spin-button {
+  opacity: 0.4;
+}
+
+/* ── Loan type selector ──────────────────────────────────────── */
+.re-loan-types {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.re-loan-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-sub);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  min-width: 76px;
+}
+
+.re-loan-type-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-text);
+}
+
+.re-loan-type-btn--active {
+  border-color: var(--color-gold);
+  background: var(--color-gold-dim);
+  color: var(--color-gold);
+}
+
+.re-loan-type-badge {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.re-loan-type-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* Description shown below the loan type buttons */
+.re-loan-type-desc {
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-sub);
+  background: rgba(240, 180, 41, 0.04);
+  border: 1px solid var(--color-border-glow);
+  border-radius: var(--radius-sm);
+}
+
+/* ══ Loan Summary Panel ════════════════════════════════════════ */
+.re-summary-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 20px;
+  transition: border-color 0.3s;
+}
+
+.re-summary-panel--loading {
+  border-color: rgba(240, 180, 41, 0.2);
+}
+
+.re-summary-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.re-summary-panel__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+@keyframes reAnalyzing {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.re-summary-panel__analyzing {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: reAnalyzing 1.4s ease-in-out infinite;
+}
+
+.re-summary-panel__empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 20px 0;
+  line-height: 1.5;
+}
+
+.re-summary-panel__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.re-summary-panel__divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 2px 0;
+}
+
+.re-summary-panel__note {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Summary rows ─────────────────────────────────────────────── */
+.re-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.re-summary-row__label {
+  font-size: 12px;
+  color: var(--color-text-sub);
+  flex-shrink: 0;
+}
+
+.re-summary-row__value {
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.re-summary-row__value--sm  { font-size: 14px; }
+.re-summary-row__value--md  { font-size: 16px; }
+.re-summary-row__value--lg  {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.re-summary-row__value--gold  { color: var(--color-gold); }
+.re-summary-row__value--muted { color: var(--color-text-muted); font-weight: 400; }
+
+/* Skeleton shimmer for loading state */
+.re-summary-row__skel {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-bg-surface)  50%,
+    var(--color-bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: skelShimmer 1.4s ease-in-out infinite;
+  display: inline-block;
+}
+
+.re-summary-row__skel--sm  { height: 16px; width: 90px; }
+.re-summary-row__skel--md  { height: 20px; width: 110px; }
+.re-summary-row__skel--lg  { height: 34px; width: 130px; }
+
+@keyframes skelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
