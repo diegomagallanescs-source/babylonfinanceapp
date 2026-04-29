@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import apiClient from '../api/client';
+import './UploadFlowPanel.css';
 import type {
   CheckingStatementResponseDto,
   StatementAnalysisResponseDto,

@@ -102,3 +102,85 @@ a {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Shared utility: buttons ─────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.btn--primary {
+  background: var(--color-gold);
+  color: #07080F;
+}
+.btn--primary:hover:not(:disabled) { background: var(--color-gold-hover); }
+.btn--primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+}
+.btn--secondary:hover:not(:disabled) { background: var(--color-gold-dim); }
+.btn--danger {
+  background: transparent;
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+}
+.btn--danger:hover:not(:disabled) { background: var(--color-negative-dim); }
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-sub);
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.btn--ghost:hover { color: var(--color-text); }
+
+/* ── Shared utility: banners ─────────────────── */
+.banner {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.banner--error {
+  background: var(--color-negative-dim);
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+}
+.banner--warn {
+  background: rgba(240, 180, 41, 0.1);
+  border: 1px solid rgba(240, 180, 41, 0.35);
+  color: var(--color-gold);
+}
+.banner--info {
+  background: rgba(107, 140, 255, 0.1);
+  border: 1px solid rgba(107, 140, 255, 0.35);
+  color: #6B8CFF;
+}
+
+/* ── Shared utility: pills ───────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  background: transparent;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.pill:hover { border-color: var(--color-gold); color: var(--color-gold); }
+.pill--active {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background: var(--color-gold-dim);
+}
