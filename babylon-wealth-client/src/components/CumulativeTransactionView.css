@@ -1,0 +1,184 @@
+/* ── Shell ───────────────────────────────────────────────────── */
+.ctv {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.ctv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ctv-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ctv-header__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.ctv-header__meta {
+  font-size: 13px;
+  color: var(--color-text-sub);
+}
+
+.ctv-header__export {
+  flex-shrink: 0;
+  font-size: 13px;
+  padding: 7px 16px;
+}
+
+/* ── Filter section ──────────────────────────────────────────── */
+.ctv-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctv-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+}
+
+.ctv-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Active filter banner ────────────────────────────────────── */
+.ctv-filter-banner {
+  font-size: 13px;
+  color: var(--color-text-sub);
+  padding: 10px 14px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.ctv-filter-banner strong {
+  color: var(--color-gold);
+}
+
+/* ── Table wrapper ───────────────────────────────────────────── */
+.ctv-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* ── Table ───────────────────────────────────────────────────── */
+.ctv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ctv-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.ctv-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+.ctv-th-sortable:hover { color: var(--color-text) !important; }
+
+.ctv-th-amount,
+.ctv-th-dir { text-align: right !important; }
+
+.ctv-th-desc { width: 45%; }
+
+.ctv-sort-icon {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--color-gold);
+}
+.ctv-sort-icon--idle {
+  color: var(--color-text-muted);
+}
+
+.ctv-table tbody tr.ctv-row {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+.ctv-table tbody tr.ctv-row:last-child { border-bottom: none; }
+.ctv-table tbody tr.ctv-row:hover { background: var(--color-bg-elevated); }
+
+.ctv-table td {
+  padding: 9px 12px;
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+/* Direction column */
+.ctv-dir-in  { color: var(--color-positive); font-weight: 700; text-align: center; }
+.ctv-dir-out { color: var(--color-negative); font-weight: 700; text-align: center; }
+
+/* Date column */
+.ctv-td-date {
+  color: var(--color-text-sub);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Description column */
+.ctv-td-desc {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Amount column */
+.ctv-amount,
+.ctv-amount-in,
+.ctv-amount-out {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ctv-amount     { color: var(--color-text); }
+.ctv-amount-in  { color: var(--color-positive); }
+.ctv-amount-out { color: var(--color-negative); }
+
+/* Account column */
+.ctv-td-acct {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.ctv-footer {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-top: 4px;
+}

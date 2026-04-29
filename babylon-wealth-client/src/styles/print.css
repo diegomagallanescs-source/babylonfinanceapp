@@ -1,0 +1,77 @@
+/* ── Print: hide everything, show only the transaction view ── */
+@media print {
+  body.printing-transactions * {
+    visibility: hidden;
+  }
+
+  body.printing-transactions #cumulative-txn-view,
+  body.printing-transactions #cumulative-txn-view * {
+    visibility: visible;
+  }
+
+  body.printing-transactions #cumulative-txn-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+    font-size: 11px;
+    color: #000;
+    background: #fff;
+  }
+
+  /* Hide interactive controls in the printed output */
+  body.printing-transactions .ctv-pills,
+  body.printing-transactions .ctv-filter-banner,
+  body.printing-transactions .ctv-header__export {
+    display: none;
+  }
+
+  /* Print header is hidden on screen but visible in print */
+  body.printing-transactions .ctv-print-header {
+    display: block !important;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  /* Table formatting for print */
+  body.printing-transactions .ctv-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #000;
+    background: #fff;
+  }
+
+  body.printing-transactions .ctv-table th,
+  body.printing-transactions .ctv-table td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    text-align: left;
+    color: #000;
+  }
+
+  body.printing-transactions .ctv-table .ctv-amount,
+  body.printing-transactions .ctv-table .ctv-amount-in,
+  body.printing-transactions .ctv-table .ctv-amount-out {
+    text-align: right;
+    color: #000;
+  }
+
+  body.printing-transactions .ctv-table .ctv-dir-in,
+  body.printing-transactions .ctv-table .ctv-dir-out {
+    color: #000;
+  }
+
+  body.printing-transactions .ctv-footer {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #555;
+  }
+}
+
+/* Print header is hidden on screen */
+.ctv-print-header {
+  display: none;
+}

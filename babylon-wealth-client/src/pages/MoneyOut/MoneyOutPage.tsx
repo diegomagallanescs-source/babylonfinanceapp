@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 
 import { UploadFlowPanel } from '../../components/UploadFlowPanel';
+import { CumulativeTransactionView } from '../../components/CumulativeTransactionView';
 import { formatCurrency } from '../../utils/format';
 import type {
   StatementAnalysisResponseDto,
@@ -242,6 +243,13 @@ export function MoneyOutPage() {
           {analysisResult.reportType === 'YearEnd' && (
             <MonthlyBreakdownBarChart breakdown={analysisResult.monthlyBreakdown} />
           )}
+
+          <CumulativeTransactionView
+            transactions={analysisResult.transactions}
+            breakdown={analysisResult.categoryBreakdown}
+            title={`Purchases — ${period.label}`}
+            showMonthFilter={period.mode === 'year-end' || analysisResult.reportType === 'YearEnd'}
+          />
         </section>
       )}
     </div>
