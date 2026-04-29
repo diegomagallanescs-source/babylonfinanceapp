@@ -12,6 +12,7 @@ import { useSaveChecking } from '../../hooks/useSaveChecking';
 import { useUpdateChecking } from '../../hooks/useUpdateChecking';
 import { useStatementAnnualSummary } from '../../hooks/useStatementAnnualSummary';
 import { formatCurrency } from '../../utils/format';
+import { PageInfoTooltip } from '../../components/PageInfoTooltip';
 import type {
   CheckingStatementResponseDto,
   CheckingStatementSummaryDto,
@@ -518,7 +519,15 @@ export function MoneyInPage() {
   return (
     <div className="mi-page">
       <header className="mi-header">
-        <h1 className="mi-title">Money In</h1>
+        <h1 className="mi-title">
+          Money In
+          <PageInfoTooltip content={
+            <>
+              <p>The real numbers. See exactly how much money is hitting your accounts each month — post-tax, post-deduction, no estimates.</p>
+              <p>Drop in PDFs from all your active bank and checking accounts. This is your true monthly income reality, not what your salary says on paper.</p>
+            </>
+          } />
+        </h1>
       </header>
 
       {toast && (

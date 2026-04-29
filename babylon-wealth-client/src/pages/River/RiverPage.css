@@ -132,6 +132,10 @@
   color: var(--color-text);
 }
 
+.nw-panel__value--scrub {
+  transition: opacity 0.08s ease;
+}
+
 /* Tier badge */
 .nw-panel__tier-row {
   display: flex;
@@ -313,21 +317,21 @@
 /* Period selector */
 .period-selector {
   display: flex;
-  gap: 4px;
-  margin-top: -4px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .period-pill {
-  padding: 4px 11px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-text-muted);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
 }
 
 .period-pill:hover {
@@ -337,8 +341,14 @@
 
 .period-pill--active {
   color: var(--color-positive);
-  background: rgba(0, 230, 118, 0.1);
-  border-color: rgba(0, 230, 118, 0.3);
+  background: rgba(0, 230, 118, 0.14);
+  border-color: rgba(0, 230, 118, 0.35);
+}
+
+[data-theme="light"] .period-pill--active {
+  color: #1A8040;
+  background: rgba(26, 128, 64, 0.10);
+  border-color: rgba(26, 128, 64, 0.32);
 }
 
 /* Chart */

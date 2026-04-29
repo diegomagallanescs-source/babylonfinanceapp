@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: 24px;
   padding: 28px 32px;
-  max-width: 900px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
@@ -21,6 +21,8 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
 }
 
 .mi-section {
@@ -241,9 +243,11 @@
 .mi-annual-table tbody tr {
   border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
+  background: var(--color-bg-surface);
 }
+.mi-annual-table tbody tr:nth-child(even) { background: var(--color-bg-card); }
 .mi-annual-table tbody tr:last-child { border-bottom: none; }
-.mi-annual-table tbody tr:hover { background: var(--color-bg-elevated); }
+.mi-annual-table tbody tr:hover { background: var(--color-bg-elevated) !important; }
 .mi-annual-table td { padding: 10px 8px; color: var(--color-text); }
 .mi-annual-table__year   { font-weight: 600; color: var(--color-gold) !important; }
 .mi-annual-table__num    { text-align: right !important; font-variant-numeric: tabular-nums; }

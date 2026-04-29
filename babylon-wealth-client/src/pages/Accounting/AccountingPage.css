@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: 20px;
   padding: 28px 32px;
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
@@ -21,6 +21,8 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
 }
 
 /* ── NW summary bar ─────────────────────────────────────────── */

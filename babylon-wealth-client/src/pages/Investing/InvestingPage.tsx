@@ -11,6 +11,7 @@ import { useDeleteInvestment }        from '../../hooks/useDeleteInvestment';
 import { useInvestmentIncomeAll }     from '../../hooks/useInvestmentIncomeAll';
 import { useCreateInvestmentIncome }  from '../../hooks/useCreateInvestmentIncome';
 import { formatCurrency }             from '../../utils/format';
+import { PageInfoTooltip }            from '../../components/PageInfoTooltip';
 import type { CreateInvestmentRequest, UpdateInvestmentRequest } from '../../types';
 import type { CreateInvestmentIncomeRequest, InvestmentIncomeResponseDto } from '../../types';
 import './InvestingPage.css';
@@ -425,6 +426,19 @@ export function InvestingPage() {
   // ─────────────────────────────────────────────────────────────
   return (
     <div className="inv-page">
+
+      <header className="inv-header">
+        <h1 className="inv-title">
+          Investing
+          <PageInfoTooltip content={
+            <>
+              <p>Track your investments and the passive income they generate. This is your river — watch it grow.</p>
+              <p>Log every portfolio entry and every dividend, rental payment, or distribution received. The goal: build passive income until it covers your biggest liabilities.</p>
+              <p><strong>The rule:</strong> big liabilities should be bought with passive income — never active income. If your river can't pay for it, you can't afford it.</p>
+            </>
+          } />
+        </h1>
+      </header>
 
       {/* ══ Section 1: Portfolio Summary ══════════════════════ */}
       <section className="inv-section">

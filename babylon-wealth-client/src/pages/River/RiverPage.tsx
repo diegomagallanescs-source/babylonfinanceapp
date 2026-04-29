@@ -1190,16 +1190,11 @@ function NetWorthPanel() {
         {scrubDateLabel ?? 'Net Worth'}
       </div>
 
-      {/* Scrub-aware value */}
+      {/* Scrub-aware value — no remount key so the number updates in-place */}
       <div className="nw-panel__value-row">
-        <motion.div
-          key={displayValue}
-          className="nw-panel__value"
-          initial={{ opacity: 0.6 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.1 }}>
+        <div className="nw-panel__value nw-panel__value--scrub">
           {nwLoading ? '—' : formatCurrency(displayValue)}
-        </motion.div>
+        </div>
       </div>
 
       {/* Delta row */}

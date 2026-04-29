@@ -14,6 +14,7 @@ import { useSaveStatement } from '../../hooks/useSaveStatement';
 import { useUpdateStatement } from '../../hooks/useUpdateStatement';
 import { useStatementAnnualSummary } from '../../hooks/useStatementAnnualSummary';
 import { formatCurrency } from '../../utils/format';
+import { PageInfoTooltip } from '../../components/PageInfoTooltip';
 import type {
   StatementAnalysisResponseDto,
   StatementSummaryResponseDto,
@@ -594,7 +595,15 @@ export function MoneyOutPage() {
   return (
     <div className="mo-page">
       <header className="mo-header">
-        <h1 className="mo-title">Money Out</h1>
+        <h1 className="mo-title">
+          Money Out
+          <PageInfoTooltip content={
+            <>
+              <p>The raw reality of your spending. See exactly where every dollar goes each month — no guessing, no rounding.</p>
+              <p>Drop in PDF statements from all your active credit card and spending accounts. This page exists to show you the truth, so you can change it.</p>
+            </>
+          } />
+        </h1>
       </header>
 
       {/* Toast */}

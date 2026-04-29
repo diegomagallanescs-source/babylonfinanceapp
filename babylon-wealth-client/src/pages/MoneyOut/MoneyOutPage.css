@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: 24px;
   padding: 28px 32px;
-  max-width: 900px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
@@ -21,6 +21,8 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
 }
 
 .mo-section {
@@ -130,9 +132,11 @@
 .mo-merchants-table tbody tr {
   border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
+  background: var(--color-bg-surface);
 }
+.mo-merchants-table tbody tr:nth-child(even) { background: var(--color-bg-card); }
 .mo-merchants-table tbody tr:last-child { border-bottom: none; }
-.mo-merchants-table tbody tr:hover { background: var(--color-bg-elevated); }
+.mo-merchants-table tbody tr:hover { background: var(--color-bg-elevated) !important; }
 .mo-merchants-table td {
   padding: 10px 8px;
   color: var(--color-text);
@@ -455,9 +459,11 @@
 .mo-annual-table tbody tr {
   border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
+  background: var(--color-bg-surface);
 }
+.mo-annual-table tbody tr:nth-child(even) { background: var(--color-bg-card); }
 .mo-annual-table tbody tr:last-child { border-bottom: none; }
-.mo-annual-table tbody tr:hover { background: var(--color-bg-elevated); }
+.mo-annual-table tbody tr:hover { background: var(--color-bg-elevated) !important; }
 .mo-annual-table td {
   padding: 10px 8px;
   color: var(--color-text);

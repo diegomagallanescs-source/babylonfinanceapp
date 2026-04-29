@@ -3,7 +3,7 @@
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
+  background: var(--color-bg-surface);
 }
 
 .lt__table {
@@ -52,6 +52,11 @@
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
   vertical-align: middle;
+  background: var(--color-bg-surface);
+}
+
+.lt__row:nth-child(even) .lt__td {
+  background: var(--color-bg-card);
 }
 
 .lt__row:last-child .lt__td {
@@ -59,7 +64,7 @@
 }
 
 .lt__row:hover .lt__td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-bg-elevated) !important;
 }
 
 /* asset rows: subtle green left border */
@@ -76,6 +81,10 @@
 
 /* ── Totals row ─────────────────────────────────────────────── */
 .lt__totals-row {
+  background: var(--color-bg-elevated);
+}
+
+.lt__totals-row .lt__totals-cell {
   background: var(--color-bg-elevated);
 }
 

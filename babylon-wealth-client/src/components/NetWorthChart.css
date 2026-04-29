@@ -1,7 +1,7 @@
 .nw-chart__canvas {
-  margin: 0 -8px;
+  position: relative;
+  margin: 0;
   border-radius: var(--radius-sm);
-  overflow: hidden;
 }
 
 /* Loading shimmer */
@@ -22,6 +22,41 @@
 @keyframes chartShimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Pulsing ring on the live (last) data point */
+.nw-pulse-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nwPulseRing 2.4s ease-out infinite;
+}
+
+@keyframes nwPulseRing {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  100% { transform: scale(3.2); opacity: 0;    }
+}
+
+/* Custom Y-axis label overlay */
+.nw-chart__ylabels {
+  position: absolute;
+  top: 0;
+  right: 8px;       /* keeps labels safely inside the parent's overflow:hidden */
+  bottom: 0;
+  pointer-events: none;
+  width: 92px;      /* fits up to "$999.0M" / "$1.5B" comfortably */
+}
+
+.nw-chart__ylabel {
+  position: absolute;
+  right: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  line-height: 1;
+  /* labels sit just below the grid line, tightly aligned */
+  transform: translateY(4px);
+  letter-spacing: -0.01em;
 }
 
 /* Empty state */

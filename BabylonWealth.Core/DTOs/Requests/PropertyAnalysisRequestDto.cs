@@ -1,13 +1,11 @@
-﻿using BabylonWealth.Core.Enums;
-
-namespace BabylonWealth.Core.DTOs.Requests;
+﻿namespace BabylonWealth.Core.DTOs.Requests;
 
 /// <summary>Input to POST /api/v1/properties/analyze and POST /api/v1/properties (save + analyze).</summary>
 public record PropertyAnalysisRequestDto
 {
     public decimal PurchasePrice { get; init; }
     public decimal DownPaymentAmount { get; init; }
-    public LoanType LoanType { get; init; }
+    public string? LoanType { get; init; }                  // informational only — not used in calculations
     public decimal InterestRate { get; init; }              // e.g. 0.07 for 7%
     public int LoanTermYears { get; init; }                 // typically 30
     public decimal MonthlyPropertyTax { get; init; }

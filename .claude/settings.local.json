@@ -124,7 +124,12 @@
       "Bash(taskkill /F /PID 38884)",
       "PowerShell(Stop-Process -Id 38884 -Force -ErrorAction SilentlyContinue)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:5231/api/v1/statements/checking/history\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGU5ZDg3Mi03NzE1LTRmM2UtODY1Yi02ODdkODAzZDhhMDciLCJlbWFpbCI6InVpdGVzdDNAYmFieWxvbi5jb20iLCJqdGkiOiI5YWEwMGU3MC1iYmQ1LTQ4NjAtYjQ0Ni04NTBhOGM0MGFhNWUiLCJmaXJzdE5hbWUiOiJEaWVnbyIsImV4cCI6MTc3NzQ3MjE0MywiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.YYmqlhSI7IBOf-24BSeBP0HSqISOt9J6yo1vEZmEb_8\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:5231/api/v1/statements/history\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGU5ZDg3Mi03NzE1LTRmM2UtODY1Yi02ODdkODAzZDhhMDciLCJlbWFpbCI6InVpdGVzdDNAYmFieWxvbi5jb20iLCJqdGkiOiI5YWEwMGU3MC1iYmQ1LTQ4NjAtYjQ0Ni04NTBhOGM0MGFhNWUiLCJmaXJzdE5hbWUiOiJEaWVnbyIsImV4cCI6MTc3NzQ3MjE0MywiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.YYmqlhSI7IBOf-24BSeBP0HSqISOt9J6yo1vEZmEb_8\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:5231/api/v1/statements/history\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGU5ZDg3Mi03NzE1LTRmM2UtODY1Yi02ODdkODAzZDhhMDciLCJlbWFpbCI6InVpdGVzdDNAYmFieWxvbi5jb20iLCJqdGkiOiI5YWEwMGU3MC1iYmQ1LTQ4NjAtYjQ0Ni04NTBhOGM0MGFhNWUiLCJmaXJzdE5hbWUiOiJEaWVnbyIsImV4cCI6MTc3NzQ3MjE0MywiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.YYmqlhSI7IBOf-24BSeBP0HSqISOt9J6yo1vEZmEb_8\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 44924)",
+      "Bash(curl -s -X POST http://localhost:5231/api/v1/properties/analyze -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGU5ZDg3Mi03NzE1LTRmM2UtODY1Yi02ODdkODAzZDhhMDciLCJlbWFpbCI6InVpdGVzdDNAYmFieWxvbi5jb20iLCJqdGkiOiJmNzc0ODY1NS00OGIyLTQ4NmMtYWMxOS1hOGNlYzY5YmQ5ZmMiLCJmaXJzdE5hbWUiOiJEaWVnbyIsImV4cCI6MTc3NzU2MzgyMywiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.-zZO_x6-yP9VpQsU3mnmfBnDMykoJqjzUZk2NsPMDdU' -d '{ *)",
+      "Bash(taskkill //F //PID 48956)",
+      "Bash(grep -n \"lt-\\\\|table\\\\|thead\\\\|tbody\\\\|\\\\\\\\.tr\\\\|\\\\\\\\.td\\\\|\\\\\\\\.th\" \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\babylon-wealth-client\\\\src\\\\styles\\\\globals.css\")"
     ]
   }
 }

@@ -170,10 +170,13 @@ export interface PropertyResponseDto {
   purchasePrice: number;
   currentEstimatedValue: number;
   loanBalance: number;
+  interestRate: number;
+  loanType: string;
   monthlyRent: number;
   monthlyExpenses: number;
   equity: number;
   monthlyCashFlow: number;
+  lastValueUpdateDate: string | null;
   createdAt: string;
   updatedAt: string;
 }

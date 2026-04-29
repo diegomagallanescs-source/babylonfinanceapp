@@ -21,6 +21,7 @@ import {
 
 import { LedgerTable, type RowVariant } from '../../components/LedgerTable';
 import { BankSearchInput } from '../../components/BankSearchInput';
+import { PageInfoTooltip } from '../../components/PageInfoTooltip';
 
 import type {
   BankDto,
@@ -1045,7 +1046,15 @@ export function AccountingPage() {
   return (
     <div className="acc-page">
       <div className="acc-header">
-        <h1 className="acc-title">Accounting</h1>
+        <h1 className="acc-title">
+          Accounting
+          <PageInfoTooltip content={
+            <>
+              <p>Your live financial snapshot. Every account, card, loan, and investment lives here — keeping your net worth graph accurate and up to date.</p>
+              <p>Numbers must be updated manually by you weekly. Keep balances current so your net worth reflects reality and you always know where your accounts stand.</p>
+            </>
+          } />
+        </h1>
       </div>
 
       {nw && (

@@ -1,0 +1,66 @@
+/* ── Info trigger ─────────────────────────────────────────────── */
+.pit-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pit-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  margin-left: 8px;
+  position: relative;
+  top: 1px;
+}
+
+.pit-trigger:hover {
+  color: var(--color-gold);
+  background: rgba(201, 168, 76, 0.1);
+}
+
+/* ── Tooltip bubble ───────────────────────────────────────────── */
+.pit-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 600;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  width: 320px;
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-sub);
+  animation: pitIn 0.14s ease;
+  pointer-events: none;
+}
+
+.pit-tooltip p {
+  margin: 0 0 8px;
+}
+.pit-tooltip p:last-child {
+  margin-bottom: 0;
+}
+
+.pit-tooltip strong {
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+@keyframes pitIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
