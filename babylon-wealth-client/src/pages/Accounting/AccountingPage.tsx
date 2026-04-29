@@ -64,7 +64,7 @@ function CategoryPill({ cat }: { cat: BudgetCategoryResponseDto | undefined }) {
       className="acc-category-pill"
       style={{ background: cat.color + '22', color: cat.color, borderColor: cat.color + '55' }}
     >
-      {cat.name}
+      {cat.name} ({Math.round(cat.targetPercentage * 100)}%)
     </span>
   );
 }
@@ -1030,27 +1030,6 @@ export function AccountingPage() {
       },
     },
     {
-      accessorKey: 'ticker',
-      header: 'Ticker',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <input
-              key={`${row.original.id}-invest-ticker`}
-              className="lt__edit-input"
-              style={{ maxWidth: 80, textTransform: 'uppercase' }}
-              defaultValue={investDraft.ticker ?? row.original.ticker ?? ''}
-              placeholder="e.g. VTI"
-              onChange={(e) => setInvestDraft((d) => ({ ...d, ticker: e.target.value || null }))} />
-          );
-        }
-        const ticker = dirtyInvestments.get(row.original.id)?.ticker ?? row.original.ticker;
-        return ticker
-          ? <span className="acc-ticker">{ticker}</span>
-          : <span className="acc-amount" style={{ opacity: 0.4 }}>—</span>;
-      },
-    },
-    {
       id: '_actions',
       header: '',
       enableSorting: false,
@@ -1573,13 +1552,6 @@ export function AccountingPage() {
                   value={addInvestForm.currentValue === 0 ? '' : addInvestForm.currentValue}
                   placeholder="0.00"
                   onChange={(e) => setAddInvestForm((f) => ({ ...f, currentValue: Number(e.target.value) }))} />
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <input className="acc-add-input acc-add-input--ticker" placeholder="Ticker (optional)"
-                  value={addInvestForm.ticker ?? ''}
-                  style={{ textTransform: 'uppercase' }}
-                  onChange={(e) => setAddInvestForm((f) => ({ ...f, ticker: e.target.value || null }))} />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">&nbsp;</span>
