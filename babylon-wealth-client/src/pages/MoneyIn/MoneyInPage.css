@@ -188,3 +188,94 @@
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Save row ────────────────────────────────────────────────── */
+.mi-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+.mi-save-btn {
+  min-width: 200px;
+  justify-content: center;
+}
+
+/* ── History section ─────────────────────────────────────────── */
+.mi-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.mi-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.mi-empty-state span { font-size: 28px; }
+.mi-empty-state p { max-width: 320px; line-height: 1.5; }
+
+/* ── Annual summary table ────────────────────────────────────── */
+.mi-annual-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.mi-annual-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  padding: 0 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.mi-annual-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+.mi-annual-table tbody tr:last-child { border-bottom: none; }
+.mi-annual-table tbody tr:hover { background: var(--color-bg-elevated); }
+.mi-annual-table td { padding: 10px 8px; color: var(--color-text); }
+.mi-annual-table__year   { font-weight: 600; color: var(--color-gold) !important; }
+.mi-annual-table__num    { text-align: right !important; font-variant-numeric: tabular-nums; }
+.mi-annual-table__in     { color: var(--color-positive) !important; }
+.mi-annual-table__pos    { color: var(--color-positive) !important; }
+.mi-annual-table__neg    { color: var(--color-negative) !important; }
+.mi-annual-table__months { color: var(--color-text-muted) !important; font-size: 12px; }
+
+/* ── Toast notification ──────────────────────────────────────── */
+.mi-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1000;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+  animation: miToastIn 0.2s ease;
+}
+.mi-toast--success {
+  background: var(--color-positive-dim);
+  border: 1px solid var(--color-positive);
+  color: var(--color-positive);
+}
+.mi-toast--error {
+  background: var(--color-negative-dim);
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+}
+@keyframes miToastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

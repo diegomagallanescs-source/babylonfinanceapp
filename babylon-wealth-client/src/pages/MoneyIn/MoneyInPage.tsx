@@ -1,14 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
+  AreaChart, Area, XAxis, YAxis,
 } from 'recharts';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { UploadFlowPanel } from '../../components/UploadFlowPanel';
 import { CumulativeTransactionView } from '../../components/CumulativeTransactionView';
+import { useCheckingHistory } from '../../hooks/useCheckingHistory';
+import { useSaveChecking } from '../../hooks/useSaveChecking';
+import { useUpdateChecking } from '../../hooks/useUpdateChecking';
+import { useStatementAnnualSummary } from '../../hooks/useStatementAnnualSummary';
 import { formatCurrency } from '../../utils/format';
 import type {
   CheckingStatementResponseDto,
+  CheckingStatementSummaryDto,
   CheckingCategoryBreakdownDto,
+  CheckingTransactionDto,
+  AnnualFinancialSummaryDto,
+  SaveCheckingStatementRequest,
   SelectedPeriod,
 } from '../../types/statements';
 import './MoneyInPage.css';
@@ -17,24 +27,29 @@ const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const DONUT_COLORS = [
-  '#00E676', // positive green
-  '#00E5CC', // river teal
-  '#F0B429', // gold
-  '#6B8CFF', // blue-purple
-  '#FF9A3C', // orange
-  '#C084FC', // purple
-  '#22D3EE', // cyan
-  '#F472B6', // pink
+  '#00E676', '#00E5CC', '#F0B429', '#6B8CFF',
+  '#FF9A3C', '#C084FC', '#22D3EE', '#F472B6',
 ];
+
+// ── Date helper (handles MM/DD/YYYY and YYYY-MM-DD) ───────────
+
+function extractYearMonth(date: string): string | null {
+  if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
+  const parts = date.split('/');
+  if (parts.length === 3 && parts[2].length === 4) {
+    return `${parts[2]}-${parts[0].padStart(2, '0')}`;
+  }
+  return null;
+}
 
 // ── MoneyFlowSummaryCards ─────────────────────────────────────
 
 function MoneyFlowSummaryCards({ result }: { result: CheckingStatementResponseDto }) {
   const net = result.netFlow;
-  const netPositive = net >= 0;
-
+  const pos = net >= 0;
   return (
     <div className="mi-kpi-row">
       <div className="mi-kpi-card">
@@ -43,18 +58,16 @@ function MoneyFlowSummaryCards({ result }: { result: CheckingStatementResponseDt
           {formatCurrency(result.totalMoneyIn)}
         </div>
       </div>
-
       <div className="mi-kpi-card">
         <div className="mi-kpi-card__label">Total Money Out</div>
         <div className="mi-kpi-card__value mi-kpi-card__value--out">
           {formatCurrency(result.totalMoneyOut)}
         </div>
       </div>
-
       <div className="mi-kpi-card">
         <div className="mi-kpi-card__label">Net Flow</div>
-        <div className={`mi-kpi-card__value ${netPositive ? 'mi-kpi-card__value--pos' : 'mi-kpi-card__value--neg'}`}>
-          {netPositive ? '+' : ''}{formatCurrency(net)}
+        <div className={`mi-kpi-card__value ${pos ? 'mi-kpi-card__value--pos' : 'mi-kpi-card__value--neg'}`}>
+          {pos ? '+' : ''}{formatCurrency(net)}
         </div>
       </div>
     </div>
@@ -70,18 +83,9 @@ function DonutTooltip({ active, payload }: any) {
   return (
     <div className="mi-tooltip">
       <div className="mi-tooltip__name">{d.category}</div>
-      <div className="mi-tooltip__row">
-        <span>Total</span>
-        <span>{formatCurrency(d.total)}</span>
-      </div>
-      <div className="mi-tooltip__row">
-        <span>Share</span>
-        <span>{d.percentage.toFixed(1)}%</span>
-      </div>
-      <div className="mi-tooltip__row">
-        <span>Transactions</span>
-        <span>{d.count}</span>
-      </div>
+      <div className="mi-tooltip__row"><span>Total</span><span>{formatCurrency(d.total)}</span></div>
+      <div className="mi-tooltip__row"><span>Share</span><span>{d.percentage.toFixed(1)}%</span></div>
+      <div className="mi-tooltip__row"><span>Transactions</span><span>{d.count}</span></div>
     </div>
   );
 }
@@ -91,13 +95,12 @@ function DonutLegend({ payload }: any) {
   if (!payload?.length) return null;
   return (
     <ul className="mi-donut-legend">
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((entry: any, i: number) => (
         <li key={i} className="mi-donut-legend__item">
           <span className="mi-donut-legend__swatch" style={{ background: entry.color }} />
           <span className="mi-donut-legend__label">{entry.value}</span>
-          <span className="mi-donut-legend__pct">
-            {entry.payload.percentage.toFixed(1)}%
-          </span>
+          <span className="mi-donut-legend__pct">{entry.payload.percentage.toFixed(1)}%</span>
         </li>
       ))}
     </ul>
@@ -105,41 +108,22 @@ function DonutLegend({ payload }: any) {
 }
 
 function MoneyInDonutChart({ breakdown }: { breakdown: CheckingCategoryBreakdownDto[] }) {
-  // Only chart Money In categories (exclude Self Transfer which has 0 or near-0 share)
-  const data = [...breakdown]
-    .filter(d => d.total > 0)
-    .sort((a, b) => b.total - a.total);
-
+  const data = [...breakdown].filter(d => d.total > 0).sort((a, b) => b.total - a.total);
   if (data.length === 0) return null;
-
   return (
     <div className="mi-chart-card">
       <div className="mi-chart-card__title">Money In Breakdown</div>
       <div className="mi-donut-wrap">
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
-            <Pie
-              data={data}
-              dataKey="total"
-              nameKey="category"
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={95}
-              paddingAngle={2}
-              strokeWidth={0}
-            >
+            <Pie data={data} dataKey="total" nameKey="category" cx="50%" cy="50%"
+              innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
               {data.map((_, i) => (
                 <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip content={<DonutTooltip />} />
-            <Legend
-              content={<DonutLegend />}
-              layout="vertical"
-              align="right"
-              verticalAlign="middle"
-            />
+            <Legend content={<DonutLegend />} layout="vertical" align="right" verticalAlign="middle" />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -147,17 +131,269 @@ function MoneyInDonutChart({ breakdown }: { breakdown: CheckingCategoryBreakdown
   );
 }
 
+// ── MoneyInAreaChart ──────────────────────────────────────────
+
+function historyLabel(r: CheckingStatementSummaryDto): string {
+  return `${MONTH_SHORT[r.month - 1]} '${String(r.year).slice(2)}`;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HistoryTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const r: CheckingStatementSummaryDto = payload[0].payload.raw;
+  return (
+    <div className="mi-tooltip">
+      <div className="mi-tooltip__name">{label}</div>
+      <div className="mi-tooltip__row"><span>Money In</span><span>{formatCurrency(r.totalMoneyIn)}</span></div>
+      <div className="mi-tooltip__row"><span>Net Flow</span><span>{r.netFlow >= 0 ? '+' : ''}{formatCurrency(r.netFlow)}</span></div>
+    </div>
+  );
+}
+
+function MoneyInAreaChart({ history }: { history: CheckingStatementSummaryDto[] }) {
+  const sorted = [...history].sort((a, b) =>
+    a.year !== b.year ? a.year - b.year : a.month - b.month,
+  );
+  const data = sorted.map(r => ({ label: historyLabel(r), moneyIn: r.totalMoneyIn, raw: r }));
+
+  if (data.length === 0) {
+    return (
+      <div className="mi-chart-card">
+        <div className="mi-chart-card__title">Money In History</div>
+        <div className="mi-empty-state">
+          <span>📄</span>
+          <p>No statements saved yet. Upload a PDF above and click Save to start tracking.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mi-chart-card">
+      <div className="mi-chart-card__title">Money In History</div>
+      <ResponsiveContainer width="100%" height={220}>
+        <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
+          <defs>
+            <linearGradient id="moneyInGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00E676" stopOpacity={0.35} />
+              <stop offset="100%" stopColor="#00E676" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false}
+            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
+          <Tooltip content={<HistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
+          <Area type="monotone" dataKey="moneyIn" stroke="#00E676" strokeWidth={2}
+            fill="url(#moneyInGrad)" dot={false}
+            activeDot={{ r: 4, fill: '#00E676', stroke: '#07080F', strokeWidth: 2 }} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── CheckingAnnualSummaryTable ────────────────────────────────
+
+function CheckingAnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[] | undefined }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="mi-chart-card">
+        <div className="mi-chart-card__title">Annual Summary</div>
+        <div className="mi-empty-state">
+          <span>📊</span>
+          <p>Save statements from multiple months to see yearly totals.</p>
+        </div>
+      </div>
+    );
+  }
+  const sorted = [...data].sort((a, b) => b.year - a.year);
+  return (
+    <div className="mi-chart-card">
+      <div className="mi-chart-card__title">Annual Summary</div>
+      <table className="mi-annual-table">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th className="mi-annual-table__num">Money In</th>
+            <th className="mi-annual-table__num">Net Savings</th>
+            <th className="mi-annual-table__num">Months Recorded</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map(row => (
+            <tr key={row.year}>
+              <td className="mi-annual-table__year">{row.year}</td>
+              <td className="mi-annual-table__num mi-annual-table__in">
+                {formatCurrency(row.totalMoneyIn, true)}
+              </td>
+              <td className={`mi-annual-table__num ${row.netSavings >= 0 ? 'mi-annual-table__pos' : 'mi-annual-table__neg'}`}>
+                {row.netSavings >= 0 ? '+' : ''}{formatCurrency(row.netSavings, true)}
+              </td>
+              <td className="mi-annual-table__num mi-annual-table__months">
+                {row.checkingMonthsRecorded}/12
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── CheckingSavePeriodButton ──────────────────────────────────
+
+interface CheckingSavePeriodButtonProps {
+  period: SelectedPeriod;
+  result: CheckingStatementResponseDto;
+  existingRecord: CheckingStatementSummaryDto | undefined;
+  onSaved: (msg: string) => void;
+  onError: (msg: string) => void;
+}
+
+function CheckingSavePeriodButton({
+  period,
+  result,
+  existingRecord,
+  onSaved,
+  onError,
+}: CheckingSavePeriodButtonProps) {
+  const [progress, setProgress] = useState<string | null>(null);
+  const saveMutation = useSaveChecking();
+  const updateMutation = useUpdateChecking();
+  const queryClient = useQueryClient();
+
+  const busy = saveMutation.isPending || updateMutation.isPending || progress !== null;
+
+  // Year-end: count how many unique months are in the transaction list
+  const yearEndMonthCount = period.mode === 'year-end'
+    ? new Set(result.transactions.map(t => extractYearMonth(t.date)).filter(Boolean)).size
+    : 0;
+
+  const label = progress
+    ?? (period.mode === 'year-end'
+      ? `Save All ${yearEndMonthCount} Months →`
+      : existingRecord
+        ? `Update ${period.label} →`
+        : `Save ${period.label} →`);
+
+  const handleMonthlySave = async () => {
+    const payload: SaveCheckingStatementRequest = {
+      month: period.month!,
+      year: period.year,
+      totalMoneyIn: result.totalMoneyIn,
+      totalMoneyOut: result.totalMoneyOut,
+      transactionCount: result.transactionCount,
+      accountsIncluded: result.accountsDetected.join(', '),
+    };
+    if (existingRecord) {
+      const ok = window.confirm(
+        `${period.label} is already saved. Overwrite with the new numbers?`,
+      );
+      if (!ok) return;
+      await updateMutation.mutateAsync({ id: existingRecord.id, ...payload });
+      onSaved(`${period.label} updated ✓`);
+    } else {
+      await saveMutation.mutateAsync(payload);
+      onSaved(`${period.label} saved ✓`);
+    }
+  };
+
+  const handleYearEndSave = async () => {
+    // Group transactions by YYYY-MM
+    const byMonth = new Map<string, { moneyIn: number; moneyOut: number; count: number }>();
+    (result.transactions as CheckingTransactionDto[]).forEach(t => {
+      const key = extractYearMonth(t.date);
+      if (!key) return;
+      const entry = byMonth.get(key) ?? { moneyIn: 0, moneyOut: 0, count: 0 };
+      if (t.direction === 'In' && t.category !== 'Self Transfer') entry.moneyIn += t.amount;
+      if (t.direction === 'Out') entry.moneyOut += t.amount;
+      entry.count++;
+      byMonth.set(key, entry);
+    });
+
+    const entries = [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b));
+    try {
+      for (let i = 0; i < entries.length; i++) {
+        const [ym, totals] = entries[i];
+        setProgress(`Saving ${i + 1} of ${entries.length}…`);
+        const [yearStr, monthStr] = ym.split('-');
+        await saveMutation.mutateAsync({
+          month: parseInt(monthStr, 10),
+          year: parseInt(yearStr, 10),
+          totalMoneyIn: totals.moneyIn,
+          totalMoneyOut: totals.moneyOut,
+          transactionCount: totals.count,
+          accountsIncluded: result.accountsDetected.join(', '),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['checking-history'] });
+      queryClient.invalidateQueries({ queryKey: ['statement-annual-summary'] });
+      onSaved(`${entries.length} months saved for ${period.year} ✓`);
+    } catch {
+      onError('Some months failed to save. Please try again.');
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  const handleClick = async () => {
+    try {
+      if (period.mode === 'year-end') {
+        await handleYearEndSave();
+      } else {
+        await handleMonthlySave();
+      }
+    } catch {
+      onError('Save failed. Please try again.');
+    }
+  };
+
+  return (
+    <div className="mi-save-row">
+      <button
+        type="button"
+        className="btn btn--primary mi-save-btn"
+        disabled={busy}
+        onClick={handleClick}
+      >
+        {label}
+      </button>
+    </div>
+  );
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+
+interface ToastState { type: 'success' | 'error'; message: string; }
+
 // ── MoneyInPage ───────────────────────────────────────────────
 
 export function MoneyInPage() {
   const [analysisResult, setAnalysisResult] = useState<CheckingStatementResponseDto | null>(null);
   const [period, setPeriod] = useState<SelectedPeriod | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const { data: history } = useCheckingHistory();
+  const { data: annualSummary } = useStatementAnnualSummary();
+
+  const showToast = useCallback((type: ToastState['type'], message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  const existingRecord = period?.mode === 'monthly' && period.month != null
+    ? history?.find(r => r.month === period.month && r.year === period.year)
+    : undefined;
 
   return (
     <div className="mi-page">
       <header className="mi-header">
         <h1 className="mi-title">Money In</h1>
       </header>
+
+      {toast && (
+        <div className={`mi-toast mi-toast--${toast.type}`}>{toast.message}</div>
+      )}
 
       {/* Upload panel */}
       <section className="mi-section">
@@ -204,8 +440,22 @@ export function MoneyInPage() {
             title={`Money In — ${period.label}`}
             showMonthFilter={period.mode === 'year-end'}
           />
+
+          <CheckingSavePeriodButton
+            period={period}
+            result={analysisResult}
+            existingRecord={existingRecord}
+            onSaved={(msg) => showToast('success', msg)}
+            onError={(msg) => showToast('error', msg)}
+          />
         </section>
       )}
+
+      {/* History section — always visible */}
+      <section className="mi-history-section">
+        <MoneyInAreaChart history={history ?? []} />
+        <CheckingAnnualSummaryTable data={annualSummary} />
+      </section>
     </div>
   );
 }
