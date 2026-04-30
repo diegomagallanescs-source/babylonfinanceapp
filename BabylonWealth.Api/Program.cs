@@ -2,7 +2,9 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using BabylonWealth.Api.BackgroundServices;
 using BabylonWealth.Infrastructure.Extensions;
+using BabylonWealth.Infrastructure.Persistence;
 using BabylonWealth.Infrastructure.Seeders;
+using Microsoft.EntityFrameworkCore;
 using BabylonWealth.Services.Extensions;
 using Microsoft.OpenApi.Models;
 
@@ -59,9 +61,13 @@ namespace Babylon.Api
             {
                 options.AddPolicy("FrontendPolicy", policy =>
                 {
-                    var allowedOrigins = builder.Configuration
+                    var configured = builder.Configuration
                         .GetSection("AllowedOrigins")
                         .Get<string[]>() ?? [];
+                    var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
+                    var allowedOrigins = string.IsNullOrEmpty(frontendUrl)
+                        ? configured
+                        : [.. configured, frontendUrl];
                     policy.WithOrigins(allowedOrigins)
                           .AllowAnyHeader()
                           .AllowAnyMethod()
@@ -71,15 +77,21 @@ namespace Babylon.Api
 
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<BabylonDbContext>();
+                db.Database.Migrate();
+            }
+
             await BankSeeder.SeedAsync(app.Services);
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseHttpsRedirection();
             }
-
-            app.UseHttpsRedirection();
             app.UseCors("FrontendPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
