@@ -146,7 +146,8 @@ function CategoryPill({ cat }: { cat: BudgetCategoryResponseDto | undefined }) {
 }
 
 function UtilBadge({ balance, limit }: { balance: number; limit: number }) {
-  if (!limit) return <span className="acc-util acc-util--none">—</span>;
+  if (!limit)        return <span className="acc-util acc-util--none">—</span>;
+  if (balance === 0) return <span className="acc-util acc-util--none">0%</span>;
   const pct = (balance / limit) * 100;
   const cls = pct < 30 ? 'acc-util--low' : pct < 60 ? 'acc-util--mid' : 'acc-util--high';
   return <span className={`acc-util ${cls}`}>{pct.toFixed(1)}%</span>;
@@ -874,7 +875,7 @@ export function AccountingPage() {
           );
         }
         const bal = dirtyCards.get(row.original.id)?.balance ?? row.original.balance;
-        return <span className="acc-amount acc-amount--negative">{formatCurrency(bal)}</span>;
+        return <span className={`acc-amount ${bal > 0 ? 'acc-amount--negative' : ''}`}>{formatCurrency(bal)}</span>;
       },
     },
     {
@@ -1185,19 +1186,6 @@ export function AccountingPage() {
       },
     },
     {
-      accessorKey: 'ticker', header: 'Ticker',
-      cell: ({ row }) => {
-        if (investEditId === row.original.id) {
-          return (
-            <input key={`${row.original.id}-invest-ticker`} className="lt__edit-input"
-              defaultValue={investDraft.ticker ?? row.original.ticker ?? ''}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, ticker: e.target.value || null }))} />
-          );
-        }
-        return dirtyInvestments.get(row.original.id)?.ticker ?? row.original.ticker ?? '—';
-      },
-    },
-    {
       accessorKey: 'investmentType', header: 'Type',
       cell: ({ row }) => {
         if (investEditId === row.original.id) {
@@ -1272,12 +1260,12 @@ export function AccountingPage() {
   };
   const bizCardTotals = {
     customLabel: 'Total',
-    balance: <span className="acc-amount acc-amount--negative">{formatCurrency(businessCards.reduce((s, c) => s + c.balance, 0))}</span>,
+    balance: (() => { const t = businessCards.reduce((s, c) => s + c.balance, 0); return <span className={`acc-amount ${t > 0 ? 'acc-amount--negative' : ''}`}>{formatCurrency(t)}</span>; })(),
     creditLimit: formatCurrency(businessCards.reduce((s, c) => s + c.creditLimit, 0)),
   };
   const persCardTotals = {
     customLabel: 'Total',
-    balance: <span className="acc-amount acc-amount--negative">{formatCurrency(personalCards.reduce((s, c) => s + c.balance, 0))}</span>,
+    balance: (() => { const t = personalCards.reduce((s, c) => s + c.balance, 0); return <span className={`acc-amount ${t > 0 ? 'acc-amount--negative' : ''}`}>{formatCurrency(t)}</span>; })(),
     creditLimit: formatCurrency(personalCards.reduce((s, c) => s + c.creditLimit, 0)),
   };
   const loanTotals = {
@@ -1489,12 +1477,6 @@ export function AccountingPage() {
                 <input className="acc-add-input" placeholder="Label *"
                   value={addInvestForm.customLabel}
                   onChange={(e) => setAddInvestForm((f) => ({ ...f, customLabel: e.target.value }))} />
-              </label>
-              <label className="acc-add-field">
-                <span className="acc-add-field-label">&nbsp;</span>
-                <input className="acc-add-input" placeholder="Ticker (optional)"
-                  value={addInvestForm.ticker ?? ''}
-                  onChange={(e) => setAddInvestForm((f) => ({ ...f, ticker: e.target.value || null }))} />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">&nbsp;</span>
