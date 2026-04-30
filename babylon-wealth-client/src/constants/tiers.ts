@@ -159,12 +159,10 @@ export function getTierLevel(nw: number): number {
 
 // ── River speed ───────────────────────────────────────────────────────────
 
-// mph = 7 × log₂(|nw| + 1) × sign(nw)
-// → $0 = 0 mph, $1 = 7 mph, changes every dollar, grows unbounded
+// 0 mph below $10k; every dollar above $10k adds 0.2 mph
 export function getRiverMph(nw: number): number {
-  if (nw === 0) return 0;
-  const raw = 7 * Math.log2(Math.abs(nw) + 1);
-  return nw > 0 ? raw : -raw;
+  if (nw <= 10_000) return 0;
+  return (nw - 10_000) * 0.2;
 }
 
 // "−25.3 mph", "47.8 mph", "3x · 47.8 mph"
