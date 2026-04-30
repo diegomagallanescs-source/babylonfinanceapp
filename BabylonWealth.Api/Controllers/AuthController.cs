@@ -29,43 +29,13 @@ public class AuthController : ControllerBase
         _budgetCategoryService = budgetCategoryService;
     }
 
-    /// <summary>Creates a new user account and returns a JWT. Default budget categories are seeded automatically.</summary>
-    /// <response code="200">Registration successful. JWT token returned.</response>
-    /// <response code="400">Validation errors (e.g. email already taken, weak password).</response>
+    /// <summary>Registration is currently closed. Returns 400 for all requests.</summary>
+    /// <response code="400">Registration is not open to the public.</response>
     [HttpPost("register")]
-    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequest request)
+    public ActionResult Register()
     {
-        var user = new ApplicationUser
-        {
-            UserName = request.Email,
-            Email = request.Email,
-            FirstName = request.FirstName,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        var result = await _userManager.CreateAsync(user, request.Password);
-
-        if (!result.Succeeded)
-        {
-            var errors = result.Errors.Select(e => e.Description);
-            return BadRequest(new { errors });
-        }
-
-        await _budgetCategoryService.SeedDefaultCategoriesAsync(user.Id);
-
-        var (token, expiresAt) = _jwtService.GenerateToken(user);
-
-        return Ok(new AuthResponseDto
-        {
-            Token = token,
-            ExpiresAt = expiresAt,
-            UserId = user.Id,
-            Email = user.Email!,
-            FirstName = user.FirstName
-        });
+        return BadRequest(new { error = "Registration is currently closed." });
     }
 
     /// <summary>Validates credentials and returns a JWT.</summary>

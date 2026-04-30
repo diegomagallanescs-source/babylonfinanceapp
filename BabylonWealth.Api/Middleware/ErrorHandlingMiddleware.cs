@@ -33,10 +33,7 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                error = "An internal server error occurred.",
-                detail = ex.Message,
-                innerDetail = ex.InnerException?.Message,
-                type = ex.GetType().Name
+                error = "An internal server error occurred."
             }));
         }
     }
