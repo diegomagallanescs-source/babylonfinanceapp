@@ -13,7 +13,7 @@ import { useCreateInvestmentIncome }  from '../../hooks/useCreateInvestmentIncom
 import { formatCurrency }             from '../../utils/format';
 import { PageInfoTooltip }            from '../../components/PageInfoTooltip';
 import type { CreateInvestmentRequest, UpdateInvestmentRequest } from '../../types';
-import type { CreateInvestmentIncomeRequest, InvestmentIncomeResponseDto } from '../../types';
+import type { InvestmentIncomeResponseDto } from '../../types';
 import './InvestingPage.css';
 
 // ── Constants ─────────────────────────────────────────────────

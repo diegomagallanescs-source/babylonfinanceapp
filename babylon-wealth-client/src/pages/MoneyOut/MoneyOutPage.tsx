@@ -96,7 +96,7 @@ function CategoryBarChart({ breakdown }: { breakdown: CategoryBreakdownDto[] }) 
           <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
           <Bar dataKey="total" radius={[0, 4, 4, 0]}>
             {sorted.map((_, i) => <Cell key={i} fill="var(--color-negative)" fillOpacity={1 - i * 0.06} />)}
-            <LabelList dataKey="percentage" position="right" formatter={(v: number) => `${v.toFixed(1)}%`} style={{ fill: 'var(--color-text-sub)', fontSize: 12 }} />
+            <LabelList dataKey="percentage" position="right" formatter={(v: unknown) => `${(v as number).toFixed(1)}%`} style={{ fill: 'var(--color-text-sub)', fontSize: 12 }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
