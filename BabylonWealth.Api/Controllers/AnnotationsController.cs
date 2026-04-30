@@ -13,24 +13,39 @@ namespace BabylonWealth.Api.Controllers;
 [Authorize]
 public class AnnotationsController : ControllerBase
 {
+    private readonly ISnapshotService _snapshotService;
     private readonly IAnnotationService _annotationService;
 
-    public AnnotationsController(IAnnotationService annotationService)
+    public AnnotationsController(ISnapshotService snapshotService, IAnnotationService annotationService)
     {
+        _snapshotService = snapshotService;
         _annotationService = annotationService;
     }
 
-    /// <summary>Creates or updates the annotation for a specific snapshot date (upsert by date).</summary>
-    /// <response code="200">Annotation saved.</response>
+    /// <summary>Creates or updates the annotation for the snapshot nearest to the given date.</summary>
+    /// <response code="204">Annotation saved.</response>
     /// <response code="401">Missing or invalid JWT.</response>
     [HttpPost("annotate")]
-    [ProducesResponseType(typeof(AnnotationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AnnotationResponseDto>> Annotate([FromBody] CreateAnnotationRequest request)
+    public async Task<IActionResult> Annotate([FromBody] CreateAnnotationRequest request)
     {
-        var userId = GetUserId();
-        var result = await _annotationService.UpsertAsync(userId, request);
-        return Ok(result);
+        var date = DateTime.SpecifyKind(request.AnnotationDate, DateTimeKind.Utc);
+        await _snapshotService.AnnotateSnapshotAsync(GetUserId(), date, request.Text);
+        return NoContent();
+    }
+
+    /// <summary>Clears the annotation from the snapshot nearest to the given date.</summary>
+    /// <response code="204">Annotation cleared.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpDelete("annotate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ClearAnnotation([FromQuery] DateTime date)
+    {
+        var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+        await _snapshotService.ClearAnnotationAsync(GetUserId(), utcDate);
+        return NoContent();
     }
 
     /// <summary>Returns all annotations within the given date range. Defaults to the past year.</summary>

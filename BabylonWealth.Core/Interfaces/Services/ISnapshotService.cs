@@ -32,6 +32,9 @@ public interface ISnapshotService
     /// </summary>
     Task AnnotateSnapshotAsync(Guid userId, DateTime annotationDate, string text);
 
+    /// <summary>Clears the annotation from the snapshot nearest to the given date.</summary>
+    Task ClearAnnotationAsync(Guid userId, DateTime annotationDate);
+
     /// <summary>
     /// Returns snapshot history within a date range, mapped to chart-ready DTOs.
     /// Called by GET /api/v1/networth/history

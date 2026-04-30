@@ -11,5 +11,8 @@ export const fetchNetWorthHistory = (from: Date, to: Date) =>
     })
     .then((r) => r.data);
 
-export const annotateNetWorth = (snapshotDate: string, annotation: string) =>
-  client.post('/networth/annotate', { snapshotDate, annotation }).then((r) => r.data);
+export const annotateNetWorth = (annotationDate: string, text: string) =>
+  client.post('/networth/annotate', { annotationDate, text }).then((r) => r.data);
+
+export const deleteAnnotation = (snapshotDate: string): Promise<void> =>
+  client.delete('/networth/annotate', { params: { date: snapshotDate } }).then(() => undefined);

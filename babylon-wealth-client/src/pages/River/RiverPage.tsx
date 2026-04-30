@@ -8,7 +8,7 @@ import { NetWorthChart } from '../../components/NetWorthChart';
 import { formatCurrency, formatDelta, formatPercent } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { getTier, getTierLevel, formatRiverSpeed } from '../../constants/tiers';
-import { annotateNetWorth } from '../../api/networth';
+import { annotateNetWorth, deleteAnnotation } from '../../api/networth';
 import type { TimePeriod } from '../../types';
 import './RiverPage.css';
 
@@ -1142,13 +1142,23 @@ function NetWorthPanel() {
     : null;
   const scrubAnnotation = scrubbedPoint?.annotation ?? null;
 
-  // Most recent snapshot date for Add Note
+  const queryClient = useQueryClient();
+
+  // ── Add Note state ──
+  const [showAddNote,   setShowAddNote]   = useState(false);
+  const [noteText,      setNoteText]      = useState('');
+  const [noteDate,      setNoteDate]      = useState('');
+
+  // Snapshot options for the date picker — exclude dates that already have a note
+  const snapshotOptions = historyData.filter(p => !p.annotation);
   const latestSnapshot  = historyData[historyData.length - 1] ?? null;
 
-  const queryClient = useQueryClient();
-  const [showAddNote, setShowAddNote]   = useState(false);
-  const [noteText, setNoteText]         = useState('');
-  const [noteSaving, setNoteSaving]     = useState(false);
+  const openAddNote = () => {
+    const defaultDate = snapshotOptions[snapshotOptions.length - 1]?.snapshotDate ?? latestSnapshot?.snapshotDate ?? '';
+    setNoteDate(defaultDate);
+    setNoteText('');
+    setShowAddNote(true);
+  };
 
   const annotateMutation = useMutation({
     mutationFn: ({ date, text }: { date: string; text: string }) =>
@@ -1160,14 +1170,18 @@ function NetWorthPanel() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAnnotation(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['networth', 'history'] }),
+  });
+
   const handleSaveNote = () => {
-    if (!latestSnapshot || !noteText.trim()) return;
-    setNoteSaving(true);
-    annotateMutation.mutate(
-      { date: latestSnapshot.snapshotDate, text: noteText.trim() },
-      { onSettled: () => setNoteSaving(false) }
-    );
+    if (!noteDate || !noteText.trim()) return;
+    annotateMutation.mutate({ date: noteDate, text: noteText.trim() });
   };
+
+  // ── View note state (shown next to date label when scrubbing an annotated point) ──
+  const [showNotePopover, setShowNotePopover] = useState(false);
 
   return (
     <div className="nw-panel">
@@ -1185,10 +1199,45 @@ function NetWorthPanel() {
         </div>
       )}
 
-      {/* Scrub date label */}
-      <div className="nw-panel__scrub-date">
-        {scrubDateLabel ?? 'Net Worth'}
+      {/* Scrub date label + note indicator */}
+      <div className="nw-panel__scrub-date-row">
+        <span className="nw-panel__scrub-date">
+          {scrubDateLabel ?? 'Net Worth'}
+        </span>
+        {scrubAnnotation && scrubbedPoint && (
+          <button
+            className="nw-panel__note-chip"
+            onClick={() => setShowNotePopover(v => !v)}
+            title="View note"
+          >
+            🚩 Note
+          </button>
+        )}
       </div>
+
+      {/* Note popover — shows when chip is clicked */}
+      <AnimatePresence>
+        {showNotePopover && scrubAnnotation && scrubbedPoint && (
+          <motion.div
+            className="nw-panel__note-popover"
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
+          >
+            <p className="nw-panel__note-popover-text">{scrubAnnotation}</p>
+            <button
+              className="nw-panel__note-delete"
+              onClick={() => {
+                if (!window.confirm('Delete this note?')) return;
+                deleteMutation.mutate(scrubbedPoint.snapshotDate);
+                setShowNotePopover(false);
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete note'}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Scrub-aware value — no remount key so the number updates in-place */}
       <div className="nw-panel__value-row">
@@ -1203,18 +1252,6 @@ function NetWorthPanel() {
         <span className="nw-panel__delta-pct">({formatPercent(deltaPercent)})</span>
         <span className="nw-panel__delta-label">{deltaLabel}</span>
       </div>
-
-      {/* Annotation callout when scrubbing a flagged point */}
-      <AnimatePresence>
-        {scrubAnnotation && (
-          <motion.div className="nw-panel__annotation"
-            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
-            <span className="nw-panel__annotation-flag">🚩</span>
-            {scrubAnnotation}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Chart */}
       <div className="nw-panel__chart-wrap">
@@ -1241,9 +1278,8 @@ function NetWorthPanel() {
             </button>
           ))}
         </div>
-        {latestSnapshot && (
-          <button className="btn-add-note" onClick={() => setShowAddNote(true)}
-            title="Add a note to the latest snapshot">
+        {snapshotOptions.length > 0 && (
+          <button className="btn-add-note" onClick={openAddNote} title="Add a note to a snapshot">
             + Note
           </button>
         )}
@@ -1258,13 +1294,19 @@ function NetWorthPanel() {
               initial={{ opacity: 0, y: 30, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}>
               <div className="add-note-modal__title">🚩 Add Note</div>
-              <div className="add-note-modal__date">
-                {latestSnapshot && new Date(latestSnapshot.snapshotDate)
-                  .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              <div className="add-note-modal__date-picker">
+                <label>Snapshot date</label>
+                <select value={noteDate} onChange={e => setNoteDate(e.target.value)}>
+                  {snapshotOptions.map(p => (
+                    <option key={p.snapshotDate} value={p.snapshotDate}>
+                      {new Date(p.snapshotDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </option>
+                  ))}
+                </select>
               </div>
               <textarea
                 className="add-note-modal__input"
-                placeholder="What happened to your net worth today?"
+                placeholder="What happened to your net worth on this date?"
                 value={noteText}
                 onChange={e => setNoteText(e.target.value)}
                 rows={3}
@@ -1273,9 +1315,9 @@ function NetWorthPanel() {
               <div className="add-note-modal__actions">
                 <button className="btn-secondary" onClick={() => setShowAddNote(false)}>Cancel</button>
                 <button className="btn-primary"
-                  disabled={!noteText.trim() || noteSaving}
+                  disabled={!noteText.trim() || annotateMutation.isPending}
                   onClick={handleSaveNote}>
-                  {noteSaving ? 'Saving…' : 'Save Note'}
+                  {annotateMutation.isPending ? 'Saving…' : 'Save Note'}
                 </button>
               </div>
             </motion.div>

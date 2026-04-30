@@ -55,6 +55,14 @@ public class SnapshotService : ISnapshotService
         await _netWorthRepo.AnnotateAsync(target.Id, userId, text);
     }
 
+    public async Task ClearAnnotationAsync(Guid userId, DateTime annotationDate)
+    {
+        var history = await _netWorthRepo.GetHistoryAsync(userId, DateTime.MinValue, annotationDate);
+        var target = history.MaxBy(s => s.SnapshotDate);
+        if (target is null) return;
+        await _netWorthRepo.AnnotateAsync(target.Id, userId, string.Empty);
+    }
+
     public async Task<IEnumerable<NetWorthHistoryPointDto>> GetHistoryAsync(Guid userId, DateTime from, DateTime to)
     {
         var snapshots = await _netWorthRepo.GetHistoryAsync(userId, from, to);
@@ -63,7 +71,7 @@ public class SnapshotService : ISnapshotService
             SnapshotDate = s.SnapshotDate,
             LiquidNetWorth = s.LiquidNetWorth,
             TotalNetWorth = s.TotalNetWorth,
-            Annotation = s.Annotation
+            Annotation = string.IsNullOrEmpty(s.Annotation) ? null : s.Annotation
         });
     }
 }
