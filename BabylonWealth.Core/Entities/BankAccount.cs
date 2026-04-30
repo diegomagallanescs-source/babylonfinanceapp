@@ -14,6 +14,7 @@ public class BankAccount : BaseEntity<Guid>
     public BudgetCategory? BudgetCategory { get; set; }
     public string? Notes { get; private set; }
     public Dictionary<string, string>? CustomFields { get; private set; }
+    public int? DisplayOrder { get; set; }
 
     private BankAccount() { }
 

@@ -22,8 +22,20 @@ public class AccountRepository : BaseRepository<BankAccount, Guid>, IAccountRepo
         return await _dbSet
             .Include(a => a.Bank)
             .Where(a => a.UserId == userId)
-            .OrderBy(a => a.CustomLabel)
+            .OrderBy(a => a.DisplayOrder == null ? int.MaxValue : a.DisplayOrder)
+            .ThenBy(a => a.CustomLabel)
             .ToListAsync();
+    }
+
+    public async Task ReorderAsync(Guid userId, IEnumerable<(Guid id, int order)> updates)
+    {
+        foreach (var (id, order) in updates)
+        {
+            var account = await _dbSet.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+            if (account is not null)
+                account.DisplayOrder = order;
+        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<BankAccount>> GetByBudgetCategoryAsync(Guid userId, Guid categoryId)

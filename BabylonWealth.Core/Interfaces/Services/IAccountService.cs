@@ -10,4 +10,5 @@ public interface IAccountService
     Task<AccountResponseDto> CreateAsync(Guid userId, CreateAccountRequest request);
     Task<AccountResponseDto> UpdateAsync(Guid id, Guid userId, UpdateAccountRequest request);
     Task SoftDeleteAsync(Guid id, Guid userId);
+    Task ReorderAsync(Guid userId, ReorderAccountsRequest request);
 }

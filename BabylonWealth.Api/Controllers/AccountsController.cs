@@ -113,6 +113,19 @@ public class AccountsController : ControllerBase
         }
     }
 
+    /// <summary>Saves a new display order for the authenticated user's accounts.</summary>
+    /// <response code="204">Order saved.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpPatch("reorder")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Reorder([FromBody] ReorderAccountsRequest request)
+    {
+        var userId = GetUserId();
+        await _accountService.ReorderAsync(userId, request);
+        return NoContent();
+    }
+
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

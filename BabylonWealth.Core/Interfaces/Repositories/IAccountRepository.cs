@@ -9,4 +9,7 @@ public interface IAccountRepository : IBaseRepository<BankAccount, Guid>
 
     /// <summary>Sum of all active account balances — used by NetWorthService to compute liquid assets.</summary>
     Task<decimal> GetTotalBalanceAsync(Guid userId);
+
+    /// <summary>Persists a new display order for a user's accounts. Each tuple is (accountId, zeroBasedIndex).</summary>
+    Task ReorderAsync(Guid userId, IEnumerable<(Guid id, int order)> updates);
 }

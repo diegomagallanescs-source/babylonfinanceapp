@@ -79,6 +79,12 @@ public class AccountService : IAccountService
         await _accountRepo.SoftDeleteAsync(id, userId);
     }
 
+    public async Task ReorderAsync(Guid userId, ReorderAccountsRequest request)
+    {
+        var updates = request.OrderedIds.Select((id, index) => (id, index));
+        await _accountRepo.ReorderAsync(userId, updates);
+    }
+
     private static AccountResponseDto ToDto(BankAccount a) => new()
     {
         Id = a.Id,
