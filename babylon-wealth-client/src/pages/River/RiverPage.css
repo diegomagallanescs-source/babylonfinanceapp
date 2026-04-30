@@ -415,8 +415,9 @@
 }
 
 .period-pill:hover {
-  color: var(--color-text);
-  background: rgba(255,255,255,0.05);
+  color: var(--color-positive);
+  background: rgba(0, 230, 118, 0.07);
+  border-color: rgba(0, 230, 118, 0.18);
 }
 
 .period-pill:active {
