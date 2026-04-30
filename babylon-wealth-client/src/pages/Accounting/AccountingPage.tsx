@@ -14,8 +14,8 @@ import { useBudgetCategories } from '../../hooks/useBudgetCategories';
 
 import {
   createAccount, updateAccount, deleteAccount, reorderAccounts,
-  createCreditCard, updateCreditCard,
-  createLoan, updateLoan,
+  createCreditCard, updateCreditCard, deleteCreditCard,
+  createLoan, updateLoan, deleteLoan,
   createInvestment, updateInvestment, deleteInvestment,
   createPendingItem, settlePendingItem, deletePendingItem,
   createProperty, updateProperty, deleteProperty,
@@ -496,6 +496,13 @@ export function AccountingPage() {
     setCardEditBank(null);
   }
 
+  async function handleDeleteCard(row: CreditCardResponseDto) {
+    if (!confirm(`Delete "${row.customLabel}"?`)) return;
+    await deleteCreditCard(row.id);
+    qc.invalidateQueries({ queryKey: ['creditcards'] });
+    qc.invalidateQueries({ queryKey: ['networth'] });
+  }
+
   async function handleAddCard() {
     if (!addCardForm.customLabel.trim()) return;
     setAddingCard(true);
@@ -553,6 +560,13 @@ export function AccountingPage() {
   function cancelLoanEdit() {
     setLoanEditId(null);
     setLoanDraft({});
+  }
+
+  async function handleDeleteLoan(row: LoanResponseDto) {
+    if (!confirm(`Delete "${row.customLabel}"?`)) return;
+    await deleteLoan(row.id);
+    qc.invalidateQueries({ queryKey: ['loans'] });
+    qc.invalidateQueries({ queryKey: ['networth'] });
   }
 
   async function handleAddLoan() {
@@ -921,6 +935,8 @@ export function AccountingPage() {
             {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
             <button className="lt__action-btn lt__action-btn--edit" type="button"
               onClick={() => startCardEdit(row.original)}>Edit</button>
+            <button className="lt__action-btn lt__action-btn--delete" type="button"
+              onClick={() => handleDeleteCard(row.original)}>Delete</button>
           </div>
         );
       },
@@ -1030,6 +1046,8 @@ export function AccountingPage() {
             {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
             <button className="lt__action-btn lt__action-btn--edit" type="button"
               onClick={() => startLoanEdit(row.original)}>Edit</button>
+            <button className="lt__action-btn lt__action-btn--delete" type="button"
+              onClick={() => handleDeleteLoan(row.original)}>Delete</button>
           </div>
         );
       },

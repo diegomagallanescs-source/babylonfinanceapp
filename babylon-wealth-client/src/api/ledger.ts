@@ -48,6 +48,10 @@ export async function updateCreditCard(id: string, body: UpdateCreditCardRequest
   return data;
 }
 
+export async function deleteCreditCard(id: string): Promise<void> {
+  await apiClient.delete(`/creditcards/${id}`);
+}
+
 // ── Loans ────────────────────────────────────────────────────
 export async function fetchLoans(): Promise<LoanResponseDto[]> {
   const { data } = await apiClient.get<LoanResponseDto[]>('/loans');
@@ -62,6 +66,10 @@ export async function createLoan(body: CreateLoanRequest): Promise<LoanResponseD
 export async function updateLoan(id: string, body: UpdateLoanRequest): Promise<LoanResponseDto> {
   const { data } = await apiClient.put<LoanResponseDto>(`/loans/${id}`, body);
   return data;
+}
+
+export async function deleteLoan(id: string): Promise<void> {
+  await apiClient.delete(`/loans/${id}`);
 }
 
 // ── Investments ──────────────────────────────────────────────
