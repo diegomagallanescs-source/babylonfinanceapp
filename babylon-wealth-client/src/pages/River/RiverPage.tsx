@@ -34,7 +34,6 @@ function SnapshotCalendarPicker({
   const [viewYear,  setViewYear]  = useState(selDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(selDate.getMonth());
 
-  const availableYMD = new Set(snapshotDates.map(toYMD));
   const availableYears = [...new Set(snapshotDates.map(d => new Date(d).getFullYear()))].sort((a,b)=>a-b);
 
   const firstDOW    = new Date(viewYear, viewMonth, 1).getDay();
