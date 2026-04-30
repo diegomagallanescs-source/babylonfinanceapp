@@ -17,3 +17,6 @@ export const fetchPassiveIncomeSummary = () =>
 
 export const createInvestmentIncome = (body: CreateInvestmentIncomeRequest) =>
   client.post<InvestmentIncomeResponseDto>('/investmentincome', body).then((r) => r.data);
+
+export const deleteInvestmentIncome = (id: string): Promise<void> =>
+  client.delete(`/investmentincome/${id}`).then(() => undefined);

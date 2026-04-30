@@ -10,6 +10,7 @@ import { useUpdateInvestment }        from '../../hooks/useUpdateInvestment';
 import { useDeleteInvestment }        from '../../hooks/useDeleteInvestment';
 import { useInvestmentIncomeAll }     from '../../hooks/useInvestmentIncomeAll';
 import { useCreateInvestmentIncome }  from '../../hooks/useCreateInvestmentIncome';
+import { useDeleteInvestmentIncome }  from '../../hooks/useDeleteInvestmentIncome';
 import { formatCurrency }             from '../../utils/format';
 import { PageInfoTooltip }            from '../../components/PageInfoTooltip';
 import type { CreateInvestmentRequest, UpdateInvestmentRequest } from '../../types';
@@ -187,6 +188,7 @@ export function InvestingPage() {
   const updateInv    = useUpdateInvestment();
   const deleteInv    = useDeleteInvestment();
   const createIncome = useCreateInvestmentIncome();
+  const deleteIncome = useDeleteInvestmentIncome();
 
   // ── Portfolio total
   const totalPortfolio = useMemo(
@@ -407,6 +409,11 @@ export function InvestingPage() {
     }
   };
 
+  const handleDeletePassiveEntry = async (id: string) => {
+    if (!window.confirm('Remove this passive income entry?')) return;
+    await deleteIncome.mutateAsync(id);
+  };
+
   // ─────────────────────────────────────────────────────────────
   // Section 3 — Compound Growth Projector
   // ─────────────────────────────────────────────────────────────
@@ -608,7 +615,7 @@ export function InvestingPage() {
                   </span>
                   <span className="inv-list__value">{formatCurrency(inv.currentValue)}</span>
                   <span className="inv-list__actions">
-                    <button className="inv-icon-btn" title="Edit" onClick={() => startEdit(inv.id)}>✏</button>
+                    <button className="inv-icon-btn" title="Edit" onClick={() => startEdit(inv.id)}>Edit</button>
                     <button
                       className="inv-icon-btn inv-icon-btn--danger"
                       title="Delete"
@@ -622,13 +629,7 @@ export function InvestingPage() {
               )
             ))}
 
-            {/* Total row */}
-            <div className="inv-list__total-row">
-              <span>Total</span>
-              <span />
-              <span>{formatCurrency(totalPortfolio)}</span>
-              <span />
-            </div>
+
           </div>
         )}
       </section>
@@ -913,6 +914,29 @@ export function InvestingPage() {
                   ))}
                 </BarChart>
               </ResponsiveContainer>
+            )}
+
+            {/* Entry management — delete individual entries */}
+            {incomeAll.length > 0 && (
+              <details className="inv-entry-list">
+                <summary className="inv-entry-list__toggle">Manage entries ({incomeAll.length})</summary>
+                <div className="inv-entry-list__rows">
+                  {[...incomeAll].map(e => (
+                    <div key={e.id} className="inv-entry-list__row">
+                      <span className="inv-entry-list__period">
+                        {MONTH_SHORT[new Date(e.receivedDate).getMonth()]} {new Date(e.receivedDate).getFullYear()}
+                      </span>
+                      <span className="inv-entry-list__cat">{e.sourceName}</span>
+                      <span className="inv-entry-list__amt">{formatCurrency(e.amount)}</span>
+                      <button
+                        className="inv-icon-btn inv-icon-btn--danger"
+                        onClick={() => handleDeletePassiveEntry(e.id)}
+                        disabled={deleteIncome.isPending}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
           </div>
 

@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createInvestmentIncome } from '../api/income';
+import { deleteInvestmentIncome } from '../api/income';
 
-export function useCreateInvestmentIncome() {
+export function useDeleteInvestmentIncome() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createInvestmentIncome,
+    mutationFn: deleteInvestmentIncome,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['investmentIncome', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['passiveIncome'] });

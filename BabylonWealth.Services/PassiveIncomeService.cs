@@ -25,6 +25,9 @@ public class PassiveIncomeService : IPassiveIncomeService
         return entries.OrderByDescending(e => e.ReceivedDate).Select(ToDto);
     }
 
+    public Task DeleteAsync(Guid id, Guid userId) =>
+        _repo.SoftDeleteAsync(id, userId);
+
     public async Task<InvestmentIncomeResponseDto> CreateAsync(Guid userId, CreateInvestmentIncomeRequest request)
     {
         var entry = InvestmentIncome.Create(

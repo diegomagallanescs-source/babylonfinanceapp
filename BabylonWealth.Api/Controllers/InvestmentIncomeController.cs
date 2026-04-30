@@ -45,6 +45,18 @@ public class InvestmentIncomeController : ControllerBase
         return CreatedAtAction(nameof(GetAll), entry);
     }
 
+    /// <summary>Soft-deletes a passive income entry.</summary>
+    /// <response code="204">Deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _passiveIncomeService.DeleteAsync(id, GetUserId());
+        return NoContent();
+    }
+
     /// <summary>Returns a rolled-up summary of passive income (trailing 12 months, by type, vs. monthly expenses).</summary>
     /// <response code="200">Passive income summary.</response>
     /// <response code="401">Missing or invalid JWT.</response>

@@ -36,6 +36,9 @@ public interface IPassiveIncomeService
     /// <summary>Records a passive income receipt.</summary>
     Task<InvestmentIncomeResponseDto> CreateAsync(Guid userId, CreateInvestmentIncomeRequest request);
 
+    /// <summary>Soft-deletes a passive income entry owned by the user.</summary>
+    Task DeleteAsync(Guid id, Guid userId);
+
     /// <summary>Total passive income received in a given calendar year.</summary>
     Task<decimal> GetAnnualTotalAsync(Guid userId, int year);
 }
