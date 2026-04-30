@@ -317,21 +317,21 @@
 /* Period selector */
 .period-selector {
   display: flex;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 4px;
+  margin-top: -4px;
 }
 
 .period-pill {
-  padding: 8px 18px;
-  border-radius: 999px;
-  font-size: 14px;
+  padding: 4px 11px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-text-muted);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
 }
 
 .period-pill:hover {
@@ -341,14 +341,8 @@
 
 .period-pill--active {
   color: var(--color-positive);
-  background: rgba(0, 230, 118, 0.14);
-  border-color: rgba(0, 230, 118, 0.35);
-}
-
-[data-theme="light"] .period-pill--active {
-  color: #1A8040;
-  background: rgba(26, 128, 64, 0.10);
-  border-color: rgba(26, 128, 64, 0.32);
+  background: rgba(0, 230, 118, 0.1);
+  border-color: rgba(0, 230, 118, 0.3);
 }
 
 /* Chart */
@@ -745,7 +739,18 @@
 }
 
 /* ── See Optimal River button ─────────────────────────── */
-/* .btn-optimal base styles merged into .btn-meaning, .btn-optimal block above */
+.btn-optimal {
+  padding: 11px 28px;
+  border: 1.5px solid rgba(0, 229, 204, 0.4);
+  border-radius: 10px;
+  color: var(--color-river);
+  font-size: 13.5px;
+  font-weight: 600;
+  background: rgba(0, 229, 204, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
 
 /* ── River panel button row ──────────────────────────── */
 .river-panel__btn-row {
@@ -756,56 +761,23 @@
   flex-wrap: wrap;
 }
 
-/* Blue shimmer sweep shared by both river buttons */
-@keyframes riverBtnShimmer {
-  0%   { left: -70%; }
-  100% { left: 130%; }
-}
-
-.btn-meaning,
-.btn-optimal {
-  position: relative;
-  overflow: hidden;
-  padding: 11px 24px;
-  border: 1px solid var(--color-border);
+.btn-meaning {
+  padding: 11px 20px;
+  border: 1.5px solid rgba(240, 180, 41, 0.35);
   border-radius: 10px;
-  color: var(--color-text-sub);
+  color: var(--color-gold);
   font-size: 13px;
   font-weight: 600;
-  background: transparent;
+  background: rgba(240, 180, 41, 0.05);
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition: all 0.2s ease;
   letter-spacing: 0.2px;
 }
 
-/* The travelling blue light */
-.btn-meaning::before,
-.btn-optimal::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -70%;
-  width: 55%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(74, 158, 255, 0.13) 50%,
-    transparent 100%
-  );
-  animation: riverBtnShimmer 3.2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* Stagger the second button so they don't pulse in sync */
-.btn-optimal::before {
-  animation-delay: 1.6s;
-}
-
-.btn-meaning:hover,
-.btn-optimal:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  color: var(--color-text);
+.btn-meaning:hover {
+  background: rgba(240, 180, 41, 0.12);
+  border-color: var(--color-gold);
+  box-shadow: 0 0 20px rgba(240, 180, 41, 0.2);
   transform: translateY(-1px);
 }
 
@@ -950,7 +922,12 @@
   margin-top: -6px;
 }
 
-/* .btn-optimal hover merged into shared block above */
+.btn-optimal:hover {
+  background: rgba(0, 229, 204, 0.12);
+  border-color: var(--color-river);
+  box-shadow: 0 0 20px rgba(0, 229, 204, 0.2);
+  transform: translateY(-1px);
+}
 
 /* ═══════════════════════════════════════════════════════
    OPTIMAL RIVER MODAL
