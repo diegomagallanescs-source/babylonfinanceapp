@@ -140,7 +140,7 @@ export function NetWorthChart({
 
   if (isLoading) return <div className="nw-chart__skeleton" />;
 
-  if (data.length < 2) {
+  if (data.length < 1) {
     return (
       <div className="nw-chart__empty">
         No snapshots yet for this period.

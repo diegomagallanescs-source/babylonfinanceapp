@@ -22,19 +22,20 @@ const CAL_DOW    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 function toYMD(iso: string) { return iso.slice(0, 10); }
 
 function SnapshotCalendarPicker({
-  snapshotDates,
   selected,
   onChange,
 }: {
-  snapshotDates: string[];
   selected: string;
   onChange: (d: string) => void;
 }) {
-  const selDate   = selected ? new Date(selected) : new Date();
+  const today     = new Date();
+  const todayYMD  = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const selDate   = selected ? new Date(selected) : today;
   const [viewYear,  setViewYear]  = useState(selDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(selDate.getMonth());
 
-  const availableYears = [...new Set(snapshotDates.map(d => new Date(d).getFullYear()))].sort((a,b)=>a-b);
+  const currentYear    = today.getFullYear();
+  const availableYears = Array.from({ length: currentYear - 2020 + 1 }, (_, i) => 2020 + i);
 
   const firstDOW    = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -66,18 +67,16 @@ function SnapshotCalendarPicker({
         {CAL_DOW.map(d => <span key={d} className="snapshot-cal__dow">{d}</span>)}
         {Array(firstDOW).fill(null).map((_, i) => <span key={`e${i}`} />)}
         {Array(daysInMonth).fill(null).map((_, i) => {
-          const day = i + 1;
-          const ymd = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          const match = snapshotDates.find(d => toYMD(d) === ymd);
-          const isAvail    = !!match;
+          const day     = i + 1;
+          const ymd     = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const isFuture   = ymd > todayYMD;
           const isSelected = selected && toYMD(selected) === ymd;
           return (
             <button
               key={day}
-              className={`snapshot-cal__day${isAvail ? ' snapshot-cal__day--avail' : ''}${isSelected ? ' snapshot-cal__day--selected' : ''}`}
-              disabled={!isAvail}
-              onClick={() => match && onChange(match)}
-              title={isAvail ? new Date(match!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : undefined}
+              className={`snapshot-cal__day${!isFuture ? ' snapshot-cal__day--avail' : ''}${isSelected ? ' snapshot-cal__day--selected' : ''}`}
+              disabled={isFuture}
+              onClick={() => !isFuture && onChange(ymd)}
             >
               {day}
             </button>
@@ -1184,6 +1183,7 @@ function NetWorthPanel() {
   const currentValue = nw ? nw[displayKey] : 0;
 
   const { data: historyData = [], isLoading: histLoading } = useNetWorthHistory(period);
+  const { data: allHistoryData = [] } = useNetWorthHistory('ALL');
 
   // Scrub-aware display value
   const scrubbedValue = scrubbedIndex != null ? (historyData[scrubbedIndex]?.[displayKey] ?? null) : null;
@@ -1225,12 +1225,9 @@ function NetWorthPanel() {
   const [noteText,      setNoteText]      = useState('');
   const [noteDate,      setNoteDate]      = useState('');
 
-  // Snapshot options for the date picker — exclude dates that already have a note
-  const snapshotOptions  = historyData.filter(p => !p.annotation);
-  const annotatedPoints  = historyData.filter(p => !!p.annotation);
-  const latestSnapshot   = historyData[historyData.length - 1] ?? null;
-
-  const [showNotesPanel, setShowNotesPanel] = useState(false);
+  // Snapshot options — use all-time history so date picker isn't limited to current period
+  const snapshotOptions = allHistoryData.filter(p => !p.annotation);
+  const latestSnapshot  = allHistoryData[allHistoryData.length - 1] ?? null;
 
   const openAddNote = () => {
     const defaultDate = snapshotOptions[snapshotOptions.length - 1]?.snapshotDate ?? latestSnapshot?.snapshotDate ?? '';
@@ -1295,16 +1292,6 @@ function NetWorthPanel() {
           </button>
         )}
 
-        {/* While NOT hovering — show chip if any notes exist */}
-        {!scrubbedPoint && annotatedPoints.length > 0 && (
-          <button
-            className="nw-panel__note-chip"
-            onClick={() => setShowNotesPanel(v => !v)}
-            title="View notes"
-          >
-            🚩 {annotatedPoints.length === 1 ? '1 note' : `${annotatedPoints.length} notes`}
-          </button>
-        )}
       </div>
 
       {/* Popover for scrubbed point note */}
@@ -1331,38 +1318,6 @@ function NetWorthPanel() {
         )}
       </AnimatePresence>
 
-      {/* Panel for all notes when not scrubbing */}
-      <AnimatePresence>
-        {showNotesPanel && !scrubbedPoint && annotatedPoints.length > 0 && (
-          <motion.div
-            className="nw-panel__note-popover"
-            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
-          >
-            {annotatedPoints.map(pt => (
-              <div key={pt.snapshotDate} className="nw-panel__note-entry">
-                <div className="nw-panel__note-entry-header">
-                  <span className="nw-panel__note-entry-date">
-                    {new Date(pt.snapshotDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                  <button
-                    className="nw-panel__note-delete"
-                    onClick={() => {
-                      if (!window.confirm('Delete this note?')) return;
-                      deleteMutation.mutate(pt.snapshotDate);
-                      if (annotatedPoints.length === 1) setShowNotesPanel(false);
-                    }}
-                    disabled={deleteMutation.isPending}
-                  >
-                    Delete
-                  </button>
-                </div>
-                <p className="nw-panel__note-popover-text">{pt.annotation}</p>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Scrub-aware value — no remount key so the number updates in-place */}
       <div className="nw-panel__value-row">
@@ -1403,7 +1358,7 @@ function NetWorthPanel() {
             </button>
           ))}
         </div>
-        {snapshotOptions.length > 0 && (
+        {allHistoryData.length > 0 && (
           <button className="btn-add-note" onClick={openAddNote} title="Add a note to a snapshot">
             + Note
           </button>
@@ -1420,7 +1375,6 @@ function NetWorthPanel() {
               exit={{ opacity: 0, y: 20 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}>
               <div className="add-note-modal__title">🚩 Add Note</div>
               <SnapshotCalendarPicker
-                snapshotDates={snapshotOptions.map(p => p.snapshotDate)}
                 selected={noteDate}
                 onChange={setNoteDate}
               />
