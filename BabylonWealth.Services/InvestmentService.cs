@@ -98,6 +98,7 @@ public class InvestmentService : IInvestmentService
         Id = i.Id,
         BankId = i.BankId,
         BankName = i.Bank?.Name,
+        BankLogoUrl = i.Bank?.LogoUrl,
         CustomLabel = i.CustomLabel,
         CurrentValue = i.CurrentValue,
         Ticker = i.Ticker,

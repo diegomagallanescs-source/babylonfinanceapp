@@ -7,6 +7,7 @@ public record InvestmentResponseDto
     public Guid Id { get; init; }
     public Guid? BankId { get; init; }
     public string? BankName { get; init; }
+    public string? BankLogoUrl { get; init; }
     public string CustomLabel { get; init; } = string.Empty;
     public decimal CurrentValue { get; init; }
     public string? Ticker { get; init; }

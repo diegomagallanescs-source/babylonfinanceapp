@@ -47,7 +47,7 @@ public static class BankSeeder
             // ── Online / Neo Banks ────────────────────────────────────────────────
             Bank.Create("SoFi",                       BankType.Both,     $"{clearbit}/sofi.com",                   "social finance"),
             Bank.Create("Ally Bank",                  BankType.Personal, $"{clearbit}/ally.com",                   "ally financial"),
-            Bank.Create("Marcus by Goldman Sachs",    BankType.Personal, $"{clearbit}/marcus.com",                 "marcus,goldman sachs savings"),
+            Bank.Create("Goldman Sachs",               BankType.Personal, $"{clearbit}/goldmansachs.com",          "marcus,goldman sachs savings,marcus by goldman sachs"),
             Bank.Create("USAA",                       BankType.Personal, $"{clearbit}/usaa.com",                   "united services automobile"),
             Bank.Create("Navy Federal Credit Union",  BankType.Personal, $"{clearbit}/navyfederal.org",            "nfcu,navy federal"),
             Bank.Create("Chime",                      BankType.Personal, $"{clearbit}/chime.com",                  "chime bank"),
@@ -65,6 +65,19 @@ public static class BankSeeder
             Bank.Create("Betterment",                 BankType.Personal, $"{clearbit}/betterment.com",             "betterment invest"),
             Bank.Create("Kraken",                     BankType.Personal, $"{clearbit}/kraken.com",                 "kraken exchange,kraken crypto"),
         };
+
+        // ── Rename legacy entries ────────────────────────────────────────────
+        // "Marcus by Goldman Sachs" was too long; rename to "Goldman Sachs" in place
+        // so existing linked accounts are preserved.
+        var renamed = await context.Banks
+            .Where(b => b.Name == "Marcus by Goldman Sachs")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(b => b.Name, "Goldman Sachs")
+                .SetProperty(b => b.LogoUrl, $"{clearbit}/goldmansachs.com")
+                .SetProperty(b => b.SearchAliases, "marcus,goldman sachs savings,marcus by goldman sachs"));
+
+        if (renamed > 0)
+            logger.LogInformation("Renamed 'Marcus by Goldman Sachs' → 'Goldman Sachs'.");
 
         // Upsert by name — only insert banks that don't already exist
         var existingNames = (await context.Banks
