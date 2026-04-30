@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -59,12 +59,28 @@ function CurrencyInput({
       ? defaultValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : '',
   );
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const cursorPos = useRef<number | null>(null);
+
+  // Restore cursor synchronously before the browser paints
+  useLayoutEffect(() => {
+    if (cursorPos.current !== null && inputRef.current) {
+      inputRef.current.setSelectionRange(cursorPos.current, cursorPos.current);
+      cursorPos.current = null;
+    }
+  });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    const el = e.target;
+    // Measure from the right so comma shifts don't throw off position
+    const distFromEnd = el.value.length - (el.selectionEnd ?? el.value.length);
+
+    const raw = el.value.replace(/[^0-9.]/g, '');
     const parts = raw.split('.');
     const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const formatted = parts.length > 1 ? `${intPart}.${parts[1].slice(0, 2)}` : intPart;
+
+    cursorPos.current = Math.max(0, formatted.length - distFromEnd);
     setText(formatted);
     const num = parseFloat(raw);
     onChange(isNaN(num) ? 0 : num);
@@ -79,6 +95,7 @@ function CurrencyInput({
 
   return (
     <input
+      ref={inputRef}
       className={className}
       type="text"
       inputMode="decimal"
