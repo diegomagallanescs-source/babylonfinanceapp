@@ -341,6 +341,7 @@ export function InvestingPage() {
   };
 
   const handleDeletePortEntry = (id: string) => {
+    if (!window.confirm('Remove this portfolio entry?')) return;
     const next = portfolioEntries.filter(e => e.id !== id);
     setPortfolioEntries(next);
     savePortfolioEntries(next);
