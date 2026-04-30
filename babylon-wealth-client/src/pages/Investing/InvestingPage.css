@@ -881,6 +881,29 @@
   border-radius: var(--radius-sm);
 }
 
+/* ── Gold shimmer — Monthly / Yearly Passive Income ──────────── */
+@keyframes goldWave {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.inv-summary-gold {
+  background: linear-gradient(
+    90deg,
+    #C9A84C 0%,
+    #E2BB6B 30%,
+    #F5D98B 50%,
+    #E2BB6B 70%,
+    #C9A84C 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: goldWave 3s linear infinite;
+}
+
 /* ── Light mode ───────────────────────────────────────────────── */
 [data-theme="light"] .inv-crud-form__field input,
 [data-theme="light"] .inv-crud-form__field select,

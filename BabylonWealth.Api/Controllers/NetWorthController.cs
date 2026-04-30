@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BabylonWealth.Core.DTOs.Requests;
 using BabylonWealth.Core.DTOs.Responses;
 using BabylonWealth.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -72,11 +73,34 @@ public class NetWorthController : ControllerBase
         var snapshot = await _snapshotService.TakeSnapshotAsync(userId);
         return Ok(new NetWorthHistoryPointDto
         {
+            Id             = snapshot.Id,
             SnapshotDate   = snapshot.SnapshotDate,
             LiquidNetWorth = snapshot.LiquidNetWorth,
             TotalNetWorth  = snapshot.TotalNetWorth,
             Annotation     = snapshot.Annotation
         });
+    }
+
+    /// <summary>Soft-deletes a snapshot by ID. No-op if not found or not owned by the caller.</summary>
+    [HttpDelete("snapshots/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteSnapshot(Guid id)
+    {
+        var userId = GetUserId();
+        await _snapshotService.DeleteSnapshotAsync(userId, id);
+        return NoContent();
+    }
+
+    /// <summary>Updates the liquid NW, total NW, and date of an existing snapshot.</summary>
+    [HttpPut("snapshots/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateSnapshot(Guid id, [FromBody] UpdateSnapshotRequest request)
+    {
+        var userId = GetUserId();
+        await _snapshotService.UpdateSnapshotAsync(userId, id, request.LiquidNetWorth, request.TotalNetWorth, request.SnapshotDate);
+        return NoContent();
     }
 
     private Guid GetUserId() =>

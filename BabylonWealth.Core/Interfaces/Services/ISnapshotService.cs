@@ -40,4 +40,10 @@ public interface ISnapshotService
     /// Called by GET /api/v1/networth/history
     /// </summary>
     Task<IEnumerable<NetWorthHistoryPointDto>> GetHistoryAsync(Guid userId, DateTime from, DateTime to);
+
+    /// <summary>Soft-deletes the snapshot with the given ID if it belongs to the user.</summary>
+    Task DeleteSnapshotAsync(Guid userId, Guid snapshotId);
+
+    /// <summary>Updates the liquid NW, total NW, and date of an existing snapshot.</summary>
+    Task UpdateSnapshotAsync(Guid userId, Guid snapshotId, decimal liquidNetWorth, decimal totalNetWorth, DateTime snapshotDate);
 }

@@ -8,7 +8,7 @@ import { NetWorthChart } from '../../components/NetWorthChart';
 import { formatCurrency, formatDelta, formatPercent } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { getTier, getTierLevel, formatRiverSpeed } from '../../constants/tiers';
-import { annotateNetWorth, deleteAnnotation } from '../../api/networth';
+import { annotateNetWorth, deleteAnnotation, deleteSnapshot, updateSnapshot } from '../../api/networth';
 import type { TimePeriod } from '../../types';
 import './RiverPage.css';
 
@@ -1251,6 +1251,39 @@ function NetWorthPanel() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['networth', 'history'] }),
   });
 
+  // ── Snapshot management state ──
+  const [snapEditId,    setSnapEditId]    = useState<string | null>(null);
+  const [snapDraft,     setSnapDraft]     = useState<{ liquidNetWorth: string; totalNetWorth: string; snapshotDate: string }>({ liquidNetWorth: '', totalNetWorth: '', snapshotDate: '' });
+
+  const deleteSnapMutation = useMutation({
+    mutationFn: (id: string) => deleteSnapshot(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['networth', 'history'] }),
+  });
+
+  const updateSnapMutation = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: { liquidNetWorth: number; totalNetWorth: number; snapshotDate: string } }) =>
+      updateSnapshot(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['networth', 'history'] });
+      queryClient.invalidateQueries({ queryKey: ['networth', 'current'] });
+      setSnapEditId(null);
+    },
+  });
+
+  function startSnapEdit(p: { id: string; liquidNetWorth: number; totalNetWorth: number; snapshotDate: string }) {
+    setSnapEditId(p.id);
+    const d = new Date(p.snapshotDate);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    setSnapDraft({ liquidNetWorth: String(p.liquidNetWorth), totalNetWorth: String(p.totalNetWorth), snapshotDate: dateStr });
+  }
+
+  function handleSaveSnap(id: string) {
+    const liq  = parseFloat(snapDraft.liquidNetWorth);
+    const tot  = parseFloat(snapDraft.totalNetWorth);
+    if (isNaN(liq) || isNaN(tot) || !snapDraft.snapshotDate) return;
+    updateSnapMutation.mutate({ id, body: { liquidNetWorth: liq, totalNetWorth: tot, snapshotDate: new Date(snapDraft.snapshotDate).toISOString() } });
+  }
+
   const handleSaveNote = () => {
     if (!noteDate || !noteText.trim()) return;
     annotateMutation.mutate({ date: noteDate, text: noteText.trim() });
@@ -1443,6 +1476,70 @@ function NetWorthPanel() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Snapshot Management ── */}
+      {allHistoryData.length > 0 && (
+        <details className="snap-manage">
+          <summary className="snap-manage__toggle">
+            Manage Snapshots ({allHistoryData.length})
+          </summary>
+          <div className="snap-manage__list">
+            {[...allHistoryData].reverse().map(p => {
+              const isEditing = snapEditId === p.id;
+              const dateLabel = new Date(p.snapshotDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+              if (isEditing) {
+                return (
+                  <div key={p.id} className="snap-manage__edit-row">
+                    <div className="snap-manage__edit-field">
+                      <label>Date</label>
+                      <input type="date" value={snapDraft.snapshotDate}
+                        onChange={e => setSnapDraft(d => ({ ...d, snapshotDate: e.target.value }))} />
+                    </div>
+                    <div className="snap-manage__edit-field">
+                      <label>Liquid NW</label>
+                      <input type="number" value={snapDraft.liquidNetWorth}
+                        onChange={e => setSnapDraft(d => ({ ...d, liquidNetWorth: e.target.value }))} />
+                    </div>
+                    <div className="snap-manage__edit-field">
+                      <label>Total NW</label>
+                      <input type="number" value={snapDraft.totalNetWorth}
+                        onChange={e => setSnapDraft(d => ({ ...d, totalNetWorth: e.target.value }))} />
+                    </div>
+                    <div className="snap-manage__edit-actions">
+                      <button className="snap-manage__save-btn"
+                        disabled={updateSnapMutation.isPending}
+                        onClick={() => handleSaveSnap(p.id)}>
+                        {updateSnapMutation.isPending ? '…' : 'Save'}
+                      </button>
+                      <button className="snap-manage__cancel-btn" onClick={() => setSnapEditId(null)}>Cancel</button>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={p.id} className="snap-manage__row">
+                  <span className="snap-manage__date">{dateLabel}</span>
+                  <span className={`snap-manage__val ${p.liquidNetWorth >= 0 ? 'snap-manage__val--pos' : 'snap-manage__val--neg'}`}>
+                    {formatCurrency(p.liquidNetWorth)}
+                  </span>
+                  <span className="snap-manage__note">{p.annotation ? `🚩 ${p.annotation}` : ''}</span>
+                  <div className="snap-manage__actions">
+                    <button className="snap-manage__btn" onClick={() => startSnapEdit(p)}>Edit</button>
+                    <button className="snap-manage__btn snap-manage__btn--danger"
+                      disabled={deleteSnapMutation.isPending}
+                      onClick={() => {
+                        if (!window.confirm(`Delete snapshot from ${dateLabel}?`)) return;
+                        deleteSnapMutation.mutate(p.id);
+                      }}>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </details>
       )}
     </div>
   );

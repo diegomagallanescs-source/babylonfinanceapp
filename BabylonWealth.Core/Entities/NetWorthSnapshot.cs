@@ -37,4 +37,12 @@ public class NetWorthSnapshot : BaseEntity<Guid>
         Annotation = annotation;
         Touch();
     }
+
+    public void Update(decimal liquidNetWorth, decimal totalNetWorth, DateTime snapshotDate)
+    {
+        LiquidNetWorth = liquidNetWorth;
+        TotalNetWorth  = totalNetWorth;
+        SnapshotDate   = snapshotDate;
+        Touch();
+    }
 }

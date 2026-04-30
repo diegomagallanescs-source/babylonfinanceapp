@@ -16,3 +16,12 @@ export const annotateNetWorth = (annotationDate: string, text: string) =>
 
 export const deleteAnnotation = (snapshotDate: string): Promise<void> =>
   client.delete('/networth/annotate', { params: { date: snapshotDate } }).then(() => undefined);
+
+export const deleteSnapshot = (id: string): Promise<void> =>
+  client.delete(`/networth/snapshots/${id}`).then(() => undefined);
+
+export const updateSnapshot = (
+  id: string,
+  body: { liquidNetWorth: number; totalNetWorth: number; snapshotDate: string },
+): Promise<void> =>
+  client.put(`/networth/snapshots/${id}`, body).then(() => undefined);

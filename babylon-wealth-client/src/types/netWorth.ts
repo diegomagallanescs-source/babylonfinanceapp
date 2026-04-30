@@ -13,6 +13,7 @@ export interface NetWorthResponseDto {
 }
 
 export interface NetWorthHistoryPointDto {
+  id: string;
   snapshotDate: string;
   liquidNetWorth: number;
   totalNetWorth: number;

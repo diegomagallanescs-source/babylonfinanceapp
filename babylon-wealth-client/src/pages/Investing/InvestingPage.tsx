@@ -48,7 +48,7 @@ const INV_TYPE_LABELS: Record<string, string> = Object.fromEntries(
 
 const INCOME_TYPES = ['Dividend', 'Interest', 'Rental', 'Royalty', 'Other'];
 
-const CAT_COLORS = ['#00E676','#00E5CC','#69F0AE','#1DE9B6','#26C6DA','#B2FF59'];
+const CAT_COLORS = ['#4CAF7D','#3A9E6E','#2E8B5A','#5ABE8A','#3D7A60','#68A880'];
 
 const PORTFOLIO_ENTRIES_KEY = 'babylon-portfolio-entries';
 
@@ -578,14 +578,14 @@ export function InvestingPage() {
         <div className="acc-summary-divider" />
         <div className="acc-summary-item">
           <span className="acc-summary-label">Monthly Passive Income</span>
-          <span className="acc-summary-value acc-summary-value--positive">
+          <span className="acc-summary-value inv-summary-gold">
             {passiveLoading ? '—' : formatCurrency(monthlyPassive)}
           </span>
         </div>
         <div className="acc-summary-divider" />
         <div className="acc-summary-item">
           <span className="acc-summary-label">Yearly Passive Income</span>
-          <span className="acc-summary-value acc-summary-value--positive">
+          <span className="acc-summary-value inv-summary-gold">
             {passiveLoading ? '—' : formatCurrency(yearlyPassive)}
           </span>
         </div>

@@ -68,10 +68,26 @@ public class SnapshotService : ISnapshotService
         var snapshots = await _netWorthRepo.GetHistoryAsync(userId, from, to);
         return snapshots.Select(s => new NetWorthHistoryPointDto
         {
-            SnapshotDate = s.SnapshotDate,
+            Id             = s.Id,
+            SnapshotDate   = s.SnapshotDate,
             LiquidNetWorth = s.LiquidNetWorth,
-            TotalNetWorth = s.TotalNetWorth,
-            Annotation = string.IsNullOrEmpty(s.Annotation) ? null : s.Annotation
+            TotalNetWorth  = s.TotalNetWorth,
+            Annotation     = string.IsNullOrEmpty(s.Annotation) ? null : s.Annotation
         });
+    }
+
+    public async Task DeleteSnapshotAsync(Guid userId, Guid snapshotId)
+    {
+        var snapshot = await _netWorthRepo.GetByIdAsync(snapshotId, userId);
+        if (snapshot is null) return;
+        await _netWorthRepo.SoftDeleteAsync(snapshotId, userId);
+    }
+
+    public async Task UpdateSnapshotAsync(Guid userId, Guid snapshotId, decimal liquidNetWorth, decimal totalNetWorth, DateTime snapshotDate)
+    {
+        var snapshot = await _netWorthRepo.GetByIdAsync(snapshotId, userId);
+        if (snapshot is null) return;
+        snapshot.Update(liquidNetWorth, totalNetWorth, DateTime.SpecifyKind(snapshotDate, DateTimeKind.Utc));
+        await _netWorthRepo.UpdateAsync(snapshot);
     }
 }

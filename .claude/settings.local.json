@@ -129,7 +129,16 @@
       "Bash(taskkill //F //PID 44924)",
       "Bash(curl -s -X POST http://localhost:5231/api/v1/properties/analyze -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGU5ZDg3Mi03NzE1LTRmM2UtODY1Yi02ODdkODAzZDhhMDciLCJlbWFpbCI6InVpdGVzdDNAYmFieWxvbi5jb20iLCJqdGkiOiJmNzc0ODY1NS00OGIyLTQ4NmMtYWMxOS1hOGNlYzY5YmQ5ZmMiLCJmaXJzdE5hbWUiOiJEaWVnbyIsImV4cCI6MTc3NzU2MzgyMywiaXNzIjoiQmFieWxvbldlYWx0aCIsImF1ZCI6IkJhYnlsb25XZWFsdGhVc2VycyJ9.-zZO_x6-yP9VpQsU3mnmfBnDMykoJqjzUZk2NsPMDdU' -d '{ *)",
       "Bash(taskkill //F //PID 48956)",
-      "Bash(grep -n \"lt-\\\\|table\\\\|thead\\\\|tbody\\\\|\\\\\\\\.tr\\\\|\\\\\\\\.td\\\\|\\\\\\\\.th\" \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\babylon-wealth-client\\\\src\\\\styles\\\\globals.css\")"
+      "Bash(grep -n \"lt-\\\\|table\\\\|thead\\\\|tbody\\\\|\\\\\\\\.tr\\\\|\\\\\\\\.td\\\\|\\\\\\\\.th\" \"C:\\\\Users\\\\diego\\\\Documents\\\\Githubrepos\\\\babylonfinanceapp\\\\babylon-wealth-client\\\\src\\\\styles\\\\globals.css\")",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(taskkill /F /IM \"node.exe\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(taskkill /F /PID 42576)",
+      "PowerShell(Stop-Process -Id 42576 -Force)",
+      "Bash(git revert *)",
+      "Bash(dotnet clean *)"
     ]
   }
 }

@@ -39,6 +39,7 @@ public record NetWorthResponseDto
 /// </summary>
 public record NetWorthHistoryPointDto
 {
+    public Guid Id { get; init; }
     public DateTime SnapshotDate { get; init; }
     public decimal LiquidNetWorth { get; init; }
     public decimal TotalNetWorth { get; init; }
