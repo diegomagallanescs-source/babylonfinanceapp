@@ -96,7 +96,8 @@ function fillDailyRange(
     const realPoint = byDay.get(ymd(cur));
 
     result.push({
-      snapshotDate:  isoDate,
+      id:             realPoint?.id ?? '',
+      snapshotDate:   isoDate,
       liquidNetWorth: current.liquidNetWorth,
       totalNetWorth:  current.totalNetWorth,
       annotation:     realPoint?.annotation ?? null,
