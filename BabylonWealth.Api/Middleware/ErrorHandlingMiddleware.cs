@@ -35,6 +35,7 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
             {
                 error = "An internal server error occurred.",
                 detail = ex.Message,
+                innerDetail = ex.InnerException?.Message,
                 type = ex.GetType().Name
             }));
         }
