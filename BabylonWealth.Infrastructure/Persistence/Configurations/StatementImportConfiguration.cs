@@ -28,6 +28,13 @@ public class StatementImportConfiguration : IEntityTypeConfiguration<StatementIm
             .HasMaxLength(500)
             .IsRequired(false);
 
+        builder.Property(s => s.NecessitiesSpend).HasPrecision(18, 2);
+        builder.Property(s => s.TravelSpend).HasPrecision(18, 2);
+        builder.Property(s => s.SavingsSpend).HasPrecision(18, 2);
+        builder.Property(s => s.ShoppingSpend).HasPrecision(18, 2);
+        builder.Property(s => s.OtherSpend).HasPrecision(18, 2);
+        builder.Property(s => s.InvestmentsSpend).HasPrecision(18, 2);
+
         builder.HasIndex(s => new { s.UserId, s.Year, s.Month });
 
         builder.HasOne<ApplicationUser>()

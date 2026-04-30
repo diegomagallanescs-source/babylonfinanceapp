@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using BabylonWealth.Api.BackgroundServices;
+using BabylonWealth.Api.Middleware;
 using BabylonWealth.Infrastructure.Extensions;
 using BabylonWealth.Infrastructure.Persistence;
 using BabylonWealth.Infrastructure.Seeders;
@@ -86,6 +87,7 @@ namespace Babylon.Api
             await BankSeeder.SeedAsync(app.Services);
 
             app.UseCors("FrontendPolicy");
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseSwagger();
             app.UseSwaggerUI();
