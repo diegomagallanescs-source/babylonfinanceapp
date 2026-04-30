@@ -15,7 +15,7 @@ public class Investment : BaseEntity<Guid>
 
     private Investment() { }
 
-    public static Investment Create(Guid userId, Guid bankId, string customLabel, decimal currentValue, InvestmentType investmentType, string? ticker = null)
+    public static Investment Create(Guid userId, Guid? bankId, string customLabel, decimal currentValue, InvestmentType investmentType, string? ticker = null)
     {
         return new Investment
         {
@@ -29,7 +29,7 @@ public class Investment : BaseEntity<Guid>
         };
     }
 
-    public void Update(Guid bankId, string customLabel, decimal currentValue, InvestmentType investmentType, string? ticker)
+    public void Update(Guid? bankId, string customLabel, decimal currentValue, InvestmentType investmentType, string? ticker)
     {
         BankId = bankId;
         CustomLabel = customLabel;

@@ -5,8 +5,7 @@ namespace BabylonWealth.Core.DTOs.Requests;
 
 public class CreateInvestmentRequest
 {
-    [Required]
-    public Guid BankId { get; set; }
+    public Guid? BankId { get; set; }
 
     [Required]
     [MaxLength(100)]
