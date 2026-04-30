@@ -85,6 +85,8 @@ namespace Babylon.Api
 
             await BankSeeder.SeedAsync(app.Services);
 
+            app.UseCors("FrontendPolicy");
+
             app.UseSwagger();
             app.UseSwaggerUI();
 
@@ -92,7 +94,6 @@ namespace Babylon.Api
             {
                 app.UseHttpsRedirection();
             }
-            app.UseCors("FrontendPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

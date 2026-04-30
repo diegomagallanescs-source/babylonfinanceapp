@@ -7,6 +7,7 @@ import { useNetWorth } from '../../hooks/useNetWorth';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCreditCards } from '../../hooks/useCreditCards';
 import { useLoans } from '../../hooks/useLoans';
+import { useInvestments } from '../../hooks/useInvestments';
 import { usePendingItems } from '../../hooks/usePendingItems';
 import { useProperties } from '../../hooks/useProperties';
 import { useBudgetCategories } from '../../hooks/useBudgetCategories';
@@ -15,6 +16,7 @@ import {
   createAccount, updateAccount, deleteAccount,
   createCreditCard, updateCreditCard,
   createLoan, updateLoan,
+  createInvestment, updateInvestment, deleteInvestment,
   createPendingItem, settlePendingItem, deletePendingItem,
   createProperty, updateProperty, deleteProperty,
 } from '../../api/ledger';
@@ -28,6 +30,7 @@ import type {
   BankAccountResponseDto, CreateBankAccountRequest, UpdateBankAccountRequest,
   CreditCardResponseDto, CreateCreditCardRequest, UpdateCreditCardRequest,
   LoanResponseDto, CreateLoanRequest, UpdateLoanRequest,
+  InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto, CreatePendingItemRequest,
   PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
   BudgetCategoryResponseDto,
@@ -39,14 +42,73 @@ import './AccountingPage.css';
 // ── Constants ─────────────────────────────────────────────────
 const ACCT_TYPES = ['Checking', 'Savings', 'Money Market', 'CD', 'Other'];
 const LOAN_TYPES = ['Mortgage', 'Auto', 'Student', 'Personal', 'HELOC', 'Business', 'Other'];
+const INVESTMENT_TYPES = ['Brokerage', 'Retirement401k', 'RothIRA', 'TraditionalIRA', 'HSA', 'Crypto', 'Other'];
+
+// ── CurrencyInput ─────────────────────────────────────────────
+function CurrencyInput({
+  defaultValue = 0,
+  onChange,
+  className,
+}: {
+  defaultValue?: number;
+  onChange: (v: number) => void;
+  className?: string;
+}) {
+  const [text, setText] = useState(
+    defaultValue > 0
+      ? defaultValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : '',
+  );
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    const parts = raw.split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const formatted = parts.length > 1 ? `${intPart}.${parts[1].slice(0, 2)}` : intPart;
+    setText(formatted);
+    const num = parseFloat(raw);
+    onChange(isNaN(num) ? 0 : num);
+  }
+
+  function handleBlur() {
+    const num = parseFloat(text.replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) {
+      setText(num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
+  }
+
+  return (
+    <input
+      className={className}
+      type="text"
+      inputMode="decimal"
+      value={text}
+      placeholder="0.00"
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
+  );
+}
 
 // ── Small display helpers ─────────────────────────────────────
+function resolveLogo(url: string | null): string | null {
+  if (!url) return null;
+  if (url.includes('logo.clearbit.com/')) {
+    const domain = url.split('logo.clearbit.com/')[1];
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  }
+  return url;
+}
+
 function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | null }) {
   const label = name ?? '—';
+  const src = resolveLogo(logoUrl);
   return (
     <div className="lt__bank-cell">
-      {logoUrl
-        ? <img className="lt__bank-logo" src={logoUrl} alt={label} />
+      {src
+        ? <img className="lt__bank-logo" src={src} alt={label}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          />
         : <span className="lt__bank-logo-placeholder">{label[0]?.toUpperCase() ?? '?'}</span>
       }
       <span>{label}</span>
@@ -283,6 +345,7 @@ export function AccountingPage() {
   const { data: accounts, isLoading: loadingAccounts } = useAccounts();
   const { data: cards, isLoading: loadingCards } = useCreditCards();
   const { data: loans, isLoading: loadingLoans } = useLoans();
+  const { data: investments, isLoading: loadingInvestments } = useInvestments();
   const { data: pending, isLoading: loadingPending } = usePendingItems();
   const { data: properties, isLoading: loadingProperties } = useProperties();
   const { data: categories = [] } = useBudgetCategories();
@@ -491,6 +554,83 @@ export function AccountingPage() {
     }
   }
 
+  // ── Investments ───────────────────────────────────────────
+  const [dirtyInvestments, setDirtyInvestments] = useState<Map<string, UpdateInvestmentRequest>>(new Map());
+  const [investEditId, setInvestEditId] = useState<string | null>(null);
+  const [investDraft, setInvestDraft] = useState<Partial<UpdateInvestmentRequest>>({});
+  const [investEditBank, setInvestEditBank] = useState<BankDto | null>(null);
+  const investDraftRef = useRef(investDraft);
+  investDraftRef.current = investDraft;
+  const investEditBankRef = useRef(investEditBank);
+  investEditBankRef.current = investEditBank;
+
+  const [showAddInvest, setShowAddInvest] = useState(false);
+  const [addInvestForm, setAddInvestForm] = useState<CreateInvestmentRequest>({
+    customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null,
+  });
+  const [addInvestBank, setAddInvestBank] = useState<BankDto | null>(null);
+  const [addingInvest, setAddingInvest] = useState(false);
+  const [addInvestKey, setAddInvestKey] = useState(0);
+
+  function startInvestEdit(row: InvestmentResponseDto) {
+    const existing = dirtyInvestments.get(row.id);
+    setInvestEditId(row.id);
+    setInvestDraft(existing ?? {
+      customLabel: row.customLabel,
+      currentValue: row.currentValue,
+      investmentType: row.investmentType,
+      bankId: row.bankId,
+      ticker: row.ticker,
+    });
+    setInvestEditBank(
+      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
+    );
+  }
+
+  function applyInvestEdit(row: InvestmentResponseDto) {
+    const d = investDraftRef.current;
+    const update: UpdateInvestmentRequest = {
+      customLabel: d.customLabel ?? row.customLabel,
+      currentValue: d.currentValue ?? row.currentValue,
+      investmentType: d.investmentType ?? row.investmentType,
+      bankId: 'bankId' in d ? d.bankId : row.bankId,
+      ticker: 'ticker' in d ? d.ticker : row.ticker,
+    };
+    setDirtyInvestments((prev) => new Map(prev).set(row.id, update));
+    setInvestEditId(null);
+    setInvestDraft({});
+    setInvestEditBank(null);
+  }
+
+  function cancelInvestEdit() {
+    setInvestEditId(null);
+    setInvestDraft({});
+    setInvestEditBank(null);
+  }
+
+  async function handleDeleteInvestment(row: InvestmentResponseDto) {
+    if (!confirm(`Delete "${row.customLabel}"?`)) return;
+    await deleteInvestment(row.id);
+    qc.invalidateQueries({ queryKey: ['investments'] });
+    qc.invalidateQueries({ queryKey: ['networth'] });
+  }
+
+  async function handleAddInvestment() {
+    if (!addInvestForm.customLabel.trim()) return;
+    setAddingInvest(true);
+    try {
+      await createInvestment({ ...addInvestForm, bankId: addInvestBank?.id ?? null });
+      qc.invalidateQueries({ queryKey: ['investments'] });
+      qc.invalidateQueries({ queryKey: ['networth'] });
+      setAddInvestForm({ customLabel: '', currentValue: 0, investmentType: 'Brokerage', bankId: null, ticker: null });
+      setAddInvestBank(null);
+      setAddInvestKey((k) => k + 1);
+      setShowAddInvest(false);
+    } finally {
+      setAddingInvest(false);
+    }
+  }
+
   // ── Generic batch save ────────────────────────────────────
   async function saveAll(
     map: Map<string, unknown>,
@@ -569,13 +709,11 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (acctEditId === row.original.id) {
           return (
-            <input
+            <CurrencyInput
               key={`${row.original.id}-acct-balance`}
               className="lt__edit-input lt__edit-input--number"
-              type="number"
-              step="0.01"
               defaultValue={acctDraft.balance ?? row.original.balance}
-              onChange={(e) => setAcctDraft((d) => ({ ...d, balance: Number(e.target.value) }))}
+              onChange={(v) => setAcctDraft((d) => ({ ...d, balance: v }))}
             />
           );
         }
@@ -681,13 +819,11 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (cardEditId === row.original.id) {
           return (
-            <input
+            <CurrencyInput
               key={`${row.original.id}-card-balance`}
               className="lt__edit-input lt__edit-input--number"
-              type="number"
-              step="0.01"
               defaultValue={cardDraft.balance ?? row.original.balance}
-              onChange={(e) => setCardDraft((d) => ({ ...d, balance: Number(e.target.value) }))}
+              onChange={(v) => setCardDraft((d) => ({ ...d, balance: v }))}
             />
           );
         }
@@ -701,13 +837,11 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (cardEditId === row.original.id) {
           return (
-            <input
+            <CurrencyInput
               key={`${row.original.id}-card-limit`}
               className="lt__edit-input lt__edit-input--number"
-              type="number"
-              step="0.01"
               defaultValue={cardDraft.creditLimit ?? row.original.creditLimit}
-              onChange={(e) => setCardDraft((d) => ({ ...d, creditLimit: Number(e.target.value) }))}
+              onChange={(v) => setCardDraft((d) => ({ ...d, creditLimit: v }))}
             />
           );
         }
@@ -831,10 +965,12 @@ export function AccountingPage() {
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <input key={`${row.original.id}-loan-balance`} className="lt__edit-input lt__edit-input--number"
-              type="number" step="0.01" min="0"
+            <CurrencyInput
+              key={`${row.original.id}-loan-balance`}
+              className="lt__edit-input lt__edit-input--number"
               defaultValue={loanDraft.balance ?? row.original.balance}
-              onChange={(e) => setLoanDraft((d) => ({ ...d, balance: Number(e.target.value) }))} />
+              onChange={(v) => setLoanDraft((d) => ({ ...d, balance: v }))}
+            />
           );
         }
         const bal = dirtyLoans.get(row.original.id)?.balance ?? row.original.balance;
@@ -969,6 +1105,108 @@ export function AccountingPage() {
     },
   ];
 
+  // ── Investment columns ────────────────────────────────────
+  const investmentColumns = useMemo<ColumnDef<InvestmentResponseDto, unknown>[]>(() => [
+    {
+      id: 'bank', header: 'Bank', accessorKey: 'bankName',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <BankSearchInput
+              value={investEditBankRef.current}
+              onChange={(bank) => { setInvestEditBank(bank); setInvestDraft((d) => ({ ...d, bankId: bank?.id ?? null })); }}
+            />
+          );
+        }
+        return <BankCell logoUrl={row.original.bankLogoUrl} name={row.original.bankName} />;
+      },
+    },
+    {
+      accessorKey: 'customLabel', header: 'Label',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <input key={`${row.original.id}-invest-label`} className="lt__edit-input lt__edit-input--wide"
+              defaultValue={investDraft.customLabel ?? row.original.customLabel}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+          );
+        }
+        return dirtyInvestments.get(row.original.id)?.customLabel ?? row.original.customLabel;
+      },
+    },
+    {
+      accessorKey: 'ticker', header: 'Ticker',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <input key={`${row.original.id}-invest-ticker`} className="lt__edit-input"
+              defaultValue={investDraft.ticker ?? row.original.ticker ?? ''}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, ticker: e.target.value || null }))} />
+          );
+        }
+        return dirtyInvestments.get(row.original.id)?.ticker ?? row.original.ticker ?? '—';
+      },
+    },
+    {
+      accessorKey: 'investmentType', header: 'Type',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <select className="lt__edit-select"
+              value={investDraft.investmentType ?? row.original.investmentType}
+              onChange={(e) => setInvestDraft((d) => ({ ...d, investmentType: e.target.value }))}>
+              {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          );
+        }
+        return dirtyInvestments.get(row.original.id)?.investmentType ?? row.original.investmentType;
+      },
+    },
+    {
+      accessorKey: 'currentValue', header: 'Value',
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <CurrencyInput
+              key={`${row.original.id}-invest-value`}
+              className="lt__edit-input lt__edit-input--number"
+              defaultValue={investDraft.currentValue ?? row.original.currentValue}
+              onChange={(v) => setInvestDraft((d) => ({ ...d, currentValue: v }))}
+            />
+          );
+        }
+        const val = dirtyInvestments.get(row.original.id)?.currentValue ?? row.original.currentValue;
+        return <span className="acc-amount acc-amount--positive">{formatCurrency(val)}</span>;
+      },
+    },
+    {
+      id: '_actions', header: '', enableSorting: false, size: 140,
+      cell: ({ row }) => {
+        if (investEditId === row.original.id) {
+          return (
+            <div className="lt__actions">
+              <button className="lt__action-btn lt__action-btn--apply" type="button"
+                onClick={() => applyInvestEdit(row.original)}>Apply</button>
+              <button className="lt__action-btn lt__action-btn--cancel" type="button"
+                onClick={cancelInvestEdit}>Cancel</button>
+            </div>
+          );
+        }
+        const isDirty = dirtyInvestments.has(row.original.id);
+        return (
+          <div className="lt__actions">
+            {isDirty && <span className="lt__dirty-dot" title="Unsaved changes" />}
+            <button className="lt__action-btn lt__action-btn--edit" type="button"
+              onClick={() => startInvestEdit(row.original)}>Edit</button>
+            <button className="lt__action-btn lt__action-btn--delete" type="button"
+              onClick={() => handleDeleteInvestment(row.original)}>Delete</button>
+          </div>
+        );
+      },
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [investEditId, dirtyInvestments]);
+
   // ── Splits + totals ───────────────────────────────────────
   const businessCards = (cards ?? []).filter((c) => c.cardType === 'Business');
   const personalCards = (cards ?? []).filter((c) => c.cardType === 'Personal');
@@ -976,6 +1214,10 @@ export function AccountingPage() {
   const accountTotals = {
     customLabel: 'Total',
     balance: <span className="acc-amount acc-amount--positive">{formatCurrency((accounts ?? []).reduce((s, a) => s + a.balance, 0))}</span>,
+  };
+  const investmentTotals = {
+    customLabel: 'Total',
+    currentValue: <span className="acc-amount acc-amount--positive">{formatCurrency((investments ?? []).reduce((s, i) => s + i.currentValue, 0))}</span>,
   };
   const bizCardTotals = {
     customLabel: 'Total',
@@ -1083,7 +1325,7 @@ export function AccountingPage() {
         {/* ── Bank Accounts ──────────────────────────────── */}
         <div className="acc-section">
           <div className="acc-section-header">
-            <span className="acc-section-title">Bank & Investment Accounts</span>
+            <span className="acc-section-title">Bank Accounts</span>
             <button className="acc-btn-add" type="button" onClick={() => setShowAddAcct((v) => !v)}>
               {showAddAcct ? '✕ Cancel' : '+ Add'}
             </button>
@@ -1122,10 +1364,10 @@ export function AccountingPage() {
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">Balance ($)</span>
-                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
-                  value={addAcctForm.balance === 0 ? '' : addAcctForm.balance}
-                  placeholder="0.00"
-                  onChange={(e) => setAddAcctForm((f) => ({ ...f, balance: Number(e.target.value) }))} />
+                <CurrencyInput
+                  className="acc-add-input acc-add-input--number"
+                  onChange={(v) => setAddAcctForm((f) => ({ ...f, balance: v }))}
+                />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">&nbsp;</span>
@@ -1155,6 +1397,84 @@ export function AccountingPage() {
                 ['accounts'],
               )}
               onDiscard={() => { setDirtyAccounts(new Map()); cancelAcctEdit(); }}
+            />
+          )}
+        </div>
+
+        {/* ── Investment Accounts ────────────────────────── */}
+        <div className="acc-section">
+          <div className="acc-section-header">
+            <span className="acc-section-title">Investment Accounts</span>
+            <button className="acc-btn-add" type="button" onClick={() => setShowAddInvest((v) => !v)}>
+              {showAddInvest ? '✕ Cancel' : '+ Add'}
+            </button>
+          </div>
+          <LedgerTable
+            data={investments ?? []}
+            columns={investmentColumns}
+            getRowVariant={() => 'asset' as RowVariant}
+            getRowClass={(row) => dirtyInvestments.has(row.id) ? 'lt__row--dirty' : ''}
+            totals={investmentTotals}
+            isLoading={loadingInvestments}
+            emptyMessage="No investment accounts yet."
+          />
+          {showAddInvest && (
+            <div className="acc-add-form">
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <BankSearchInput
+                  value={addInvestBank}
+                  onChange={(b) => { setAddInvestBank(b); setAddInvestForm((f) => ({ ...f, bankId: b?.id ?? null })); }}
+                  placeholder="Brokerage (optional)"
+                />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Label *"
+                  value={addInvestForm.customLabel}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, customLabel: e.target.value }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <input className="acc-add-input" placeholder="Ticker (optional)"
+                  value={addInvestForm.ticker ?? ''}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, ticker: e.target.value || null }))} />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <select className="acc-add-select" value={addInvestForm.investmentType}
+                  onChange={(e) => setAddInvestForm((f) => ({ ...f, investmentType: e.target.value }))}>
+                  {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">Value ($)</span>
+                <CurrencyInput
+                  key={addInvestKey}
+                  className="acc-add-input acc-add-input--number"
+                  onChange={(v) => setAddInvestForm((f) => ({ ...f, currentValue: v }))}
+                />
+              </label>
+              <label className="acc-add-field">
+                <span className="acc-add-field-label">&nbsp;</span>
+                <button className="acc-btn acc-btn--primary acc-btn--sm" type="button"
+                  onClick={handleAddInvestment} disabled={addingInvest}>
+                  {addingInvest ? 'Adding…' : 'Add Investment'}
+                </button>
+              </label>
+            </div>
+          )}
+          {dirtyInvestments.size > 0 && (
+            <BatchSaveBar
+              dirtyCount={dirtyInvestments.size}
+              saving={saving}
+              onSave={() => saveAll(
+                dirtyInvestments as Map<string, unknown>,
+                updateInvestment as (id: string, ch: unknown) => Promise<unknown>,
+                () => setDirtyInvestments(new Map()),
+                ['investments'],
+              )}
+              onDiscard={() => { setDirtyInvestments(new Map()); cancelInvestEdit(); }}
             />
           )}
         </div>
@@ -1219,17 +1539,17 @@ export function AccountingPage() {
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">Balance ($)</span>
-                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
-                  value={addCardForm.balance === 0 ? '' : addCardForm.balance}
-                  placeholder="0.00"
-                  onChange={(e) => setAddCardForm((f) => ({ ...f, balance: Number(e.target.value) }))} />
+                <CurrencyInput
+                  className="acc-add-input acc-add-input--number"
+                  onChange={(v) => setAddCardForm((f) => ({ ...f, balance: v }))}
+                />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">Credit Limit ($)</span>
-                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
-                  value={addCardForm.creditLimit === 0 ? '' : addCardForm.creditLimit}
-                  placeholder="0.00"
-                  onChange={(e) => setAddCardForm((f) => ({ ...f, creditLimit: Number(e.target.value) }))} />
+                <CurrencyInput
+                  className="acc-add-input acc-add-input--number"
+                  onChange={(v) => setAddCardForm((f) => ({ ...f, creditLimit: v }))}
+                />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">APR (%)</span>
@@ -1302,10 +1622,10 @@ export function AccountingPage() {
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">Balance ($)</span>
-                <input className="acc-add-input acc-add-input--number" type="number" step="0.01" min="0"
-                  value={addLoanForm.balance === 0 ? '' : addLoanForm.balance}
-                  placeholder="0.00"
-                  onChange={(e) => setAddLoanForm((f) => ({ ...f, balance: Number(e.target.value) }))} />
+                <CurrencyInput
+                  className="acc-add-input acc-add-input--number"
+                  onChange={(v) => setAddLoanForm((f) => ({ ...f, balance: v }))}
+                />
               </label>
               <label className="acc-add-field">
                 <span className="acc-add-field-label">Rate (%)</span>
