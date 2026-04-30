@@ -22,11 +22,14 @@ public static class InfrastructureExtensions
     {
         // ── Database ──────────────────────────────────────────────
         // Reads DATABASE_URL from environment first (Railway injects this in production).
+        // Railway provides a postgresql:// URI; Npgsql requires key-value format, so convert.
         // Falls back to the connection string in appsettings.Development.json locally.
-        var connectionString =
+        var rawConnection =
             Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("No database connection string found.");
+
+        var connectionString = ParseConnectionString(rawConnection);
 
         services.AddDbContext<BabylonDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -102,5 +105,15 @@ public static class InfrastructureExtensions
         services.AddScoped<ICheckingStatementImportRepository, CheckingStatementImportRepository>();
 
         return services;
+    }
+
+    private static string ParseConnectionString(string value)
+    {
+        if (!value.StartsWith("postgresql://") && !value.StartsWith("postgres://"))
+            return value;
+
+        var uri = new Uri(value);
+        var userInfo = uri.UserInfo.Split(':', 2);
+        return $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
     }
 }
