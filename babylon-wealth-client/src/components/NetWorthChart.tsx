@@ -13,9 +13,9 @@ import type { NetWorthHistoryPointDto, TimePeriod } from '../types'; // TimePeri
 import './NetWorthChart.css';
 
 // ── Layout constants (must match AreaChart margin below) ──────
-const CHART_H  = 440;
-const M_TOP    = 24;
-const M_BOT    = 32;   // generous bottom — guarantees the lowest Y-label never clips
+const CHART_H  = 260;
+const M_TOP    = 16;
+const M_BOT    = 24;
 const PLOT_H   = CHART_H - M_TOP - M_BOT;  // vertical space the lines are drawn in
 
 interface Props {
