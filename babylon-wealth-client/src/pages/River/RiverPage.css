@@ -804,13 +804,13 @@
   background: var(--color-bg-card);
   border: 1px solid rgba(240, 180, 41, 0.2);
   border-radius: var(--radius-xl);
-  padding: 22px 22px 18px;
-  max-width: 380px;
+  padding: 20px 24px 16px;
+  max-width: 500px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   box-shadow:
     0 0 0 1px rgba(240,180,41,0.08),
     0 24px 80px rgba(0,0,0,0.7),
@@ -833,9 +833,9 @@
 }
 
 .meaning-modal__intro {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-sub);
-  line-height: 1.65;
+  line-height: 1.5;
   text-align: center;
   padding: 0 4px;
 }
@@ -857,23 +857,23 @@
 .meaning-steps {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
 }
 
 .meaning-step {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 14px 16px;
-  border-radius: 14px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--color-border);
 }
 
 .meaning-step__graphic {
   flex-shrink: 0;
-  width: 52px;
+  width: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -882,27 +882,27 @@
 .meaning-step__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
 }
 
 .meaning-step__label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 1.4px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
 .meaning-step__title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text);
 }
 
 .meaning-step__desc {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-sub);
-  line-height: 1.55;
+  line-height: 1.4;
 }
 
 .meaning-connector {
@@ -910,9 +910,9 @@
   justify-content: center;
   align-items: center;
   color: var(--color-text-muted);
-  font-size: 18px;
+  font-size: 14px;
   opacity: 0.5;
-  margin: -4px 0;
+  margin: -2px 0;
 }
 
 .meaning-step--bucket { border-color: rgba(0, 230, 118, 0.2); }
@@ -952,7 +952,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 56px 24px;
+  padding: 100px 32px;
   overflow-y: auto;
 }
 
@@ -960,13 +960,13 @@
   background: var(--color-bg-card);
   border: 1px solid rgba(0, 229, 204, 0.2);
   border-radius: var(--radius-xl);
-  padding: 24px 24px 20px;
-  max-width: 480px;
+  padding: 22px 26px 18px;
+  max-width: 560px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   box-shadow:
     0 0 0 1px rgba(0,229,204,0.08),
     0 24px 80px rgba(0,0,0,0.7),
