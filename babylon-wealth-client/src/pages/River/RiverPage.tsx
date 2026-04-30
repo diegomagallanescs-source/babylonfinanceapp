@@ -13,6 +13,83 @@ import type { TimePeriod } from '../../types';
 import './RiverPage.css';
 
 // ─────────────────────────────────────────────────────────
+// SNAPSHOT CALENDAR PICKER
+// ─────────────────────────────────────────────────────────
+
+const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CAL_DOW    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+function toYMD(iso: string) { return iso.slice(0, 10); }
+
+function SnapshotCalendarPicker({
+  snapshotDates,
+  selected,
+  onChange,
+}: {
+  snapshotDates: string[];
+  selected: string;
+  onChange: (d: string) => void;
+}) {
+  const selDate   = selected ? new Date(selected) : new Date();
+  const [viewYear,  setViewYear]  = useState(selDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selDate.getMonth());
+
+  const availableYMD = new Set(snapshotDates.map(toYMD));
+  const availableYears = [...new Set(snapshotDates.map(d => new Date(d).getFullYear()))].sort((a,b)=>a-b);
+
+  const firstDOW    = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  return (
+    <div className="snapshot-cal">
+      <div className="snapshot-cal__header">
+        <button className="snapshot-cal__nav" onClick={prevMonth}>‹</button>
+        <div className="snapshot-cal__selects">
+          <select value={viewMonth} onChange={e => setViewMonth(+e.target.value)}>
+            {CAL_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select value={viewYear} onChange={e => setViewYear(+e.target.value)}>
+            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <button className="snapshot-cal__nav" onClick={nextMonth}>›</button>
+      </div>
+      <div className="snapshot-cal__grid">
+        {CAL_DOW.map(d => <span key={d} className="snapshot-cal__dow">{d}</span>)}
+        {Array(firstDOW).fill(null).map((_, i) => <span key={`e${i}`} />)}
+        {Array(daysInMonth).fill(null).map((_, i) => {
+          const day = i + 1;
+          const ymd = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const match = snapshotDates.find(d => toYMD(d) === ymd);
+          const isAvail    = !!match;
+          const isSelected = selected && toYMD(selected) === ymd;
+          return (
+            <button
+              key={day}
+              className={`snapshot-cal__day${isAvail ? ' snapshot-cal__day--avail' : ''}${isSelected ? ' snapshot-cal__day--selected' : ''}`}
+              disabled={!isAvail}
+              onClick={() => match && onChange(match)}
+              title={isAvail ? new Date(match!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : undefined}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
 // DRY BED / DESERT SCENE  (rings 0)
 // ─────────────────────────────────────────────────────────
 
@@ -1294,16 +1371,11 @@ function NetWorthPanel() {
               initial={{ opacity: 0, y: 30, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}>
               <div className="add-note-modal__title">🚩 Add Note</div>
-              <div className="add-note-modal__date-picker">
-                <label>Snapshot date</label>
-                <select value={noteDate} onChange={e => setNoteDate(e.target.value)}>
-                  {snapshotOptions.map(p => (
-                    <option key={p.snapshotDate} value={p.snapshotDate}>
-                      {new Date(p.snapshotDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SnapshotCalendarPicker
+                snapshotDates={snapshotOptions.map(p => p.snapshotDate)}
+                selected={noteDate}
+                onChange={setNoteDate}
+              />
               <textarea
                 className="add-note-modal__input"
                 placeholder="What happened to your net worth on this date?"
