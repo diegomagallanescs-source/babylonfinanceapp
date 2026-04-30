@@ -1226,8 +1226,11 @@ function NetWorthPanel() {
   const [noteDate,      setNoteDate]      = useState('');
 
   // Snapshot options for the date picker — exclude dates that already have a note
-  const snapshotOptions = historyData.filter(p => !p.annotation);
-  const latestSnapshot  = historyData[historyData.length - 1] ?? null;
+  const snapshotOptions  = historyData.filter(p => !p.annotation);
+  const annotatedPoints  = historyData.filter(p => !!p.annotation);
+  const latestSnapshot   = historyData[historyData.length - 1] ?? null;
+
+  const [showNotesPanel, setShowNotesPanel] = useState(false);
 
   const openAddNote = () => {
     const defaultDate = snapshotOptions[snapshotOptions.length - 1]?.snapshotDate ?? latestSnapshot?.snapshotDate ?? '';
@@ -1280,6 +1283,8 @@ function NetWorthPanel() {
         <span className="nw-panel__scrub-date">
           {scrubDateLabel ?? 'Net Worth'}
         </span>
+
+        {/* While hovering an annotated point */}
         {scrubAnnotation && scrubbedPoint && (
           <button
             className="nw-panel__note-chip"
@@ -1289,9 +1294,20 @@ function NetWorthPanel() {
             🚩 Note
           </button>
         )}
+
+        {/* While NOT hovering — show chip if any notes exist */}
+        {!scrubbedPoint && annotatedPoints.length > 0 && (
+          <button
+            className="nw-panel__note-chip"
+            onClick={() => setShowNotesPanel(v => !v)}
+            title="View notes"
+          >
+            🚩 {annotatedPoints.length === 1 ? '1 note' : `${annotatedPoints.length} notes`}
+          </button>
+        )}
       </div>
 
-      {/* Note popover — shows when chip is clicked */}
+      {/* Popover for scrubbed point note */}
       <AnimatePresence>
         {showNotePopover && scrubAnnotation && scrubbedPoint && (
           <motion.div
@@ -1311,6 +1327,39 @@ function NetWorthPanel() {
             >
               {deleteMutation.isPending ? 'Deleting…' : 'Delete note'}
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Panel for all notes when not scrubbing */}
+      <AnimatePresence>
+        {showNotesPanel && !scrubbedPoint && annotatedPoints.length > 0 && (
+          <motion.div
+            className="nw-panel__note-popover"
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
+          >
+            {annotatedPoints.map(pt => (
+              <div key={pt.snapshotDate} className="nw-panel__note-entry">
+                <div className="nw-panel__note-entry-header">
+                  <span className="nw-panel__note-entry-date">
+                    {new Date(pt.snapshotDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <button
+                    className="nw-panel__note-delete"
+                    onClick={() => {
+                      if (!window.confirm('Delete this note?')) return;
+                      deleteMutation.mutate(pt.snapshotDate);
+                      if (annotatedPoints.length === 1) setShowNotesPanel(false);
+                    }}
+                    disabled={deleteMutation.isPending}
+                  >
+                    Delete
+                  </button>
+                </div>
+                <p className="nw-panel__note-popover-text">{pt.annotation}</p>
+              </div>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>

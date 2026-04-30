@@ -49,16 +49,16 @@ public class SnapshotService : ISnapshotService
 
     public async Task AnnotateSnapshotAsync(Guid userId, DateTime annotationDate, string text)
     {
-        var history = await _netWorthRepo.GetHistoryAsync(userId, DateTime.MinValue, annotationDate);
-        var target = history.MaxBy(s => s.SnapshotDate);
+        var all = await _netWorthRepo.GetAllByUserAsync(userId);
+        var target = all.FirstOrDefault(s => s.SnapshotDate.Date == annotationDate.Date);
         if (target is null) return;
         await _netWorthRepo.AnnotateAsync(target.Id, userId, text);
     }
 
     public async Task ClearAnnotationAsync(Guid userId, DateTime annotationDate)
     {
-        var history = await _netWorthRepo.GetHistoryAsync(userId, DateTime.MinValue, annotationDate);
-        var target = history.MaxBy(s => s.SnapshotDate);
+        var all = await _netWorthRepo.GetAllByUserAsync(userId);
+        var target = all.FirstOrDefault(s => s.SnapshotDate.Date == annotationDate.Date);
         if (target is null) return;
         await _netWorthRepo.AnnotateAsync(target.Id, userId, string.Empty);
     }
