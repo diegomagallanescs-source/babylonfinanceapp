@@ -96,6 +96,7 @@ public class AccountService : IAccountService
         AccountType = a.AccountType,
         BudgetCategoryId = a.BudgetCategoryId,
         Notes = a.Notes,
+        DisplayOrder = a.DisplayOrder,
         CreatedAt = a.CreatedAt,
         UpdatedAt = a.UpdatedAt
     };

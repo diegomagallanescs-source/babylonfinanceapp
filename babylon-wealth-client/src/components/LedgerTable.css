@@ -221,6 +221,53 @@
   color: var(--color-text);
 }
 
+/* ── Drag handle ────────────────────────────────────────────── */
+.lt__th--handle {
+  width: 28px;
+  padding: 0;
+}
+
+.lt__drag-handle {
+  width: 28px;
+  padding: 0 6px;
+  cursor: grab;
+  text-align: center;
+  background: var(--color-bg-surface);
+  touch-action: none;
+}
+
+.lt__drag-handle:active {
+  cursor: grabbing;
+}
+
+.lt__drag-icon {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  opacity: 0.4;
+  display: block;
+  line-height: 1;
+  transition: opacity 0.12s;
+}
+
+.lt__drag-handle:hover .lt__drag-icon {
+  opacity: 0.9;
+  color: var(--color-text);
+}
+
+.lt__row--dragging .lt__td,
+.lt__row--dragging .lt__drag-handle {
+  background: var(--color-bg-elevated) !important;
+}
+
+/* asset/liability color border moves to drag handle when sortable */
+.lt__row--asset .lt__drag-handle {
+  border-left: 3px solid var(--color-positive);
+}
+
+.lt__row--liability .lt__drag-handle {
+  border-left: 3px solid var(--color-negative);
+}
+
 /* ── Bank logo cell helper ──────────────────────────────────── */
 .lt__bank-cell {
   display: flex;

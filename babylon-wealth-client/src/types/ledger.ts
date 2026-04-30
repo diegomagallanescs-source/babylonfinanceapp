@@ -16,6 +16,7 @@ export interface BankAccountResponseDto {
   balance: number;
   accountType: string;
   budgetCategoryId: string | null;
+  displayOrder: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -13,6 +13,7 @@ public record AccountResponseDto
     public AccountType AccountType { get; init; }
     public Guid? BudgetCategoryId { get; init; }
     public string? Notes { get; init; }
+    public int? DisplayOrder { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
 }

@@ -28,6 +28,10 @@ export async function deleteAccount(id: string): Promise<void> {
   await apiClient.delete(`/accounts/${id}`);
 }
 
+export async function reorderAccounts(orderedIds: string[]): Promise<void> {
+  await apiClient.patch('/accounts/reorder', { orderedIds });
+}
+
 // ── Credit Cards ─────────────────────────────────────────────
 export async function fetchCreditCards(): Promise<CreditCardResponseDto[]> {
   const { data } = await apiClient.get<CreditCardResponseDto[]>('/creditcards');

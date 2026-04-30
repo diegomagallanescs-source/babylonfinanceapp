@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -13,7 +13,7 @@ import { useProperties } from '../../hooks/useProperties';
 import { useBudgetCategories } from '../../hooks/useBudgetCategories';
 
 import {
-  createAccount, updateAccount, deleteAccount,
+  createAccount, updateAccount, deleteAccount, reorderAccounts,
   createCreditCard, updateCreditCard,
   createLoan, updateLoan,
   createInvestment, updateInvestment, deleteInvestment,
@@ -352,6 +352,21 @@ export function AccountingPage() {
 
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+
+  // ── Bank Accounts (ordered) ───────────────────────────────
+  const [orderedAccounts, setOrderedAccounts] = useState<BankAccountResponseDto[]>([]);
+  useEffect(() => {
+    if (accounts) setOrderedAccounts(accounts);
+  }, [accounts]);
+
+  async function handleAcctReorder(newIds: string[]) {
+    const newOrder = newIds.map(
+      (id) => orderedAccounts.find((a) => a.id === id)!,
+    );
+    setOrderedAccounts(newOrder);
+    await reorderAccounts(newIds);
+    qc.invalidateQueries({ queryKey: ['accounts'] });
+  }
 
   // ── Bank Accounts ─────────────────────────────────────────
   const [dirtyAccounts, setDirtyAccounts] = useState<Map<string, UpdateBankAccountRequest>>(new Map());
@@ -1331,13 +1346,18 @@ export function AccountingPage() {
             </button>
           </div>
           <LedgerTable
-            data={accounts ?? []}
+            data={orderedAccounts}
             columns={accountColumns}
             getRowVariant={() => 'asset' as RowVariant}
             getRowClass={(row) => dirtyAccounts.has(row.id) ? 'lt__row--dirty' : ''}
             totals={accountTotals}
             isLoading={loadingAccounts}
             emptyMessage="No bank accounts yet."
+            sortable={{
+              ids: orderedAccounts.map((a) => a.id),
+              getDragId: (row) => row.id,
+              onReorder: handleAcctReorder,
+            }}
           />
           {showAddAcct && (
             <div className="acc-add-form">

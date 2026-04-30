@@ -7,12 +7,35 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import './LedgerTable.css';
 
 export type RowVariant = 'asset' | 'liability' | 'neutral';
 
 export interface TotalsRow {
   [accessorKey: string]: React.ReactNode;
+}
+
+export interface SortableConfig<T> {
+  ids: string[];
+  getDragId: (row: T) => string;
+  onReorder: (newOrderedIds: string[]) => void;
 }
 
 interface LedgerTableProps<T extends object> {
@@ -25,6 +48,38 @@ interface LedgerTableProps<T extends object> {
   emptyMessage?: string;
   onEditRow?: (row: T) => void;
   onDeleteRow?: (row: T) => void;
+  sortable?: SortableConfig<T>;
+}
+
+function SortableRow({
+  id,
+  className,
+  children,
+}: {
+  id: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 1 : undefined,
+  };
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`${className}${isDragging ? ' lt__row--dragging' : ''}`}
+    >
+      <td className="lt__drag-handle" {...attributes} {...listeners}>
+        <span className="lt__drag-icon">⠿</span>
+      </td>
+      {children}
+    </tr>
+  );
 }
 
 export function LedgerTable<T extends object>({
@@ -37,41 +92,48 @@ export function LedgerTable<T extends object>({
   emptyMessage = 'No records yet.',
   onEditRow,
   onDeleteRow,
+  sortable,
 }: LedgerTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Inject actions column if handlers provided
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const allColumns: ColumnDef<T, unknown>[] = [
     ...columns,
     ...(onEditRow || onDeleteRow
-      ? [{
-          id: '_actions',
-          header: '',
-          cell: ({ row }: { row: { original: T } }) => (
-            <div className="lt__actions">
-              {onEditRow && (
-                <button
-                  className="lt__action-btn lt__action-btn--edit"
-                  onClick={() => onEditRow(row.original)}
-                  type="button"
-                >
-                  Edit
-                </button>
-              )}
-              {onDeleteRow && (
-                <button
-                  className="lt__action-btn lt__action-btn--delete"
-                  onClick={() => onDeleteRow(row.original)}
-                  type="button"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          ),
-          enableSorting: false,
-          size: 100,
-        } as ColumnDef<T, unknown>]
+      ? [
+          {
+            id: '_actions',
+            header: '',
+            cell: ({ row }: { row: { original: T } }) => (
+              <div className="lt__actions">
+                {onEditRow && (
+                  <button
+                    className="lt__action-btn lt__action-btn--edit"
+                    onClick={() => onEditRow(row.original)}
+                    type="button"
+                  >
+                    Edit
+                  </button>
+                )}
+                {onDeleteRow && (
+                  <button
+                    className="lt__action-btn lt__action-btn--delete"
+                    onClick={() => onDeleteRow(row.original)}
+                    type="button"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            ),
+            enableSorting: false,
+            size: 100,
+          } as ColumnDef<T, unknown>,
+        ]
       : []),
   ];
 
@@ -84,6 +146,15 @@ export function LedgerTable<T extends object>({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !sortable) return;
+    const oldIndex = sortable.ids.indexOf(active.id as string);
+    const newIndex = sortable.ids.indexOf(over.id as string);
+    if (oldIndex === -1 || newIndex === -1) return;
+    sortable.onReorder(arrayMove(sortable.ids, oldIndex, newIndex));
+  }
+
   if (isLoading) {
     return (
       <div className="lt__skeleton">
@@ -94,12 +165,16 @@ export function LedgerTable<T extends object>({
     );
   }
 
-  return (
+  const rows = table.getRowModel().rows;
+  const colCount = allColumns.length + (sortable ? 1 : 0);
+
+  const tableEl = (
     <div className="lt__wrapper">
       <table className="lt__table">
         <thead className="lt__thead">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
+              {sortable && <th className="lt__th lt__th--handle" />}
               {hg.headers.map((header) => {
                 const canSort = header.column.getCanSort();
                 const sortDir = header.column.getIsSorted();
@@ -124,14 +199,35 @@ export function LedgerTable<T extends object>({
         </thead>
 
         <tbody>
-          {table.getRowModel().rows.length === 0 ? (
+          {rows.length === 0 ? (
             <tr>
-              <td className="lt__empty" colSpan={allColumns.length}>
+              <td className="lt__empty" colSpan={colCount}>
                 {emptyMessage}
               </td>
             </tr>
+          ) : sortable ? (
+            <SortableContext items={sortable.ids} strategy={verticalListSortingStrategy}>
+              {rows.map((row) => {
+                const variant = getRowVariant ? getRowVariant(row.original) : 'neutral';
+                const extra = getRowClass ? getRowClass(row.original) : '';
+                const dragId = sortable.getDragId(row.original);
+                return (
+                  <SortableRow
+                    key={row.id}
+                    id={dragId}
+                    className={`lt__row lt__row--${variant}${extra ? ` ${extra}` : ''}`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="lt__td">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </SortableRow>
+                );
+              })}
+            </SortableContext>
           ) : (
-            table.getRowModel().rows.map((row) => {
+            rows.map((row) => {
               const variant = getRowVariant ? getRowVariant(row.original) : 'neutral';
               const extra = getRowClass ? getRowClass(row.original) : '';
               return (
@@ -150,9 +246,10 @@ export function LedgerTable<T extends object>({
           )}
         </tbody>
 
-        {totals && table.getRowModel().rows.length > 0 && (
+        {totals && rows.length > 0 && (
           <tfoot>
             <tr className="lt__totals-row">
+              {sortable && <td className="lt__totals-cell" />}
               {table.getAllFlatColumns().map((col) => (
                 <td key={col.id} className="lt__totals-cell">
                   {totals[col.id] ?? null}
@@ -164,4 +261,18 @@ export function LedgerTable<T extends object>({
       </table>
     </div>
   );
+
+  if (sortable) {
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        {tableEl}
+      </DndContext>
+    );
+  }
+
+  return tableEl;
 }
