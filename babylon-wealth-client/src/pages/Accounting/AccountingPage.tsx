@@ -1258,8 +1258,9 @@ export function AccountingPage() {
   ], [investEditId, dirtyInvestments]);
 
   // ── Splits + totals ───────────────────────────────────────
-  const businessCards = (cards ?? []).filter((c) => c.cardType === 'Business');
-  const personalCards = (cards ?? []).filter((c) => c.cardType === 'Personal');
+  const businessCards = (cards ?? []).filter((c) => c.cardType === 'Business').sort((a, b) => b.balance - a.balance);
+  const personalCards = (cards ?? []).filter((c) => c.cardType === 'Personal').sort((a, b) => b.balance - a.balance);
+  const sortedInvestments = [...(investments ?? [])].sort((a, b) => b.currentValue - a.currentValue);
 
   const accountTotals = {
     customLabel: 'Total',
@@ -1465,7 +1466,7 @@ export function AccountingPage() {
             </button>
           </div>
           <LedgerTable
-            data={investments ?? []}
+            data={sortedInvestments}
             columns={investmentColumns}
             getRowVariant={() => 'asset' as RowVariant}
             getRowClass={(row) => dirtyInvestments.has(row.id) ? 'lt__row--dirty' : ''}

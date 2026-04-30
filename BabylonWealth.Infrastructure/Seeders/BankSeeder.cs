@@ -15,14 +15,11 @@ public static class BankSeeder
         var context = scope.ServiceProvider.GetRequiredService<BabylonDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<BabylonDbContext>>();
 
-        if (await context.Banks.AnyAsync())
-            return;
-
-        logger.LogInformation("Seeding banks table...");
+        logger.LogInformation("Checking banks table for missing entries...");
 
         const string clearbit = "https://logo.clearbit.com";
 
-        var banks = new List<Bank>
+        var allBanks = new List<Bank>
         {
             // ── Major US Banks ────────────────────────────────────────────────────
             Bank.Create("Chase",                      BankType.Both,     $"{clearbit}/chase.com",                  "jpmorgan,jp morgan,jpmc"),
@@ -45,6 +42,7 @@ public static class BankSeeder
             // ── Credit Cards / Charge Cards ──────────────────────────────────────
             Bank.Create("American Express",           BankType.Both,     $"{clearbit}/americanexpress.com",        "amex,americanexpress"),
             Bank.Create("Discover",                   BankType.Both,     $"{clearbit}/discover.com",               "discover card"),
+            Bank.Create("Apple Card",                 BankType.Personal, $"{clearbit}/apple.com",                  "apple,apple credit card,goldman sachs apple"),
 
             // ── Online / Neo Banks ────────────────────────────────────────────────
             Bank.Create("SoFi",                       BankType.Both,     $"{clearbit}/sofi.com",                   "social finance"),
@@ -65,11 +63,27 @@ public static class BankSeeder
             Bank.Create("Robinhood",                  BankType.Personal, $"{clearbit}/robinhood.com",              "rh"),
             Bank.Create("Wealthfront",                BankType.Personal, $"{clearbit}/wealthfront.com",            "wf robo"),
             Bank.Create("Betterment",                 BankType.Personal, $"{clearbit}/betterment.com",             "betterment invest"),
+            Bank.Create("Kraken",                     BankType.Personal, $"{clearbit}/kraken.com",                 "kraken exchange,kraken crypto"),
         };
 
-        context.Banks.AddRange(banks);
+        // Upsert by name — only insert banks that don't already exist
+        var existingNames = (await context.Banks
+            .Select(b => b.Name)
+            .ToListAsync())
+            .ToHashSet();
+
+        var toAdd = allBanks.Where(b => !existingNames.Contains(b.Name)).ToList();
+
+        if (toAdd.Count == 0)
+        {
+            logger.LogInformation("Banks table already up to date.");
+            return;
+        }
+
+        context.Banks.AddRange(toAdd);
         await context.SaveChangesAsync();
 
-        logger.LogInformation("Seeded {Count} banks successfully.", banks.Count);
+        logger.LogInformation("Added {Count} new bank(s): {Names}.",
+            toAdd.Count, string.Join(", ", toAdd.Select(b => b.Name)));
     }
 }
