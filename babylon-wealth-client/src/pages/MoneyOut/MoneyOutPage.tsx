@@ -303,10 +303,20 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
     );
   }
 
+  const totalSpend = sorted.reduce((s, r) => s + r.totalSpend, 0);
+  const totalNecessities = sorted.reduce((s, r) => s + (r.necessitiesSpend ?? 0), 0);
+  const aboveNecessities = totalSpend - totalNecessities;
+
   if (!hasCategoryData) {
     return (
       <div className="mo-chart-card">
         <div className="mo-chart-card__title">Spend History</div>
+        <div className="mo-history-stats">
+          <div className="mo-history-stat">
+            <span className="mo-history-stat__label">Total Tracked</span>
+            <span className="mo-history-stat__value mo-history-stat__value--neg">{formatCurrency(totalSpend)}</span>
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
             <defs>
@@ -328,6 +338,16 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
   return (
     <div className="mo-chart-card">
       <div className="mo-chart-card__title">Spend History by Category</div>
+      <div className="mo-history-stats">
+        <div className="mo-history-stat">
+          <span className="mo-history-stat__label">Total Tracked</span>
+          <span className="mo-history-stat__value mo-history-stat__value--neg">{formatCurrency(totalSpend)}</span>
+        </div>
+        <div className="mo-history-stat">
+          <span className="mo-history-stat__label">Above Necessities</span>
+          <span className="mo-history-stat__value">{formatCurrency(aboveNecessities)}</span>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />

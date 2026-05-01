@@ -196,10 +196,18 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
     );
   }
 
+  const totalMoneyIn = sorted.reduce((s, r) => s + r.totalMoneyIn, 0);
+
   if (!hasCategoryData) {
     return (
       <div className="mi-chart-card">
         <div className="mi-chart-card__title">Money In History</div>
+        <div className="mi-history-stats">
+          <div className="mi-history-stat">
+            <span className="mi-history-stat__label">Total Tracked</span>
+            <span className="mi-history-stat__value mi-history-stat__value--in">{formatCurrency(totalMoneyIn)}</span>
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
             <defs>
@@ -223,6 +231,12 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
   return (
     <div className="mi-chart-card">
       <div className="mi-chart-card__title">Money In by Category</div>
+      <div className="mi-history-stats">
+        <div className="mi-history-stat">
+          <span className="mi-history-stat__label">Total Tracked</span>
+          <span className="mi-history-stat__value mi-history-stat__value--in">{formatCurrency(totalMoneyIn)}</span>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />

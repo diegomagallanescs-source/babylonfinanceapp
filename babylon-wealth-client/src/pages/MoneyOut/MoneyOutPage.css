@@ -484,6 +484,42 @@
   font-size: 12px;
 }
 
+/* ── History stat strip ──────────────────────────────────────── */
+.mo-history-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 0 2px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 4px;
+}
+
+.mo-history-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mo-history-stat__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  color: var(--color-text-muted);
+}
+
+.mo-history-stat__value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.mo-history-stat__value--neg {
+  color: var(--color-negative);
+}
+
 /* ── Toast notification ──────────────────────────────────────── */
 .mo-toast {
   position: fixed;

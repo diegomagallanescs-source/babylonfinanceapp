@@ -383,6 +383,42 @@
   background: var(--color-negative-dim);
 }
 
+/* ── History stat strip ──────────────────────────────────────── */
+.mi-history-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 0 2px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 4px;
+}
+
+.mi-history-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mi-history-stat__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  color: var(--color-text-muted);
+}
+
+.mi-history-stat__value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.mi-history-stat__value--in {
+  color: var(--color-positive);
+}
+
 /* ── Toast notification ──────────────────────────────────────── */
 .mi-toast {
   position: fixed;
