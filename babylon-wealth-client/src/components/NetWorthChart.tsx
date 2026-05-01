@@ -325,13 +325,16 @@ export function NetWorthChart({
 
           {hasProperties && (
             <>
-              {/* Total NW horizontal overlay — richer fill toward current point */}
+              {/* Total NW horizontal overlay — richer fill toward current point.
+                  baseValue pinned to chart's bottom so fill always sits BELOW the line,
+                  even when values are negative. */}
               <Area
                 type="monotone"
                 dataKey="totalNetWorth"
                 stroke="none"
                 strokeWidth={0}
                 fill="url(#nwGradTotalH)"
+                baseValue={domainMin}
                 dot={false}
                 activeDot={false}
                 isAnimationActive={false}
@@ -345,6 +348,7 @@ export function NetWorthChart({
                 strokeWidth={1.5}
                 strokeDasharray="5 3"
                 fill="url(#nwGradTotal)"
+                baseValue={domainMin}
                 dot={
                   <CustomDot
                     activeIndex={displayKey === 'totalNetWorth' ? scrubbedIndex : null}
@@ -361,13 +365,16 @@ export function NetWorthChart({
             </>
           )}
 
-          {/* Liquid NW horizontal overlay — sits behind the main area */}
+          {/* Liquid NW horizontal overlay — sits behind the main area.
+              baseValue pinned to chart's bottom so fill always sits BELOW the line,
+              even when values are negative. */}
           <Area
             type="monotone"
             dataKey="liquidNetWorth"
             stroke="none"
             strokeWidth={0}
             fill="url(#nwGradLiquidH)"
+            baseValue={domainMin}
             dot={false}
             activeDot={false}
             isAnimationActive={false}
@@ -381,6 +388,7 @@ export function NetWorthChart({
             stroke={accentColor}
             strokeWidth={2}
             fill="url(#nwGradLiquid)"
+            baseValue={domainMin}
             dot={
               <CustomDot
                 activeIndex={displayKey === 'liquidNetWorth' ? scrubbedIndex : null}
