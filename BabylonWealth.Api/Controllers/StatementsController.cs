@@ -278,6 +278,30 @@ public class StatementsController : ControllerBase
         }
     }
 
+    /// <summary>Soft-deletes all credit card statement records for a given year (clears the annual summary row).</summary>
+    /// <response code="204">All records for the year deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpDelete("year/{year:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteByYear(int year)
+    {
+        await _importService.DeleteByYearAsync(GetUserId(), year);
+        return NoContent();
+    }
+
+    /// <summary>Soft-deletes all checking statement records for a given year (clears the annual summary row).</summary>
+    /// <response code="204">All records for the year deleted.</response>
+    /// <response code="401">Missing or invalid JWT.</response>
+    [HttpDelete("checking/year/{year:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteCheckingByYear(int year)
+    {
+        await _checkingImportService.DeleteByYearAsync(GetUserId(), year);
+        return NoContent();
+    }
+
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
