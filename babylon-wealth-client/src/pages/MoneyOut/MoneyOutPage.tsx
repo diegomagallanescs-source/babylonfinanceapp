@@ -336,12 +336,15 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
           </AreaChart>
         </ResponsiveContainer>
         <div className="mo-year-totals">
-          {yearEntries.map(({ year, total }) => (
-            <div key={year} className="mo-year-total">
-              <span className="mo-year-total__year">{year}</span>
-              <span className="mo-year-total__value">{formatCurrency(total)}</span>
-            </div>
-          ))}
+          <div className="mo-year-totals__title">Yearly Totals</div>
+          <div className="mo-year-totals__rows">
+            {yearEntries.map(({ year, total }) => (
+              <div key={year} className="mo-year-total">
+                <span className="mo-year-total__year">{year}</span>
+                <span className="mo-year-total__value">{formatCurrency(total)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -366,12 +369,15 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
         </BarChart>
       </ResponsiveContainer>
       <div className="mo-year-totals">
-        {yearEntries.map(({ year, total }) => (
-          <div key={year} className="mo-year-total">
-            <span className="mo-year-total__year">{year}</span>
-            <span className="mo-year-total__value">{formatCurrency(total)}</span>
-          </div>
-        ))}
+        <div className="mo-year-totals__title">Yearly Totals</div>
+        <div className="mo-year-totals__rows">
+          {yearEntries.map(({ year, total }) => (
+            <div key={year} className="mo-year-total">
+              <span className="mo-year-total__year">{year}</span>
+              <span className="mo-year-total__value">{formatCurrency(total)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

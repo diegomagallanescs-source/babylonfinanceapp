@@ -229,12 +229,15 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
           </AreaChart>
         </ResponsiveContainer>
         <div className="mi-year-totals">
-          {yearEntries.map(({ year, total }) => (
-            <div key={year} className="mi-year-total">
-              <span className="mi-year-total__year">{year}</span>
-              <span className="mi-year-total__value">{formatCurrency(total)}</span>
-            </div>
-          ))}
+          <div className="mi-year-totals__title">Yearly Totals</div>
+          <div className="mi-year-totals__rows">
+            {yearEntries.map(({ year, total }) => (
+              <div key={year} className="mi-year-total">
+                <span className="mi-year-total__year">{year}</span>
+                <span className="mi-year-total__value">{formatCurrency(total)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -261,12 +264,15 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
         </BarChart>
       </ResponsiveContainer>
       <div className="mi-year-totals">
-        {yearEntries.map(({ year, total }) => (
-          <div key={year} className="mi-year-total">
-            <span className="mi-year-total__year">{year}</span>
-            <span className="mi-year-total__value">{formatCurrency(total)}</span>
-          </div>
-        ))}
+        <div className="mi-year-totals__title">Yearly Totals</div>
+        <div className="mi-year-totals__rows">
+          {yearEntries.map(({ year, total }) => (
+            <div key={year} className="mi-year-total">
+              <span className="mi-year-total__year">{year}</span>
+              <span className="mi-year-total__value">{formatCurrency(total)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

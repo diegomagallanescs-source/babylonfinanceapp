@@ -393,33 +393,47 @@
   background: var(--color-negative-dim);
 }
 
-/* ── Year totals strip (below chart) ────────────────────────── */
+/* ── Year totals section (below chart) ──────────────────────── */
 .mi-year-totals {
+  margin-top: 20px;
+  padding: 16px 4px 4px;
+  border-top: 1px solid var(--color-border);
+}
+
+.mi-year-totals__title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.mi-year-totals__rows {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
-  padding: 14px 4px 2px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  margin-top: 8px;
+  gap: 8px 28px;
 }
 
 .mi-year-total {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
 }
 
 .mi-year-total__year {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 
 .mi-year-total__value {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: #00A84F;
