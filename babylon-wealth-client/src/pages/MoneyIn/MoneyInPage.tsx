@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { UploadFlowPanel } from '../../components/UploadFlowPanel';
 import { CumulativeTransactionView } from '../../components/CumulativeTransactionView';
 import { useCheckingHistory } from '../../hooks/useCheckingHistory';
+import { useDeleteChecking } from '../../hooks/useDeleteChecking';
 import { useSaveChecking } from '../../hooks/useSaveChecking';
 import { useUpdateChecking } from '../../hooks/useUpdateChecking';
 import { useStatementAnnualSummary } from '../../hooks/useStatementAnnualSummary';
@@ -280,7 +281,34 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
 
 // ── CheckingAnnualSummaryTable ────────────────────────────────
 
-function CheckingAnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[] | undefined }) {
+function CheckingAnnualSummaryTable({
+  data,
+  history,
+  onDeleted,
+  onError,
+}: {
+  data: AnnualFinancialSummaryDto[] | undefined;
+  history: CheckingStatementSummaryDto[];
+  onDeleted: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const deleteMutation = useDeleteChecking();
+
+  async function handleDeleteYear(year: number) {
+    const records = history.filter(r => r.year === year);
+    if (records.length === 0) return;
+    const ok = window.confirm(
+      `Delete all ${records.length} saved month${records.length !== 1 ? 's' : ''} for ${year}? This cannot be undone.`,
+    );
+    if (!ok) return;
+    try {
+      await Promise.all(records.map(r => deleteMutation.mutateAsync(String(r.id))));
+      onDeleted(`${year} data deleted`);
+    } catch {
+      onError('Delete failed. Please try again.');
+    }
+  }
+
   if (!data || data.length === 0) {
     return (
       <div className="mi-chart-card">
@@ -303,6 +331,7 @@ function CheckingAnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[
             <th className="mi-annual-table__num">Money In</th>
             <th className="mi-annual-table__num">Net Savings</th>
             <th className="mi-annual-table__num">Months Recorded</th>
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -317,6 +346,17 @@ function CheckingAnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[
               </td>
               <td className="mi-annual-table__num mi-annual-table__months">
                 {row.checkingMonthsRecorded}/12
+              </td>
+              <td className="mi-annual-table__action">
+                <button
+                  type="button"
+                  className="mi-annual-table__del"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => handleDeleteYear(row.year)}
+                  title={`Delete all ${row.year} data`}
+                >
+                  ✕
+                </button>
               </td>
             </tr>
           ))}
@@ -638,7 +678,12 @@ export function MoneyInPage() {
         ) : annualError ? (
           <div className="banner banner--error">Failed to load annual summary. Please refresh.</div>
         ) : (
-          <CheckingAnnualSummaryTable data={annualSummary} />
+          <CheckingAnnualSummaryTable
+            data={annualSummary}
+            history={history ?? []}
+            onDeleted={(msg) => showToast('success', msg)}
+            onError={(msg) => showToast('error', msg)}
+          />
         )}
       </section>
     </div>

@@ -268,6 +268,33 @@
 .mi-annual-table__pos    { color: var(--color-positive) !important; }
 .mi-annual-table__neg    { color: var(--color-negative) !important; }
 .mi-annual-table__months { color: var(--color-text-muted) !important; font-size: 12px; }
+.mi-annual-table__action {
+  width: 32px;
+  text-align: right !important;
+  padding-right: 4px !important;
+}
+.mi-annual-table__del {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.mi-annual-table tbody tr:hover .mi-annual-table__del {
+  opacity: 1;
+}
+.mi-annual-table__del:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-dim);
+}
+.mi-annual-table__del:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* ── Save section (category inputs) ─────────────────────────── */
 .mi-save-section {

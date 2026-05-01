@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { UploadFlowPanel } from '../../components/UploadFlowPanel';
 import { CumulativeTransactionView } from '../../components/CumulativeTransactionView';
 import { useStatementHistory } from '../../hooks/useStatementHistory';
+import { useDeleteStatement } from '../../hooks/useDeleteStatement';
 import { useSaveStatement } from '../../hooks/useSaveStatement';
 import { useUpdateStatement } from '../../hooks/useUpdateStatement';
 import { useStatementAnnualSummary } from '../../hooks/useStatementAnnualSummary';
@@ -385,7 +386,34 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
 
 // ── AnnualSummaryTable ────────────────────────────────────────
 
-function AnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[] | undefined }) {
+function AnnualSummaryTable({
+  data,
+  history,
+  onDeleted,
+  onError,
+}: {
+  data: AnnualFinancialSummaryDto[] | undefined;
+  history: StatementSummaryResponseDto[];
+  onDeleted: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const deleteMutation = useDeleteStatement();
+
+  async function handleDeleteYear(year: number) {
+    const records = history.filter(r => r.year === year);
+    if (records.length === 0) return;
+    const ok = window.confirm(
+      `Delete all ${records.length} saved month${records.length !== 1 ? 's' : ''} for ${year}? This cannot be undone.`,
+    );
+    if (!ok) return;
+    try {
+      await Promise.all(records.map(r => deleteMutation.mutateAsync(String(r.id))));
+      onDeleted(`${year} data deleted`);
+    } catch {
+      onError('Delete failed. Please try again.');
+    }
+  }
+
   if (!data || data.length === 0) {
     return (
       <div className="mo-chart-card mo-history-empty">
@@ -411,6 +439,7 @@ function AnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[] | unde
             <th className="mo-annual-table__num">Money In</th>
             <th className="mo-annual-table__num">Net Savings</th>
             <th className="mo-annual-table__num">CC Months</th>
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -426,6 +455,17 @@ function AnnualSummaryTable({ data }: { data: AnnualFinancialSummaryDto[] | unde
               </td>
               <td className="mo-annual-table__num mo-annual-table__months">
                 {row.creditCardMonthsRecorded}/12
+              </td>
+              <td className="mo-annual-table__action">
+                <button
+                  type="button"
+                  className="mo-annual-table__del"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => handleDeleteYear(row.year)}
+                  title={`Delete all ${row.year} data`}
+                >
+                  ✕
+                </button>
               </td>
             </tr>
           ))}
@@ -709,7 +749,12 @@ export function MoneyOutPage() {
         ) : annualError ? (
           <div className="banner banner--error">Failed to load annual summary. Please refresh.</div>
         ) : (
-          <AnnualSummaryTable data={annualSummary} />
+          <AnnualSummaryTable
+            data={annualSummary}
+            history={history ?? []}
+            onDeleted={(msg) => showToast('success', msg)}
+            onError={(msg) => showToast('error', msg)}
+          />
         )}
       </section>
     </div>

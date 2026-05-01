@@ -87,3 +87,11 @@ export async function fetchStatementAnnualSummary(): Promise<AnnualFinancialSumm
   const { data } = await apiClient.get<AnnualFinancialSummaryDto[]>('/statements/annual-summary');
   return data;
 }
+
+export async function deleteStatement(id: string): Promise<void> {
+  await apiClient.delete(`/statements/${id}`);
+}
+
+export async function deleteChecking(id: string): Promise<void> {
+  await apiClient.delete(`/statements/checking/${id}`);
+}
