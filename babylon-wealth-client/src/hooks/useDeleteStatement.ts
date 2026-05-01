@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteStatement } from '../api/statements';
+import { deleteStatementYear } from '../api/statements';
 
 export function useDeleteStatement() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => deleteStatement(id),
+    mutationFn: (year: number) => deleteStatementYear(year),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statement-history'] });
       queryClient.invalidateQueries({ queryKey: ['statement-annual-summary'] });

@@ -107,6 +107,11 @@ public class CheckingStatementImportService : ICheckingStatementImportService
         await _checkingRepo.SoftDeleteAsync(id, userId);
     }
 
+    public async Task DeleteByYearAsync(Guid userId, int year)
+    {
+        await _checkingRepo.DeleteByYearAsync(userId, year);
+    }
+
     private static void Validate(SaveCheckingStatementRequest request)
     {
         if (request.Month < 1 || request.Month > 12)

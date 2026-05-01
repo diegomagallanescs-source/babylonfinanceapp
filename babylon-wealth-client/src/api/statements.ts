@@ -95,3 +95,11 @@ export async function deleteStatement(id: string): Promise<void> {
 export async function deleteChecking(id: string): Promise<void> {
   await apiClient.delete(`/statements/checking/${id}`);
 }
+
+export async function deleteStatementYear(year: number): Promise<void> {
+  await apiClient.delete(`/statements/year/${year}`);
+}
+
+export async function deleteCheckingYear(year: number): Promise<void> {
+  await apiClient.delete(`/statements/checking/year/${year}`);
+}

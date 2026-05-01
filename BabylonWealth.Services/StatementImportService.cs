@@ -75,6 +75,11 @@ public class StatementImportService : IStatementImportService
         await _repo.SoftDeleteAsync(id, userId);
     }
 
+    public async Task DeleteByYearAsync(Guid userId, int year)
+    {
+        await _repo.DeleteByYearAsync(userId, year);
+    }
+
     private static void Validate(SaveStatementSummaryRequest request)
     {
         if (request.Month < 1 || request.Month > 12)

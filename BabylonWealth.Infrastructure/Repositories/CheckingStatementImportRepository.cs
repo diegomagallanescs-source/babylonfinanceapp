@@ -24,4 +24,13 @@ public class CheckingStatementImportRepository
         return await _dbSet
             .FirstOrDefaultAsync(c => c.UserId == userId && c.Month == month && c.Year == year);
     }
+
+    public async Task DeleteByYearAsync(Guid userId, int year)
+    {
+        var records = await _dbSet
+            .Where(c => c.UserId == userId && c.Year == year)
+            .ToListAsync();
+        foreach (var r in records) r.SoftDelete();
+        await _context.SaveChangesAsync();
+    }
 }

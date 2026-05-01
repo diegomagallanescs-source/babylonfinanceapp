@@ -9,4 +9,5 @@ public interface IStatementImportService
     Task<StatementSummaryResponseDto> UpdateAsync(Guid id, Guid userId, SaveStatementSummaryRequest request);
     Task<IEnumerable<StatementSummaryResponseDto>> GetHistoryAsync(Guid userId);
     Task DeleteAsync(Guid id, Guid userId);
+    Task DeleteByYearAsync(Guid userId, int year);
 }

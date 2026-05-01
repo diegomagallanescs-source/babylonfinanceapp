@@ -6,4 +6,5 @@ public interface IStatementImportRepository : IBaseRepository<StatementImport, G
 {
     Task<IEnumerable<StatementImport>> GetHistoryAsync(Guid userId);
     Task<StatementImport?> GetByMonthYearAsync(Guid userId, int month, int year);
+    Task DeleteByYearAsync(Guid userId, int year);
 }

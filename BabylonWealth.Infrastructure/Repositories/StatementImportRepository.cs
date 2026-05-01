@@ -23,4 +23,13 @@ public class StatementImportRepository : BaseRepository<StatementImport, Guid>, 
         return await _dbSet
             .FirstOrDefaultAsync(s => s.UserId == userId && s.Month == month && s.Year == year);
     }
+
+    public async Task DeleteByYearAsync(Guid userId, int year)
+    {
+        var records = await _dbSet
+            .Where(s => s.UserId == userId && s.Year == year)
+            .ToListAsync();
+        foreach (var r in records) r.SoftDelete();
+        await _context.SaveChangesAsync();
+    }
 }

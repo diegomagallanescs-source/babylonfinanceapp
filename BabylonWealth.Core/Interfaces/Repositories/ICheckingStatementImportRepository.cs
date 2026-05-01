@@ -6,4 +6,5 @@ public interface ICheckingStatementImportRepository : IBaseRepository<CheckingSt
 {
     Task<IEnumerable<CheckingStatementImport>> GetHistoryAsync(Guid userId);
     Task<CheckingStatementImport?> GetByMonthYearAsync(Guid userId, int month, int year);
+    Task DeleteByYearAsync(Guid userId, int year);
 }

@@ -388,37 +388,22 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
 
 function AnnualSummaryTable({
   data,
-  history,
   onDeleted,
   onError,
 }: {
   data: AnnualFinancialSummaryDto[] | undefined;
-  history: StatementSummaryResponseDto[];
   onDeleted: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
   const deleteMutation = useDeleteStatement();
 
   async function handleDeleteYear(year: number) {
-    // Only delete year-end records (no category breakdown). Monthly records
-    // that have category data are what populate the Spend History chart and
-    // must not be touched here.
-    const records = history.filter(
-      r => r.year === year &&
-        r.necessitiesSpend == null &&
-        r.travelSpend == null &&
-        r.savingsSpend == null &&
-        r.shoppingSpend == null &&
-        r.investmentsSpend == null &&
-        r.otherSpend == null,
-    );
-    if (records.length === 0) return;
     const ok = window.confirm(
-      `Delete the ${year} annual summary data (${records.length} month${records.length !== 1 ? 's' : ''})? This cannot be undone.`,
+      `Delete all saved credit card data for ${year}? This cannot be undone.`,
     );
     if (!ok) return;
     try {
-      await Promise.all(records.map(r => deleteMutation.mutateAsync(String(r.id))));
+      await deleteMutation.mutateAsync(year);
       onDeleted(`${year} annual summary deleted`);
     } catch {
       onError('Delete failed. Please try again.');
@@ -762,7 +747,6 @@ export function MoneyOutPage() {
         ) : (
           <AnnualSummaryTable
             data={annualSummary}
-            history={history ?? []}
             onDeleted={(msg) => showToast('success', msg)}
             onError={(msg) => showToast('error', msg)}
           />

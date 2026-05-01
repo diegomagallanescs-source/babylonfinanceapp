@@ -283,31 +283,22 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
 
 function CheckingAnnualSummaryTable({
   data,
-  history,
   onDeleted,
   onError,
 }: {
   data: AnnualFinancialSummaryDto[] | undefined;
-  history: CheckingStatementSummaryDto[];
   onDeleted: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
   const deleteMutation = useDeleteChecking();
 
   async function handleDeleteYear(year: number) {
-    // Only delete year-end records (no income categories). Monthly records
-    // that have category breakdowns populate the Money In chart and must
-    // not be touched here.
-    const records = history.filter(
-      r => r.year === year && r.incomeCategories.length === 0,
-    );
-    if (records.length === 0) return;
     const ok = window.confirm(
-      `Delete the ${year} annual summary data (${records.length} month${records.length !== 1 ? 's' : ''})? This cannot be undone.`,
+      `Delete all saved checking data for ${year}? This cannot be undone.`,
     );
     if (!ok) return;
     try {
-      await Promise.all(records.map(r => deleteMutation.mutateAsync(String(r.id))));
+      await deleteMutation.mutateAsync(year);
       onDeleted(`${year} annual summary deleted`);
     } catch {
       onError('Delete failed. Please try again.');
@@ -685,7 +676,6 @@ export function MoneyInPage() {
         ) : (
           <CheckingAnnualSummaryTable
             data={annualSummary}
-            history={history ?? []}
             onDeleted={(msg) => showToast('success', msg)}
             onError={(msg) => showToast('error', msg)}
           />
