@@ -186,6 +186,9 @@
   padding: 2px 0;
 }
 
+.mi-tooltip__row span:first-child {
+  font-weight: 600;
+}
 .mi-tooltip__row span:last-child {
   color: var(--color-text);
   font-variant-numeric: tabular-nums;

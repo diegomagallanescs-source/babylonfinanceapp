@@ -299,6 +299,9 @@
   color: #b0a898;
   padding: 2px 0;
 }
+.mo-tooltip__row span:first-child {
+  font-weight: 600;
+}
 .mo-tooltip__row span:last-child {
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
