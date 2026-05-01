@@ -10,6 +10,7 @@ public class CheckingStatementImport : BaseEntity<Guid>
     public int TransactionCount { get; private set; }
     public string AccountsIncluded { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
+    public bool IsYearEnd { get; private set; }
     /// <summary>JSON array of {Name, Amount} income category items, e.g. [{"Name":"Employment","Amount":5000}].</summary>
     public string? IncomeCategoriesJson { get; private set; }
 
@@ -24,7 +25,8 @@ public class CheckingStatementImport : BaseEntity<Guid>
         int transactionCount,
         string accountsIncluded,
         string? notes = null,
-        string? incomeCategoriesJson = null)
+        string? incomeCategoriesJson = null,
+        bool isYearEnd = false)
     {
         return new CheckingStatementImport
         {
@@ -37,6 +39,7 @@ public class CheckingStatementImport : BaseEntity<Guid>
             TransactionCount = transactionCount,
             AccountsIncluded = accountsIncluded,
             Notes = notes,
+            IsYearEnd = isYearEnd,
             IncomeCategoriesJson = incomeCategoriesJson,
         };
     }

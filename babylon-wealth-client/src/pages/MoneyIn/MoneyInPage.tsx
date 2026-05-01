@@ -477,6 +477,7 @@ function CheckingSavePeriodButton({
           totalMoneyOut: totals.moneyOut,
           transactionCount: totals.count,
           accountsIncluded: result.accountsDetected.join(', '),
+          isYearEnd: true,
         });
       }
       queryClient.invalidateQueries({ queryKey: ['checking-history'] });

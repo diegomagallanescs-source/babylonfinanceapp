@@ -13,7 +13,16 @@ public class CheckingStatementImportRepository
     public async Task<IEnumerable<CheckingStatementImport>> GetHistoryAsync(Guid userId)
     {
         return await _dbSet
-            .Where(c => c.UserId == userId)
+            .Where(c => c.UserId == userId && !c.IsYearEnd)
+            .OrderBy(c => c.Year)
+            .ThenBy(c => c.Month)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<CheckingStatementImport>> GetYearEndHistoryAsync(Guid userId)
+    {
+        return await _dbSet
+            .Where(c => c.UserId == userId && c.IsYearEnd)
             .OrderBy(c => c.Year)
             .ThenBy(c => c.Month)
             .ToListAsync();
@@ -22,13 +31,13 @@ public class CheckingStatementImportRepository
     public async Task<CheckingStatementImport?> GetByMonthYearAsync(Guid userId, int month, int year)
     {
         return await _dbSet
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.Month == month && c.Year == year);
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Month == month && c.Year == year && !c.IsYearEnd);
     }
 
     public async Task DeleteByYearAsync(Guid userId, int year)
     {
         var records = await _dbSet
-            .Where(c => c.UserId == userId && c.Year == year)
+            .Where(c => c.UserId == userId && c.Year == year && c.IsYearEnd)
             .ToListAsync();
         foreach (var r in records) r.SoftDelete();
         await _context.SaveChangesAsync();

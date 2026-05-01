@@ -36,7 +36,8 @@ public class CheckingStatementImportService : ICheckingStatementImportService
             request.TransactionCount,
             request.AccountsIncluded,
             request.Notes,
-            SerializeCategories(request.IncomeCategories));
+            SerializeCategories(request.IncomeCategories),
+            request.IsYearEnd);
 
         var saved = await _checkingRepo.CreateAsync(entity);
         return MapToDto(saved);
@@ -69,8 +70,8 @@ public class CheckingStatementImportService : ICheckingStatementImportService
 
     public async Task<IEnumerable<AnnualFinancialSummaryDto>> GetAnnualSummaryAsync(Guid userId)
     {
-        var checkingRecords   = (await _checkingRepo.GetHistoryAsync(userId)).ToList();
-        var creditCardRecords = (await _creditCardRepo.GetHistoryAsync(userId)).ToList();
+        var checkingRecords   = (await _checkingRepo.GetYearEndHistoryAsync(userId)).ToList();
+        var creditCardRecords = (await _creditCardRepo.GetYearEndHistoryAsync(userId)).ToList();
 
         var years = checkingRecords.Select(c => c.Year)
             .Union(creditCardRecords.Select(s => s.Year))

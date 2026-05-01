@@ -33,7 +33,8 @@ public class StatementImportService : IStatementImportService
             request.SavingsSpend,
             request.ShoppingSpend,
             request.InvestmentsSpend,
-            request.OtherSpend);
+            request.OtherSpend,
+            request.IsYearEnd);
 
         var saved = await _repo.CreateAsync(entity);
         return MapToDto(saved);

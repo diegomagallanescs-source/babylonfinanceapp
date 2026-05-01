@@ -10,6 +10,7 @@ public record SaveCheckingStatementRequest
     public string AccountsIncluded { get; init; } = string.Empty;
     public string? Notes { get; init; }
     public List<IncomeCategoryItemDto>? IncomeCategories { get; init; }
+    public bool IsYearEnd { get; init; }
 }
 
 public record IncomeCategoryItemDto

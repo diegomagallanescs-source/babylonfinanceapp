@@ -14,4 +14,5 @@ public record SaveStatementSummaryRequest
     public decimal? ShoppingSpend { get; init; }
     public decimal? InvestmentsSpend { get; init; }
     public decimal? OtherSpend { get; init; }
+    public bool IsYearEnd { get; init; }
 }

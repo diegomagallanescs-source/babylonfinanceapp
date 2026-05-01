@@ -67,6 +67,7 @@ export interface SaveCheckingStatementRequest {
   accountsIncluded: string;
   notes?: string;
   incomeCategories?: IncomeCategoryItem[];
+  isYearEnd?: boolean;
 }
 
 export interface CheckingStatementSummaryDto {
@@ -143,6 +144,7 @@ export interface SaveStatementRequest {
   shoppingSpend?: number | null;
   investmentsSpend?: number | null;
   otherSpend?: number | null;
+  isYearEnd?: boolean;
 }
 
 export interface StatementSummaryResponseDto {

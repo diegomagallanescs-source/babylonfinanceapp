@@ -9,6 +9,7 @@ public class StatementImport : BaseEntity<Guid>
     public int TransactionCount { get; private set; }
     public string AccountsIncluded { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
+    public bool IsYearEnd { get; private set; }
 
     // Optional per-category spend breakdown (manually entered by the user)
     public decimal? NecessitiesSpend { get; private set; }
@@ -33,7 +34,8 @@ public class StatementImport : BaseEntity<Guid>
         decimal? savingsSpend = null,
         decimal? shoppingSpend = null,
         decimal? investmentsSpend = null,
-        decimal? otherSpend = null)
+        decimal? otherSpend = null,
+        bool isYearEnd = false)
     {
         return new StatementImport
         {
@@ -45,6 +47,7 @@ public class StatementImport : BaseEntity<Guid>
             TransactionCount = transactionCount,
             AccountsIncluded = accountsIncluded,
             Notes = notes,
+            IsYearEnd = isYearEnd,
             NecessitiesSpend = necessitiesSpend,
             TravelSpend = travelSpend,
             SavingsSpend = savingsSpend,

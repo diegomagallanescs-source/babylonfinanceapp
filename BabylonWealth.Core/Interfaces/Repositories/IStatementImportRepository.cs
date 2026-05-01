@@ -5,6 +5,7 @@ namespace BabylonWealth.Core.Interfaces.Repositories;
 public interface IStatementImportRepository : IBaseRepository<StatementImport, Guid>
 {
     Task<IEnumerable<StatementImport>> GetHistoryAsync(Guid userId);
+    Task<IEnumerable<StatementImport>> GetYearEndHistoryAsync(Guid userId);
     Task<StatementImport?> GetByMonthYearAsync(Guid userId, int month, int year);
     Task DeleteByYearAsync(Guid userId, int year);
 }

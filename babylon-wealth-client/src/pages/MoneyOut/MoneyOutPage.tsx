@@ -547,6 +547,7 @@ function SavePeriodButton({
           totalSpend: months[i].total,
           transactionCount: months[i].count,
           accountsIncluded: result.accountsDetected.join(', '),
+          isYearEnd: true,
         });
       }
       queryClient.invalidateQueries({ queryKey: ['statement-history'] });
