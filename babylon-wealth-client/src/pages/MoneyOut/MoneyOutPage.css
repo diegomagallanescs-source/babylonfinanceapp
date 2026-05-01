@@ -296,7 +296,7 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  color: var(--color-text-sub);
+  color: #b0a898;
   padding: 2px 0;
 }
 .mo-tooltip__row span:last-child {
@@ -492,6 +492,38 @@
 .mo-annual-table__months {
   color: var(--color-text-muted) !important;
   font-size: 12px;
+}
+
+/* ── Year totals strip (below chart) ────────────────────────── */
+.mo-year-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 14px 4px 2px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 8px;
+}
+
+.mo-year-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.mo-year-total__year {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+}
+
+.mo-year-total__value {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-negative);
 }
 
 /* ── History stat strip ──────────────────────────────────────── */

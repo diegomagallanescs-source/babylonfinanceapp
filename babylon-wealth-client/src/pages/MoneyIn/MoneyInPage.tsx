@@ -135,7 +135,7 @@ function MoneyInDonutChart({ breakdown }: { breakdown: CheckingCategoryBreakdown
 
 // ── MoneyInHistoryChart ───────────────────────────────────────
 
-const CAT_PALETTE = ['#00E676','#6B8CFF','#F0B429','#C084FC','#FF9A3C','#22D3EE','#F472B6','#4CAF7D'];
+const CAT_PALETTE = ['#00A84F','#4D6FD9','#D4951A','#9B5FD9','#D97B2A','#1AB8CC','#D95C8A','#3A9E6A'];
 
 function historyLabel(r: CheckingStatementSummaryDto): string {
   return `${MONTH_SHORT[r.month - 1]} '${String(r.year).slice(2)}`;
@@ -200,6 +200,14 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
     );
   }
 
+  const yearTotals = sorted.reduce<Record<number, number>>((acc, r) => {
+    acc[r.year] = (acc[r.year] ?? 0) + r.totalMoneyIn;
+    return acc;
+  }, {});
+  const yearEntries = Object.entries(yearTotals)
+    .map(([y, t]) => ({ year: Number(y), total: t }))
+    .sort((a, b) => b.year - a.year);
+
   if (!hasCategoryData) {
     return (
       <div className="mi-chart-card">
@@ -208,18 +216,26 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
           <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
             <defs>
               <linearGradient id="moneyInGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00E676" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#00E676" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="#00A84F" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#00A84F" stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
             <Tooltip content={<MoneyInHistoryTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }} />
-            <Area type="monotone" dataKey="moneyIn" stroke="#00E676" strokeWidth={2}
-              fill="url(#moneyInGrad)" dot={false} activeDot={{ r: 4, fill: '#00E676' }} />
+            <Area type="monotone" dataKey="moneyIn" stroke="#00A84F" strokeWidth={2}
+              fill="url(#moneyInGrad)" dot={false} activeDot={{ r: 4, fill: '#00A84F' }} />
           </AreaChart>
         </ResponsiveContainer>
+        <div className="mi-year-totals">
+          {yearEntries.map(({ year, total }) => (
+            <div key={year} className="mi-year-total">
+              <span className="mi-year-total__year">{year}</span>
+              <span className="mi-year-total__value">{formatCurrency(total)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -244,6 +260,14 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
           ))}
         </BarChart>
       </ResponsiveContainer>
+      <div className="mi-year-totals">
+        {yearEntries.map(({ year, total }) => (
+          <div key={year} className="mi-year-total">
+            <span className="mi-year-total__year">{year}</span>
+            <span className="mi-year-total__value">{formatCurrency(total)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

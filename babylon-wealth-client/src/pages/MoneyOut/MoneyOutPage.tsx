@@ -309,6 +309,14 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
     );
   }
 
+  const yearTotals = sorted.reduce<Record<number, number>>((acc, r) => {
+    acc[r.year] = (acc[r.year] ?? 0) + r.totalSpend;
+    return acc;
+  }, {});
+  const yearEntries = Object.entries(yearTotals)
+    .map(([y, t]) => ({ year: Number(y), total: t }))
+    .sort((a, b) => b.year - a.year);
+
   if (!hasCategoryData) {
     return (
       <div className="mo-chart-card">
@@ -327,6 +335,14 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
             <Area type="monotone" dataKey="total" stroke="#FF4458" strokeWidth={2} fill="url(#spendGrad)" dot={false} activeDot={{ r: 4, fill: '#FF4458' }} />
           </AreaChart>
         </ResponsiveContainer>
+        <div className="mo-year-totals">
+          {yearEntries.map(({ year, total }) => (
+            <div key={year} className="mo-year-total">
+              <span className="mo-year-total__year">{year}</span>
+              <span className="mo-year-total__value">{formatCurrency(total)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -349,6 +365,14 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
           ))}
         </BarChart>
       </ResponsiveContainer>
+      <div className="mo-year-totals">
+        {yearEntries.map(({ year, total }) => (
+          <div key={year} className="mo-year-total">
+            <span className="mo-year-total__year">{year}</span>
+            <span className="mo-year-total__value">{formatCurrency(total)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

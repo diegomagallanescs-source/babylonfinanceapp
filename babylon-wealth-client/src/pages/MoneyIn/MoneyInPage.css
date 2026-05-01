@@ -182,7 +182,7 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  color: var(--color-text-sub);
+  color: #b0a898;
   padding: 2px 0;
 }
 
@@ -198,7 +198,7 @@
   color: var(--color-text);
 }
 .mi-tooltip__row--total span:last-child {
-  color: var(--color-positive);
+  color: #00A84F;
 }
 
 /* ── Save row ────────────────────────────────────────────────── */
@@ -391,6 +391,38 @@
 .mi-cat-row__remove:hover {
   color: var(--color-negative);
   background: var(--color-negative-dim);
+}
+
+/* ── Year totals strip (below chart) ────────────────────────── */
+.mi-year-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 14px 4px 2px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 8px;
+}
+
+.mi-year-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.mi-year-total__year {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+}
+
+.mi-year-total__value {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #00A84F;
 }
 
 /* ── History stat strip ──────────────────────────────────────── */
