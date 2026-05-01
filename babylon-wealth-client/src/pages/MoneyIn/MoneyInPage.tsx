@@ -295,15 +295,20 @@ function CheckingAnnualSummaryTable({
   const deleteMutation = useDeleteChecking();
 
   async function handleDeleteYear(year: number) {
-    const records = history.filter(r => r.year === year);
+    // Only delete year-end records (no income categories). Monthly records
+    // that have category breakdowns populate the Money In chart and must
+    // not be touched here.
+    const records = history.filter(
+      r => r.year === year && r.incomeCategories.length === 0,
+    );
     if (records.length === 0) return;
     const ok = window.confirm(
-      `Delete all ${records.length} saved month${records.length !== 1 ? 's' : ''} for ${year}? This cannot be undone.`,
+      `Delete the ${year} annual summary data (${records.length} month${records.length !== 1 ? 's' : ''})? This cannot be undone.`,
     );
     if (!ok) return;
     try {
       await Promise.all(records.map(r => deleteMutation.mutateAsync(String(r.id))));
-      onDeleted(`${year} data deleted`);
+      onDeleted(`${year} annual summary deleted`);
     } catch {
       onError('Delete failed. Please try again.');
     }
