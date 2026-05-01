@@ -33,40 +33,93 @@ interface Props {
 
 // ── Y-axis helpers ────────────────────────────────────────────
 
-function niceStep(rough: number): number {
-  if (rough <= 0) return 1000;
-  const mag  = Math.pow(10, Math.floor(Math.log10(rough)));
-  const n    = rough / mag;
-  const nice = n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10;
+/**
+ * Smallest "nice" step (a value of the form {1,2,5} × 10^n) that is >= target.
+ * Examples:  35_000 → 50_000   75_000 → 100_000   3_500 → 5_000
+ */
+function niceStep(target: number): number {
+  if (target <= 0) return 1;
+  const mag  = Math.pow(10, Math.floor(Math.log10(target)));
+  const norm = target / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
   return nice * mag;
 }
 
-function buildYAxis(vals: number[]): { ticks: number[]; domainMin: number; domainMax: number } {
-  const dMax  = Math.max(...vals);
-  const dMin  = Math.min(...vals);
-  const range = Math.abs(dMax - dMin) || Math.abs(dMax) || 10_000;
-
-  const rawTop  = dMax + range * 0.22;
-  const step    = niceStep(rawTop / 4);
-  const niceTop = Math.ceil(rawTop / step) * step;
-  // Allow negative bottom — show numbers below zero when NW is negative.
-  const niceBot = Math.floor((dMin - range * 0.05) / step) * step;
-
-  const ticks: number[] = [];
-  for (let t = niceBot; t <= niceTop + step * 0.01; t += step) {
-    ticks.push(Math.round(t));
-  }
-
-  return { ticks, domainMin: niceBot, domainMax: niceTop };
+/** Next "nice" step after the current one (1 → 2 → 5 → 10 → 20 → 50 → ...). */
+function nextNiceStep(current: number): number {
+  const mag  = Math.pow(10, Math.floor(Math.log10(current)));
+  const norm = Math.round(current / mag);
+  if (norm < 2)  return 2  * mag;
+  if (norm < 5)  return 5  * mag;
+  if (norm < 10) return 10 * mag;
+  return 20 * mag;
 }
 
+/**
+ * Builds exactly 3 evenly-spaced ticks (bottom, middle, top) for the Y-axis.
+ *
+ *  - top    >= max value in the dataset
+ *  - bottom <= min value in the dataset
+ *  - middle = (bottom + top) / 2 — and all three are clean multiples of a
+ *    "nice" step (1k, 2k, 5k, 10k, 20k, 50k, 100k, …)
+ *
+ * The smallest nice step that bracketing the data with three equally-spaced
+ * ticks is chosen, so the labels re-fit automatically when the timeframe
+ * changes.
+ */
+function buildYAxis(vals: number[]): { ticks: number[]; domainMin: number; domainMax: number } {
+  if (vals.length === 0) {
+    return { ticks: [0, 50_000, 100_000], domainMin: 0, domainMax: 100_000 };
+  }
+
+  const dMin = Math.min(...vals);
+  const dMax = Math.max(...vals);
+
+  // Flat data — synthesize a step around the single value so labels stay readable.
+  if (dMin === dMax) {
+    const step = niceStep(Math.max(Math.abs(dMax) / 4, 1));
+    return {
+      ticks: [dMax - step, dMax, dMax + step],
+      domainMin: dMax - step,
+      domainMax: dMax + step,
+    };
+  }
+
+  const avg  = (dMin + dMax) / 2;
+  let   step = niceStep((dMax - dMin) / 2);
+
+  // Iterate up nice steps until 3 equally-spaced ticks fully bracket the data.
+  for (let i = 0; i < 12; i++) {
+    const middle = Math.round(avg / step) * step;
+    const bottom = middle - step;
+    const top    = middle + step;
+
+    if (top >= dMax && bottom <= dMin) {
+      return {
+        ticks:    [bottom, middle, top],
+        domainMin: bottom,
+        domainMax: top,
+      };
+    }
+    step = nextNiceStep(step);
+  }
+
+  // Fallback (effectively unreachable for finite numeric input).
+  return { ticks: [dMin, (dMin + dMax) / 2, dMax], domainMin: dMin, domainMax: dMax };
+}
+
+/**
+ * Formats a tick value as a clean dollar string.
+ * Whole multiples of 1M / 1K render as "$5M" / "$50K";
+ * non-multiples fall back to a comma-separated full number to avoid decimals.
+ */
 function formatYAxis(val: number): string {
   const sign = val < 0 ? '-' : '';
   const abs  = Math.abs(val);
-  if (abs >= 1_000_000_000) return `${sign}$${(abs / 1_000_000_000).toFixed(1)}B`;
-  if (abs >= 1_000_000)     return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000)         return `${sign}$${Math.round(abs / 1_000)}K`;
-  return `${sign}$${Math.round(abs)}`;
+  if (abs === 0) return '$0';
+  if (abs >= 1_000_000 && abs % 1_000_000 === 0) return `${sign}$${abs / 1_000_000}M`;
+  if (abs >= 1_000     && abs %     1_000 === 0) return `${sign}$${abs /     1_000}K`;
+  return `${sign}$${abs.toLocaleString('en-US')}`;
 }
 
 // Convert a data-domain value to a pixel Y within the chart canvas div
