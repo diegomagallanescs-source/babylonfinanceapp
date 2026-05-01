@@ -253,21 +253,27 @@ function historyLabel(r: StatementSummaryResponseDto): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SpendHistoryTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const hasCats = payload.some((p: any) => p.dataKey !== 'total' && p.value > 0);
+  const cats = payload.filter((p: any) => p.dataKey !== 'total' && p.value > 0);
+  const hasCats = cats.length > 0;
+  const total = hasCats
+    ? cats.reduce((s: number, p: any) => s + p.value, 0)
+    : payload[0].value;
   return (
     <div className="mo-tooltip">
       <div className="mo-tooltip__name">{label}</div>
       {hasCats
-        ? payload
-            .filter((p: any) => p.value > 0)
-            .map((p: any) => (
-              <div key={p.dataKey} className="mo-tooltip__row">
-                <span style={{ color: p.fill }}>{p.name}</span>
-                <span>{formatCurrency(p.value)}</span>
-              </div>
-            ))
-        : <div className="mo-tooltip__row"><span>Total Spend</span><span>{formatCurrency(payload[0].value)}</span></div>
+        ? cats.map((p: any) => (
+            <div key={p.dataKey} className="mo-tooltip__row">
+              <span style={{ color: p.fill }}>{p.name}</span>
+              <span>{formatCurrency(p.value)}</span>
+            </div>
+          ))
+        : null
       }
+      <div className="mo-tooltip__row mo-tooltip__row--total">
+        <span>Total Spend</span>
+        <span>{formatCurrency(total)}</span>
+      </div>
     </div>
   );
 }
@@ -303,20 +309,10 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
     );
   }
 
-  const totalSpend = sorted.reduce((s, r) => s + r.totalSpend, 0);
-  const totalNecessities = sorted.reduce((s, r) => s + (r.necessitiesSpend ?? 0), 0);
-  const aboveNecessities = totalSpend - totalNecessities;
-
   if (!hasCategoryData) {
     return (
       <div className="mo-chart-card">
         <div className="mo-chart-card__title">Spend History</div>
-        <div className="mo-history-stats">
-          <div className="mo-history-stat">
-            <span className="mo-history-stat__label">Total Tracked</span>
-            <span className="mo-history-stat__value mo-history-stat__value--neg">{formatCurrency(totalSpend)}</span>
-          </div>
-        </div>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
             <defs>
@@ -338,16 +334,6 @@ function SpendHistoryChart({ history }: { history: StatementSummaryResponseDto[]
   return (
     <div className="mo-chart-card">
       <div className="mo-chart-card__title">Spend History by Category</div>
-      <div className="mo-history-stats">
-        <div className="mo-history-stat">
-          <span className="mo-history-stat__label">Total Tracked</span>
-          <span className="mo-history-stat__value mo-history-stat__value--neg">{formatCurrency(totalSpend)}</span>
-        </div>
-        <div className="mo-history-stat">
-          <span className="mo-history-stat__label">Above Necessities</span>
-          <span className="mo-history-stat__value">{formatCurrency(aboveNecessities)}</span>
-        </div>
-      </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />

@@ -144,23 +144,27 @@ function historyLabel(r: CheckingStatementSummaryDto): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MoneyInHistoryTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const hasCats = payload.some((p: any) => p.dataKey !== 'moneyIn' && p.value > 0);
+  const cats = payload.filter((p: any) => p.dataKey !== 'moneyIn' && p.value > 0);
+  const hasCats = cats.length > 0;
+  const total = hasCats
+    ? cats.reduce((s: number, p: any) => s + p.value, 0)
+    : payload[0].value;
   return (
     <div className="mi-tooltip">
       <div className="mi-tooltip__name">{label}</div>
       {hasCats
-        ? payload.filter((p: any) => p.value > 0).map((p: any) => (
+        ? cats.map((p: any) => (
             <div key={p.dataKey} className="mi-tooltip__row">
               <span style={{ color: p.fill }}>{p.name}</span>
               <span>{formatCurrency(p.value)}</span>
             </div>
           ))
-        : payload.map((p: any) => (
-            <div key={p.dataKey} className="mi-tooltip__row">
-              <span>Money In</span><span>{formatCurrency(p.value)}</span>
-            </div>
-          ))
+        : null
       }
+      <div className="mi-tooltip__row mi-tooltip__row--total">
+        <span>Total</span>
+        <span>{formatCurrency(total)}</span>
+      </div>
     </div>
   );
 }
@@ -196,18 +200,10 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
     );
   }
 
-  const totalMoneyIn = sorted.reduce((s, r) => s + r.totalMoneyIn, 0);
-
   if (!hasCategoryData) {
     return (
       <div className="mi-chart-card">
         <div className="mi-chart-card__title">Money In History</div>
-        <div className="mi-history-stats">
-          <div className="mi-history-stat">
-            <span className="mi-history-stat__label">Total Tracked</span>
-            <span className="mi-history-stat__value mi-history-stat__value--in">{formatCurrency(totalMoneyIn)}</span>
-          </div>
-        </div>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 12, right: 8, left: 8, bottom: 0 }}>
             <defs>
@@ -231,12 +227,6 @@ function MoneyInHistoryChart({ history }: { history: CheckingStatementSummaryDto
   return (
     <div className="mi-chart-card">
       <div className="mi-chart-card__title">Money In by Category</div>
-      <div className="mi-history-stats">
-        <div className="mi-history-stat">
-          <span className="mi-history-stat__label">Total Tracked</span>
-          <span className="mi-history-stat__value mi-history-stat__value--in">{formatCurrency(totalMoneyIn)}</span>
-        </div>
-      </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
           <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
