@@ -1289,9 +1289,6 @@ function NetWorthPanel() {
     annotateMutation.mutate({ date: noteDate, text: noteText.trim() });
   };
 
-  // ── View note state (shown next to date label when scrubbing an annotated point) ──
-  const [showNotePopover, setShowNotePopover] = useState(false);
-
   return (
     <div className="nw-panel">
       <div className="nw-panel__greeting">
@@ -1308,49 +1305,12 @@ function NetWorthPanel() {
         </div>
       )}
 
-      {/* Scrub date label + note indicator */}
+      {/* Scrub date label */}
       <div className="nw-panel__scrub-date-row">
         <span className="nw-panel__scrub-date">
           {scrubDateLabel ?? 'Net Worth'}
         </span>
-
-        {/* While hovering an annotated point */}
-        {scrubAnnotation && scrubbedPoint && (
-          <button
-            className="nw-panel__note-chip"
-            onClick={() => setShowNotePopover(v => !v)}
-            title="View note"
-          >
-            🚩 Note
-          </button>
-        )}
-
       </div>
-
-      {/* Popover for scrubbed point note */}
-      <AnimatePresence>
-        {showNotePopover && scrubAnnotation && scrubbedPoint && (
-          <motion.div
-            className="nw-panel__note-popover"
-            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
-          >
-            <p className="nw-panel__note-popover-text">{scrubAnnotation}</p>
-            <button
-              className="nw-panel__note-delete"
-              onClick={() => {
-                if (!window.confirm('Delete this note?')) return;
-                deleteMutation.mutate(scrubbedPoint.snapshotDate);
-                setShowNotePopover(false);
-              }}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting…' : 'Delete note'}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
 
       {/* Scrub-aware value — no remount key so the number updates in-place */}
       <div className="nw-panel__value-row">
@@ -1365,6 +1325,32 @@ function NetWorthPanel() {
         <span className="nw-panel__delta-pct">({formatPercent(deltaPercent)})</span>
         <span className="nw-panel__delta-label">{deltaLabel}</span>
       </div>
+
+      {/* Inline note — only visible while scrubbing an annotated point */}
+      <AnimatePresence>
+        {scrubAnnotation && scrubbedPoint && (
+          <motion.div
+            key="inline-note"
+            className="nw-panel__inline-note"
+            initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.12 }}
+          >
+            <span className="nw-panel__inline-note-icon">🚩</span>
+            <span className="nw-panel__inline-note-text">{scrubAnnotation}</span>
+            <button
+              className="nw-panel__inline-note-delete"
+              title="Delete note"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (!window.confirm('Delete this note?')) return;
+                deleteMutation.mutate(scrubbedPoint.snapshotDate);
+              }}
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chart */}
       <div className="nw-panel__chart-wrap">

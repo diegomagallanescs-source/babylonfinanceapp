@@ -49,18 +49,39 @@ public class SnapshotService : ISnapshotService
 
     public async Task AnnotateSnapshotAsync(Guid userId, DateTime annotationDate, string text)
     {
-        var all = await _netWorthRepo.GetAllByUserAsync(userId);
-        var target = all.FirstOrDefault(s => s.SnapshotDate.Date == annotationDate.Date);
+        var target = await FindClosestSnapshotAsync(userId, annotationDate);
         if (target is null) return;
         await _netWorthRepo.AnnotateAsync(target.Id, userId, text);
     }
 
     public async Task ClearAnnotationAsync(Guid userId, DateTime annotationDate)
     {
-        var all = await _netWorthRepo.GetAllByUserAsync(userId);
-        var target = all.FirstOrDefault(s => s.SnapshotDate.Date == annotationDate.Date);
+        var target = await FindClosestSnapshotAsync(userId, annotationDate);
         if (target is null) return;
         await _netWorthRepo.AnnotateAsync(target.Id, userId, string.Empty);
+    }
+
+    /// <summary>
+    /// Finds the snapshot that should hold an annotation for the given date:
+    ///   1. Exact UTC date match if one exists.
+    ///   2. Otherwise the nearest prior snapshot.
+    ///   3. Otherwise the earliest snapshot (if the date is older than every snapshot).
+    /// </summary>
+    private async Task<NetWorthSnapshot?> FindClosestSnapshotAsync(Guid userId, DateTime annotationDate)
+    {
+        var all = (await _netWorthRepo.GetAllByUserAsync(userId)).ToList();
+        if (all.Count == 0) return null;
+
+        var exact = all.FirstOrDefault(s => s.SnapshotDate.Date == annotationDate.Date);
+        if (exact is not null) return exact;
+
+        var prior = all
+            .Where(s => s.SnapshotDate.Date <= annotationDate.Date)
+            .OrderByDescending(s => s.SnapshotDate)
+            .FirstOrDefault();
+        if (prior is not null) return prior;
+
+        return all.OrderBy(s => s.SnapshotDate).First();
     }
 
     public async Task<IEnumerable<NetWorthHistoryPointDto>> GetHistoryAsync(Guid userId, DateTime from, DateTime to)

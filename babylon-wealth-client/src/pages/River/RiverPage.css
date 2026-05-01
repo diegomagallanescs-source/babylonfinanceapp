@@ -358,6 +358,60 @@
   font-size: 12px;
 }
 
+/* ── Inline note (under delta, only while scrubbing annotated point) ── */
+.nw-panel__inline-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: -2px;
+  max-width: 100%;
+}
+
+.nw-panel__inline-note-icon {
+  font-size: 11px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.nw-panel__inline-note-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.nw-panel__inline-note-delete {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.nw-panel__inline-note:hover .nw-panel__inline-note-delete {
+  opacity: 1;
+}
+
+.nw-panel__inline-note-delete:hover {
+  color: var(--color-negative);
+  background: rgba(224, 85, 85, 0.08);
+}
+
+.nw-panel__inline-note-delete:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 
 /* Chart footer — period pills + add note */
 .nw-panel__chart-footer {
