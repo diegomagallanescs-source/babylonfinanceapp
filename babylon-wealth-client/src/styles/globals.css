@@ -58,6 +58,13 @@
   --color-text:         #0D1017;
   --color-text-muted:   #3A4260;
   --color-text-sub:     #1E2840;
+  --color-gold:         #A0720A;
+  --color-gold-hover:   #B8880A;
+  --color-gold-dim:     rgba(160, 114, 10, 0.12);
+  --color-positive:     #007A2B;
+  --color-positive-dim: rgba(0, 122, 43, 0.12);
+  --color-negative:     #B81C2A;
+  --color-negative-dim: rgba(184, 28, 42, 0.12);
   --color-river:        #007A6B;
   --color-river-deep:   #005E53;
   --color-river-glow:   rgba(0, 122, 107, 0.2);
