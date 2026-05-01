@@ -36,6 +36,18 @@
   100% { transform: scale(3.2); opacity: 0;    }
 }
 
+/* Gold glow around a pinned (clicked) data point */
+.nw-pinned-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nwPinnedPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes nwPinnedPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.18; }
+  50%      { transform: scale(1.18); opacity: 0.32; }
+}
+
 /* Custom Y-axis label overlay */
 .nw-chart__ylabels {
   position: absolute;

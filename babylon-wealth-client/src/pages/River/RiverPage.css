@@ -412,6 +412,34 @@
   cursor: not-allowed;
 }
 
+/* When pinned, show note + delete persistently with a subtle gold tint */
+.nw-panel__inline-note--pinned {
+  color: var(--color-text-sub, var(--color-text));
+  background: rgba(240, 180, 41, 0.08);
+  border: 1px solid rgba(240, 180, 41, 0.18);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-style: normal;
+}
+
+.nw-panel__inline-note--pinned .nw-panel__inline-note-text {
+  white-space: normal;
+}
+
+.nw-panel__inline-note--pinned .nw-panel__inline-note-delete {
+  opacity: 1;
+}
+
+/* Pinned helper hint — small muted line under the note */
+.nw-panel__pin-hint {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+  margin-top: -4px;
+  font-style: italic;
+  opacity: 0.75;
+}
+
 
 /* Chart footer — period pills + add note */
 .nw-panel__chart-footer {

@@ -1174,6 +1174,7 @@ function NetWorthPanel() {
   const [showTotal, setShowTotal]           = useState(false);
   const [period, setPeriod]                 = useState<TimePeriod>('6M');
   const [scrubbedIndex, setScrubIndex]      = useState<number | null>(null);
+  const [pinnedIndex, setPinnedIndex]       = useState<number | null>(null);
 
   const lastYear = new Date().getFullYear() - 1;
   const { data: annualSummary } = useAnnualSummary(lastYear);
@@ -1185,16 +1186,17 @@ function NetWorthPanel() {
   const { data: historyData = [], isLoading: histLoading } = useNetWorthHistory(period);
   const { data: allHistoryData = [] } = useNetWorthHistory('ALL');
 
-  // Scrub-aware display value
-  const scrubbedValue = scrubbedIndex != null ? (historyData[scrubbedIndex]?.[displayKey] ?? null) : null;
-  const displayValue  = scrubbedValue ?? currentValue;
+  // Pinned takes precedence over scrub for the displayed value/date/note
+  const effectiveIndex = pinnedIndex ?? scrubbedIndex;
+  const scrubbedValue  = effectiveIndex != null ? (historyData[effectiveIndex]?.[displayKey] ?? null) : null;
+  const displayValue   = scrubbedValue ?? currentValue;
 
   // Delta computation
   let delta        = 0;
   let deltaPercent = 0;
   let deltaLabel   = 'Today';
 
-  if (scrubbedIndex != null && historyData.length > 0) {
+  if (effectiveIndex != null && historyData.length > 0) {
     const base   = historyData[0][displayKey];
     delta        = displayValue - base;
     deltaPercent = base !== 0 ? (delta / Math.abs(base)) * 100 : 0;
@@ -1211,12 +1213,13 @@ function NetWorthPanel() {
   const accentColor = delta >= 0 ? '#00E676' : '#FF4458';
   const displayName = user?.firstName ?? user?.email?.split('@')[0] ?? 'there';
 
-  const scrubbedPoint   = scrubbedIndex != null ? historyData[scrubbedIndex] : null;
+  const scrubbedPoint   = effectiveIndex != null ? historyData[effectiveIndex] : null;
   const scrubDateLabel  = scrubbedPoint
     ? new Date(scrubbedPoint.snapshotDate)
         .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : null;
   const scrubAnnotation = scrubbedPoint?.annotation ?? null;
+  const isPinned        = pinnedIndex != null;
 
   const queryClient = useQueryClient();
 
@@ -1326,12 +1329,12 @@ function NetWorthPanel() {
         <span className="nw-panel__delta-label">{deltaLabel}</span>
       </div>
 
-      {/* Inline note — only visible while scrubbing an annotated point */}
+      {/* Inline note — visible while scrubbing OR pinned to an annotated point */}
       <AnimatePresence>
         {scrubAnnotation && scrubbedPoint && (
           <motion.div
             key="inline-note"
-            className="nw-panel__inline-note"
+            className={`nw-panel__inline-note${isPinned ? ' nw-panel__inline-note--pinned' : ''}`}
             initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.12 }}
           >
@@ -1344,10 +1347,21 @@ function NetWorthPanel() {
               onClick={() => {
                 if (!window.confirm('Delete this note?')) return;
                 deleteMutation.mutate(scrubbedPoint.snapshotDate);
+                setPinnedIndex(null);
               }}
             >
               ✕
             </button>
+          </motion.div>
+        )}
+        {isPinned && (
+          <motion.div
+            key="pin-hint"
+            className="nw-panel__pin-hint"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            Click the highlighted point again to unpin.
           </motion.div>
         )}
       </AnimatePresence>
@@ -1363,6 +1377,8 @@ function NetWorthPanel() {
           period={period}
           scrubbedIndex={scrubbedIndex}
           onScrubIndex={setScrubIndex}
+          pinnedIndex={pinnedIndex}
+          onPinIndex={setPinnedIndex}
         />
       </div>
 
@@ -1372,7 +1388,7 @@ function NetWorthPanel() {
           {(['1W','1M','3M','6M','1Y','ALL'] as TimePeriod[]).map(p => (
             <button key={p}
               className={`period-pill${period === p ? ' period-pill--active' : ''}`}
-              onClick={() => { setPeriod(p); setScrubIndex(null); }}>
+              onClick={() => { setPeriod(p); setScrubIndex(null); setPinnedIndex(null); }}>
               {p}
             </button>
           ))}

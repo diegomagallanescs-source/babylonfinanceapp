@@ -27,6 +27,8 @@ interface Props {
   period: TimePeriod;
   scrubbedIndex: number | null;
   onScrubIndex: (i: number | null) => void;
+  pinnedIndex: number | null;
+  onPinIndex: (i: number | null) => void;
 }
 
 // ── Y-axis helpers ────────────────────────────────────────────
@@ -47,22 +49,24 @@ function buildYAxis(vals: number[]): { ticks: number[]; domainMin: number; domai
   const rawTop  = dMax + range * 0.22;
   const step    = niceStep(rawTop / 4);
   const niceTop = Math.ceil(rawTop / step) * step;
-  const niceBot = Math.max(0, Math.floor(Math.max(0, dMin - range * 0.05) / step) * step);
+  // Allow negative bottom — show numbers below zero when NW is negative.
+  const niceBot = Math.floor((dMin - range * 0.05) / step) * step;
 
   const ticks: number[] = [];
   for (let t = niceBot; t <= niceTop + step * 0.01; t += step) {
     ticks.push(Math.round(t));
   }
 
-  const domainMin = dMin < 0 ? dMin - range * 0.05 : niceBot;
-  return { ticks, domainMin, domainMax: niceTop };
+  return { ticks, domainMin: niceBot, domainMax: niceTop };
 }
 
 function formatYAxis(val: number): string {
-  if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
-  if (val >= 1_000_000)     return `$${(val / 1_000_000).toFixed(1)}M`;
-  if (val >= 1_000)         return `$${Math.round(val / 1_000)}K`;
-  return `$${Math.round(val)}`;
+  const sign = val < 0 ? '-' : '';
+  const abs  = Math.abs(val);
+  if (abs >= 1_000_000_000) return `${sign}$${(abs / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000)     return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000)         return `${sign}$${Math.round(abs / 1_000)}K`;
+  return `${sign}$${Math.round(abs)}`;
 }
 
 // Convert a data-domain value to a pixel Y within the chart canvas div
@@ -80,22 +84,26 @@ interface DotProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   activeIndex: number | null;
+  pinnedIndex: number | null;
   dataLength: number;
   accentColor: string;
   isSecondary?: boolean;
+  onPinClick?: (index: number) => void;
 }
 
-function CustomDot({ cx, cy, index, payload, activeIndex, dataLength, accentColor, isSecondary }: DotProps) {
+function CustomDot({ cx, cy, index, payload, activeIndex, pinnedIndex, dataLength, accentColor, isSecondary, onPinClick }: DotProps) {
   if (cx == null || cy == null) return null;
 
   const isLast   = index === dataLength - 1;
   const isActive = activeIndex !== null && index === activeIndex;
+  const isPinned = pinnedIndex !== null && index === pinnedIndex;
   const hasNote  = !!payload?.annotation;
 
-  if (!isLast && !isActive && !hasNote) return null;
+  if (!isLast && !isActive && !isPinned && !hasNote) return null;
 
   const dotColor  = isSecondary ? '#00E5CC' : accentColor;
-  const dotRadius = isActive ? 5 : 4;
+  const glowColor = '#F0B429';
+  const dotRadius = isPinned ? 6 : isActive ? 5 : 4;
 
   return (
     <g>
@@ -107,16 +115,33 @@ function CustomDot({ cx, cy, index, payload, activeIndex, dataLength, accentColo
             fill="#F0B429" opacity={0.9} />
         </>
       )}
-      {isLast && !isActive && (
+      {isLast && !isActive && !isPinned && (
         <circle cx={cx} cy={cy} r={5}
           fill="none" stroke={dotColor} strokeWidth={1.5}
           className="nw-pulse-ring" />
       )}
-      {isActive && (
+      {isActive && !isPinned && (
         <circle cx={cx} cy={cy} r={9} fill={dotColor} opacity={0.15} />
       )}
+      {isPinned && (
+        <>
+          <circle cx={cx} cy={cy} r={16} fill={glowColor} opacity={0.18} className="nw-pinned-glow" />
+          <circle cx={cx} cy={cy} r={11} fill={glowColor} opacity={0.30} />
+          <circle cx={cx} cy={cy} r={8}  fill="none" stroke={glowColor} strokeWidth={1.4} opacity={0.85} />
+        </>
+      )}
       <circle cx={cx} cy={cy} r={dotRadius}
-        fill={dotColor} stroke="#0D0D0D" strokeWidth={2} />
+        fill={isPinned ? glowColor : dotColor} stroke="#0D0D0D" strokeWidth={2} />
+
+      {/* Larger invisible click-target so annotated points are easy to hit */}
+      {hasNote && onPinClick && index !== undefined && (
+        <circle
+          cx={cx} cy={cy} r={14}
+          fill="transparent"
+          style={{ cursor: 'pointer', pointerEvents: 'all' }}
+          onClick={(e) => { e.stopPropagation(); onPinClick(index); }}
+        />
+      )}
     </g>
   );
 }
@@ -124,7 +149,7 @@ function CustomDot({ cx, cy, index, payload, activeIndex, dataLength, accentColo
 // ── Chart ─────────────────────────────────────────────────────
 
 export function NetWorthChart({
-  data, isLoading, hasProperties, displayKey, accentColor, scrubbedIndex, onScrubIndex,
+  data, isLoading, hasProperties, displayKey, accentColor, scrubbedIndex, onScrubIndex, pinnedIndex, onPinIndex,
 }: Props) {
   const handleMouseMove = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,6 +162,14 @@ export function NetWorthChart({
     [onScrubIndex]
   );
   const handleMouseLeave = useCallback(() => onScrubIndex(null), [onScrubIndex]);
+
+  const handlePinClick = useCallback(
+    (idx: number) => {
+      // Click pinned point again → unpin. Click a different point → switch pin.
+      onPinIndex(pinnedIndex === idx ? null : idx);
+    },
+    [pinnedIndex, onPinIndex],
+  );
 
   if (isLoading) return <div className="nw-chart__skeleton" />;
 
@@ -155,7 +188,8 @@ export function NetWorthChart({
   );
   const { ticks, domainMin, domainMax } = buildYAxis(vals);
 
-  const scrubDate = scrubbedIndex != null ? data[scrubbedIndex]?.snapshotDate : null;
+  const effectiveIndex = pinnedIndex ?? scrubbedIndex;
+  const scrubDate = effectiveIndex != null ? data[effectiveIndex]?.snapshotDate : null;
 
   return (
     <div className="nw-chart__canvas">
@@ -261,9 +295,11 @@ export function NetWorthChart({
                 dot={
                   <CustomDot
                     activeIndex={displayKey === 'totalNetWorth' ? scrubbedIndex : null}
+                    pinnedIndex={displayKey === 'totalNetWorth' ? pinnedIndex : null}
                     dataLength={data.length}
                     accentColor={accentColor}
                     isSecondary
+                    onPinClick={handlePinClick}
                   />
                 }
                 activeDot={false}
@@ -295,8 +331,10 @@ export function NetWorthChart({
             dot={
               <CustomDot
                 activeIndex={displayKey === 'liquidNetWorth' ? scrubbedIndex : null}
+                pinnedIndex={displayKey === 'liquidNetWorth' ? pinnedIndex : null}
                 dataLength={data.length}
                 accentColor={accentColor}
+                onPinClick={handlePinClick}
               />
             }
             activeDot={false}
