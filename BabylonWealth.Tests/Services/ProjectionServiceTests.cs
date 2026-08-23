@@ -337,6 +337,81 @@ public class ProjectionServiceTests
             }));
     }
 
+    // ── Loan sign normalization ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateAsync_WithNegativeSeedLoanBalance_StoresItAsPositiveDebt()
+    {
+        // GET /loans negates the balance for display; a ledger seeded from it arrives negative.
+        var state = MakeState(cash: 10_000m, loanBalance: -3_000m);
+        Projection? captured = null;
+
+        _repoMock
+            .Setup(r => r.CreateAsync(It.IsAny<Projection>()))
+            .Callback<Projection>(p => captured = p)
+            .ReturnsAsync((Projection p) => p);
+
+        var result = await _service.CreateAsync(_userId, new CreateProjectionRequest
+        {
+            Name = "Seeded",
+            State = state
+        });
+
+        Assert.Equal(3_000m, result.Workspace.Loans.Single().Balance);
+        Assert.DoesNotContain("-3000", captured!.WorkspaceStateJson);
+    }
+
+    [Fact]
+    public async Task AddSnapshotAsync_WithNegativeLoanBalance_AddsItToLiabilities()
+    {
+        var projection = MakeProjection();
+        _repoMock.Setup(r => r.GetByIdAsync(projection.Id, _userId)).ReturnsAsync(projection);
+        _snapshotRepoMock
+            .Setup(r => r.CreateAsync(It.IsAny<ProjectionSnapshot>()))
+            .ReturnsAsync((ProjectionSnapshot s) => s);
+
+        var result = await _service.AddSnapshotAsync(projection.Id, _userId, new CreateProjectionSnapshotRequest
+        {
+            SnapshotDate = new DateTime(2027, 1, 1),
+            Kind = ProjectionSnapshotKind.Projected,
+            State = MakeState(cash: 10_000m, cardBalance: 2_000m, loanBalance: -3_000m)
+        });
+
+        // The loan is debt: 2,000 card + 3,000 loan. Before the fix this came to -1,000.
+        Assert.Equal(5_000m, result.TotalLiabilities);
+        Assert.Equal(10_000m, result.TotalAssets);
+        Assert.Equal(5_000m, result.LiquidNetWorth);
+        Assert.Equal(3_000m, result.State.Loans.Single().Balance);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithLegacyNegativeLoanInStoredJson_ReturnsItPositive()
+    {
+        var projection = MakeProjection(MakeState(cash: 1_000m, loanBalance: -750m));
+        _repoMock.Setup(r => r.GetByIdAsync(projection.Id, _userId)).ReturnsAsync(projection);
+        _snapshotRepoMock.Setup(r => r.GetByProjectionAsync(_userId, projection.Id)).ReturnsAsync([]);
+
+        var result = await _service.GetByIdAsync(projection.Id, _userId);
+
+        Assert.Equal(750m, result.Workspace.Loans.Single().Balance);
+    }
+
+    [Fact]
+    public async Task SaveWorkspaceAsync_WithNegativeLoanBalance_PersistsItPositive()
+    {
+        var projection = MakeProjection();
+        _repoMock.Setup(r => r.GetByIdAsync(projection.Id, _userId)).ReturnsAsync(projection);
+        _repoMock.Setup(r => r.UpdateAsync(It.IsAny<Projection>())).ReturnsAsync((Projection p) => p);
+
+        await _service.SaveWorkspaceAsync(projection.Id, _userId, new SaveProjectionWorkspaceRequest
+        {
+            State = MakeState(loanBalance: -4_200m)
+        });
+
+        Assert.Contains("4200", projection.WorkspaceStateJson);
+        Assert.DoesNotContain("-4200", projection.WorkspaceStateJson);
+    }
+
     // ── SaveWorkspaceAsync ───────────────────────────────────────────────────
 
     [Fact]

@@ -66,7 +66,7 @@ public class ProjectionService : IProjectionService
     {
         ValidateDetails(request.Name, request.Description);
 
-        var state = request.State ?? new ProjectionStateDto();
+        var state = Normalize(request.State ?? new ProjectionStateDto());
         var entity = Projection.Create(userId, request.Name.Trim(), Trim(request.Description), Serialize(state));
         var saved = await _repo.CreateAsync(entity);
 
@@ -128,7 +128,7 @@ public class ProjectionService : IProjectionService
             throw new ValidationException("Notes must be 1000 characters or fewer.");
 
         // Falls back to the stored workspace so a snapshot can be taken without resending the ledger.
-        var state = request.State ?? Deserialize(projection.WorkspaceStateJson);
+        var state = Normalize(request.State ?? Deserialize(projection.WorkspaceStateJson));
         var totals = ComputeNetWorth(state);
         var date = NormalizeDate(request.SnapshotDate);
         var stateJson = Serialize(state);
@@ -250,13 +250,27 @@ public class ProjectionService : IProjectionService
     private static DateTime NormalizeDate(DateTime date) =>
         DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
 
+    /// <summary>
+    /// A projection ledger carries debt as a positive number, matching NetWorthService. The
+    /// /loans endpoint negates the balance for display, so a ledger seeded from it arrives with
+    /// negative loans that subtract from liabilities instead of adding to them. Applied on every
+    /// read and write so no path can reintroduce the wrong sign. Idempotent.
+    /// </summary>
+    private static ProjectionStateDto Normalize(ProjectionStateDto state)
+    {
+        foreach (var loan in state.Loans)
+            loan.Balance = Math.Abs(loan.Balance);
+
+        return state;
+    }
+
     private static string Serialize(ProjectionStateDto state) =>
-        JsonSerializer.Serialize(state, JsonOptions);
+        JsonSerializer.Serialize(Normalize(state), JsonOptions);
 
     private static ProjectionStateDto Deserialize(string json)
     {
         if (string.IsNullOrWhiteSpace(json)) return new ProjectionStateDto();
-        return JsonSerializer.Deserialize<ProjectionStateDto>(json, JsonOptions) ?? new ProjectionStateDto();
+        return Normalize(JsonSerializer.Deserialize<ProjectionStateDto>(json, JsonOptions) ?? new ProjectionStateDto());
     }
 
     private static ProjectionSnapshotResponseDto MapSnapshot(ProjectionSnapshot s) =>

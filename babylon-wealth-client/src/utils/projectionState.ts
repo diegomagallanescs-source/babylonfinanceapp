@@ -69,7 +69,10 @@ export function buildSeedState(input: {
       id: newRowId(),
       customLabel: l.customLabel,
       lenderName: l.lenderName,
-      balance: l.balance,
+      // /loans stores the balance positive but returns it negated for display. A projection
+      // ledger keeps debt positive, the same convention NetWorthService uses, so flip it back —
+      // otherwise a seeded loan subtracts from liabilities instead of adding to them.
+      balance: Math.abs(l.balance),
       interestRate: l.interestRate,
       loanType: l.loanType,
     })),
