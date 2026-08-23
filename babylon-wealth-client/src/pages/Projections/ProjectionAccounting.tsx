@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect, useReducer } from 'react';
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { LedgerTable, type RowVariant } from '../../components/LedgerTable';
@@ -34,6 +34,14 @@ import './ProjectionAccounting.css';
  * Every edit is a local state change handed back through onChange — this component never calls
  * the /accounts, /creditcards, /loans, /investments, /pending, or /properties endpoints, so
  * nothing done here can reach the real Accounting tab.
+ *
+ * Two rules keep the inline editors usable, both mirroring AccountingPage:
+ *
+ *  - In-progress edits live in refs, never in state. A keystroke that re-rendered this component
+ *    would rebuild the column definitions below, and a fresh `cell` function is a new component
+ *    type to React — it would tear down the focused input and drop the caret after every digit.
+ *  - The columns are memoized, so their closures go stale. Anything a cell handler needs at click
+ *    time is read through a ref rather than captured.
  */
 export function ProjectionAccounting({
   state,
@@ -47,9 +55,17 @@ export function ProjectionAccounting({
   const { data: categories = [] } = useBudgetCategories();
   const nw = useMemo(() => computeProjectionNetWorth(state), [state]);
 
+  // Memoized cells would otherwise apply their edit on top of whichever ledger was current when
+  // the columns were last built, silently reverting edits made in another section since.
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  // Bumped when a bank is picked — the only editor change that has to reach the screen.
+  const [, refreshEditors] = useReducer((n: number) => n + 1, 0);
+
   // ── Section helpers ───────────────────────────────────────
   function patch(partial: Partial<ProjectionState>) {
-    onChange({ ...state, ...partial });
+    onChange({ ...stateRef.current, ...partial });
   }
 
   function updateRow<K extends keyof ProjectionState>(
@@ -57,28 +73,42 @@ export function ProjectionAccounting({
     id: string,
     changes: Partial<ProjectionState[K][number]>,
   ) {
-    const rows = state[key] as ProjectionState[K][number][];
+    const rows = stateRef.current[key] as ProjectionState[K][number][];
     patch({
       [key]: rows.map((r) => (r.id === id ? { ...r, ...changes } : r)),
     } as Partial<ProjectionState>);
   }
 
   function removeRow<K extends keyof ProjectionState>(key: K, id: string) {
-    const rows = state[key] as ProjectionState[K][number][];
+    const rows = stateRef.current[key] as ProjectionState[K][number][];
     patch({ [key]: rows.filter((r) => r.id !== id) } as Partial<ProjectionState>);
   }
 
   function addRow<K extends keyof ProjectionState>(key: K, row: ProjectionState[K][number]) {
-    const rows = state[key] as ProjectionState[K][number][];
+    const rows = stateRef.current[key] as ProjectionState[K][number][];
     patch({ [key]: [...rows, row] } as Partial<ProjectionState>);
+  }
+
+  /** Bank picked mid-edit: stash it and repaint so the search box shows the choice. */
+  function chooseBank(ref: React.RefObject<BankDto | null>, bank: BankDto | null) {
+    ref.current = bank;
+    refreshEditors();
+  }
+
+  function bankOf(row: { bankId: string | null; bankName: string | null; bankLogoUrl: string | null }): BankDto | null {
+    return row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null;
+  }
+
+  /** The bank fields to write on apply. The ref is seeded from the row, so an untouched
+   *  search box round-trips the original bank and a cleared one nulls all three. */
+  function bankFields(bank: BankDto | null) {
+    return { bankId: bank?.id ?? null, bankName: bank?.name ?? null, bankLogoUrl: bank?.logoUrl ?? null };
   }
 
   // ── Bank Accounts ─────────────────────────────────────────
   const [acctEditId, setAcctEditId] = useState<string | null>(null);
-  const [acctDraft, setAcctDraft] = useState<Partial<ProjectionAccountRow>>({});
-  const [acctEditBank, setAcctEditBank] = useState<BankDto | null>(null);
-  const acctEditBankRef = useRef(acctEditBank);
-  acctEditBankRef.current = acctEditBank;
+  const acctDraft = useRef<Partial<ProjectionAccountRow>>({});
+  const acctBank = useRef<BankDto | null>(null);
 
   const [showAddAcct, setShowAddAcct] = useState(false);
   const [addAcctBank, setAddAcctBank] = useState<BankDto | null>(null);
@@ -88,43 +118,32 @@ export function ProjectionAccounting({
   const [addAcctKey, setAddAcctKey] = useState(0);
 
   function startAcctEdit(row: ProjectionAccountRow) {
-    setAcctEditId(row.id);
-    setAcctDraft({
+    acctDraft.current = {
       customLabel: row.customLabel,
       balance: row.balance,
       accountType: row.accountType,
-      bankId: row.bankId,
       budgetCategoryId: row.budgetCategoryId,
-    });
-    setAcctEditBank(
-      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
-    );
+    };
+    acctBank.current = bankOf(row);
+    setAcctEditId(row.id);
   }
 
   function applyAcctEdit(row: ProjectionAccountRow) {
-    const bank = acctEditBankRef.current;
-    updateRow('accounts', row.id, {
-      ...acctDraft,
-      bankId: bank ? bank.id : ('bankId' in acctDraft ? acctDraft.bankId ?? null : row.bankId),
-      bankName: bank ? bank.name : ('bankId' in acctDraft && !acctDraft.bankId ? null : row.bankName),
-      bankLogoUrl: bank ? bank.logoUrl : ('bankId' in acctDraft && !acctDraft.bankId ? null : row.bankLogoUrl),
-    });
+    updateRow('accounts', row.id, { ...acctDraft.current, ...bankFields(acctBank.current) });
     cancelAcctEdit();
   }
 
   function cancelAcctEdit() {
+    acctDraft.current = {};
+    acctBank.current = null;
     setAcctEditId(null);
-    setAcctDraft({});
-    setAcctEditBank(null);
   }
 
   function handleAddAccount() {
     if (!addAcctForm.customLabel.trim()) return;
     addRow('accounts', {
       id: newRowId(),
-      bankId: addAcctBank?.id ?? null,
-      bankName: addAcctBank?.name ?? null,
-      bankLogoUrl: addAcctBank?.logoUrl ?? null,
+      ...bankFields(addAcctBank),
       customLabel: addAcctForm.customLabel.trim(),
       balance: addAcctForm.balance,
       accountType: addAcctForm.accountType,
@@ -143,11 +162,8 @@ export function ProjectionAccounting({
         if (acctEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={acctEditBankRef.current}
-              onChange={(bank) => {
-                setAcctEditBank(bank);
-                setAcctDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
-              }}
+              value={acctBank.current}
+              onChange={(bank) => chooseBank(acctBank, bank)}
             />
           );
         }
@@ -160,8 +176,8 @@ export function ProjectionAccounting({
         if (acctEditId === row.original.id) {
           return (
             <input key={`${row.original.id}-acct-label`} className="lt__edit-input lt__edit-input--wide"
-              defaultValue={acctDraft.customLabel ?? row.original.customLabel}
-              onChange={(e) => setAcctDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+              defaultValue={acctDraft.current.customLabel ?? row.original.customLabel}
+              onChange={(e) => { acctDraft.current.customLabel = e.target.value; }} />
           );
         }
         return row.original.customLabel;
@@ -172,9 +188,9 @@ export function ProjectionAccounting({
       cell: ({ row }) => {
         if (acctEditId === row.original.id) {
           return (
-            <select className="lt__edit-select"
-              value={acctDraft.accountType ?? row.original.accountType}
-              onChange={(e) => setAcctDraft((d) => ({ ...d, accountType: e.target.value }))}>
+            <select key={`${row.original.id}-acct-type`} className="lt__edit-select"
+              defaultValue={acctDraft.current.accountType ?? row.original.accountType}
+              onChange={(e) => { acctDraft.current.accountType = e.target.value; }}>
               {ACCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           );
@@ -190,8 +206,8 @@ export function ProjectionAccounting({
             <CurrencyInput
               key={`${row.original.id}-acct-balance`}
               className="lt__edit-input lt__edit-input--number"
-              defaultValue={acctDraft.balance ?? row.original.balance}
-              onChange={(v) => setAcctDraft((d) => ({ ...d, balance: v }))}
+              defaultValue={acctDraft.current.balance ?? row.original.balance}
+              onChange={(v) => { acctDraft.current.balance = v; }}
             />
           );
         }
@@ -203,9 +219,9 @@ export function ProjectionAccounting({
       cell: ({ row }) => {
         if (acctEditId === row.original.id) {
           return (
-            <select className="lt__edit-select"
-              value={acctDraft.budgetCategoryId ?? row.original.budgetCategoryId ?? ''}
-              onChange={(e) => setAcctDraft((d) => ({ ...d, budgetCategoryId: e.target.value || null }))}>
+            <select key={`${row.original.id}-acct-cat`} className="lt__edit-select"
+              defaultValue={acctDraft.current.budgetCategoryId ?? row.original.budgetCategoryId ?? ''}
+              onChange={(e) => { acctDraft.current.budgetCategoryId = e.target.value || null; }}>
               <option value="">— None —</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -225,14 +241,12 @@ export function ProjectionAccounting({
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [acctEditId, acctDraft, categories, state.accounts, disabled]);
+  ], [acctEditId, categories, disabled]);
 
   // ── Investments ───────────────────────────────────────────
   const [investEditId, setInvestEditId] = useState<string | null>(null);
-  const [investDraft, setInvestDraft] = useState<Partial<ProjectionInvestmentRow>>({});
-  const [investEditBank, setInvestEditBank] = useState<BankDto | null>(null);
-  const investEditBankRef = useRef(investEditBank);
-  investEditBankRef.current = investEditBank;
+  const investDraft = useRef<Partial<ProjectionInvestmentRow>>({});
+  const investBank = useRef<BankDto | null>(null);
 
   const [showAddInvest, setShowAddInvest] = useState(false);
   const [addInvestBank, setAddInvestBank] = useState<BankDto | null>(null);
@@ -242,42 +256,31 @@ export function ProjectionAccounting({
   const [addInvestKey, setAddInvestKey] = useState(0);
 
   function startInvestEdit(row: ProjectionInvestmentRow) {
-    setInvestEditId(row.id);
-    setInvestDraft({
+    investDraft.current = {
       customLabel: row.customLabel,
       currentValue: row.currentValue,
       investmentType: row.investmentType,
-      bankId: row.bankId,
-    });
-    setInvestEditBank(
-      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
-    );
+    };
+    investBank.current = bankOf(row);
+    setInvestEditId(row.id);
   }
 
   function applyInvestEdit(row: ProjectionInvestmentRow) {
-    const bank = investEditBankRef.current;
-    updateRow('investments', row.id, {
-      ...investDraft,
-      bankId: bank ? bank.id : ('bankId' in investDraft ? investDraft.bankId ?? null : row.bankId),
-      bankName: bank ? bank.name : ('bankId' in investDraft && !investDraft.bankId ? null : row.bankName),
-      bankLogoUrl: bank ? bank.logoUrl : ('bankId' in investDraft && !investDraft.bankId ? null : row.bankLogoUrl),
-    });
+    updateRow('investments', row.id, { ...investDraft.current, ...bankFields(investBank.current) });
     cancelInvestEdit();
   }
 
   function cancelInvestEdit() {
+    investDraft.current = {};
+    investBank.current = null;
     setInvestEditId(null);
-    setInvestDraft({});
-    setInvestEditBank(null);
   }
 
   function handleAddInvestment() {
     if (!addInvestForm.customLabel.trim()) return;
     addRow('investments', {
       id: newRowId(),
-      bankId: addInvestBank?.id ?? null,
-      bankName: addInvestBank?.name ?? null,
-      bankLogoUrl: addInvestBank?.logoUrl ?? null,
+      ...bankFields(addInvestBank),
       customLabel: addInvestForm.customLabel.trim(),
       currentValue: addInvestForm.currentValue,
       ticker: null,
@@ -296,11 +299,8 @@ export function ProjectionAccounting({
         if (investEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={investEditBankRef.current}
-              onChange={(bank) => {
-                setInvestEditBank(bank);
-                setInvestDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
-              }}
+              value={investBank.current}
+              onChange={(bank) => chooseBank(investBank, bank)}
             />
           );
         }
@@ -313,8 +313,8 @@ export function ProjectionAccounting({
         if (investEditId === row.original.id) {
           return (
             <input key={`${row.original.id}-invest-label`} className="lt__edit-input lt__edit-input--wide"
-              defaultValue={investDraft.customLabel ?? row.original.customLabel}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+              defaultValue={investDraft.current.customLabel ?? row.original.customLabel}
+              onChange={(e) => { investDraft.current.customLabel = e.target.value; }} />
           );
         }
         return row.original.customLabel;
@@ -325,9 +325,9 @@ export function ProjectionAccounting({
       cell: ({ row }) => {
         if (investEditId === row.original.id) {
           return (
-            <select className="lt__edit-select"
-              value={investDraft.investmentType ?? row.original.investmentType}
-              onChange={(e) => setInvestDraft((d) => ({ ...d, investmentType: e.target.value }))}>
+            <select key={`${row.original.id}-invest-type`} className="lt__edit-select"
+              defaultValue={investDraft.current.investmentType ?? row.original.investmentType}
+              onChange={(e) => { investDraft.current.investmentType = e.target.value; }}>
               {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           );
@@ -343,8 +343,8 @@ export function ProjectionAccounting({
             <CurrencyInput
               key={`${row.original.id}-invest-value`}
               className="lt__edit-input lt__edit-input--number"
-              defaultValue={investDraft.currentValue ?? row.original.currentValue}
-              onChange={(v) => setInvestDraft((d) => ({ ...d, currentValue: v }))}
+              defaultValue={investDraft.current.currentValue ?? row.original.currentValue}
+              onChange={(v) => { investDraft.current.currentValue = v; }}
             />
           );
         }
@@ -362,14 +362,12 @@ export function ProjectionAccounting({
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [investEditId, investDraft, state.investments, disabled]);
+  ], [investEditId, disabled]);
 
   // ── Credit Cards ──────────────────────────────────────────
   const [cardEditId, setCardEditId] = useState<string | null>(null);
-  const [cardDraft, setCardDraft] = useState<Partial<ProjectionCreditCardRow>>({});
-  const [cardEditBank, setCardEditBank] = useState<BankDto | null>(null);
-  const cardEditBankRef = useRef(cardEditBank);
-  cardEditBankRef.current = cardEditBank;
+  const cardDraft = useRef<Partial<ProjectionCreditCardRow>>({});
+  const cardBank = useRef<BankDto | null>(null);
 
   const [showAddCard, setShowAddCard] = useState(false);
   const [addCardBank, setAddCardBank] = useState<BankDto | null>(null);
@@ -379,44 +377,33 @@ export function ProjectionAccounting({
   const [addCardKey, setAddCardKey] = useState(0);
 
   function startCardEdit(row: ProjectionCreditCardRow) {
-    setCardEditId(row.id);
-    setCardDraft({
+    cardDraft.current = {
       customLabel: row.customLabel,
       balance: row.balance,
       creditLimit: row.creditLimit,
       apr: row.apr,
       cardType: row.cardType,
-      bankId: row.bankId,
-    });
-    setCardEditBank(
-      row.bankId ? { id: row.bankId, name: row.bankName ?? '', logoUrl: row.bankLogoUrl, type: '' } : null,
-    );
+    };
+    cardBank.current = bankOf(row);
+    setCardEditId(row.id);
   }
 
   function applyCardEdit(row: ProjectionCreditCardRow) {
-    const bank = cardEditBankRef.current;
-    updateRow('creditCards', row.id, {
-      ...cardDraft,
-      bankId: bank ? bank.id : ('bankId' in cardDraft ? cardDraft.bankId ?? null : row.bankId),
-      bankName: bank ? bank.name : ('bankId' in cardDraft && !cardDraft.bankId ? null : row.bankName),
-      bankLogoUrl: bank ? bank.logoUrl : ('bankId' in cardDraft && !cardDraft.bankId ? null : row.bankLogoUrl),
-    });
+    updateRow('creditCards', row.id, { ...cardDraft.current, ...bankFields(cardBank.current) });
     cancelCardEdit();
   }
 
   function cancelCardEdit() {
+    cardDraft.current = {};
+    cardBank.current = null;
     setCardEditId(null);
-    setCardDraft({});
-    setCardEditBank(null);
   }
 
   function handleAddCard() {
     if (!addCardForm.customLabel.trim()) return;
     addRow('creditCards', {
       id: newRowId(),
-      bankId: addCardBank?.id ?? null,
-      bankName: addCardBank?.name ?? null,
-      bankLogoUrl: addCardBank?.logoUrl ?? null,
+      ...bankFields(addCardBank),
       customLabel: addCardForm.customLabel.trim(),
       balance: addCardForm.balance,
       creditLimit: addCardForm.creditLimit,
@@ -436,11 +423,8 @@ export function ProjectionAccounting({
         if (cardEditId === row.original.id) {
           return (
             <BankSearchInput
-              value={cardEditBankRef.current}
-              onChange={(bank) => {
-                setCardEditBank(bank);
-                setCardDraft((d) => ({ ...d, bankId: bank?.id ?? null }));
-              }}
+              value={cardBank.current}
+              onChange={(bank) => chooseBank(cardBank, bank)}
             />
           );
         }
@@ -453,8 +437,8 @@ export function ProjectionAccounting({
         if (cardEditId === row.original.id) {
           return (
             <input key={`${row.original.id}-card-label`} className="lt__edit-input lt__edit-input--wide"
-              defaultValue={cardDraft.customLabel ?? row.original.customLabel}
-              onChange={(e) => setCardDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+              defaultValue={cardDraft.current.customLabel ?? row.original.customLabel}
+              onChange={(e) => { cardDraft.current.customLabel = e.target.value; }} />
           );
         }
         return row.original.customLabel;
@@ -468,8 +452,8 @@ export function ProjectionAccounting({
             <CurrencyInput
               key={`${row.original.id}-card-balance`}
               className="lt__edit-input lt__edit-input--number"
-              defaultValue={cardDraft.balance ?? row.original.balance}
-              onChange={(v) => setCardDraft((d) => ({ ...d, balance: v }))}
+              defaultValue={cardDraft.current.balance ?? row.original.balance}
+              onChange={(v) => { cardDraft.current.balance = v; }}
             />
           );
         }
@@ -485,8 +469,8 @@ export function ProjectionAccounting({
             <CurrencyInput
               key={`${row.original.id}-card-limit`}
               className="lt__edit-input lt__edit-input--number"
-              defaultValue={cardDraft.creditLimit ?? row.original.creditLimit}
-              onChange={(v) => setCardDraft((d) => ({ ...d, creditLimit: v }))}
+              defaultValue={cardDraft.current.creditLimit ?? row.original.creditLimit}
+              onChange={(v) => { cardDraft.current.creditLimit = v; }}
             />
           );
         }
@@ -500,8 +484,8 @@ export function ProjectionAccounting({
           return (
             <input key={`${row.original.id}-card-apr`} className="lt__edit-input lt__edit-input--number"
               type="number" step="0.01" placeholder="%" style={{ maxWidth: 72 }}
-              defaultValue={Number(((cardDraft.apr ?? row.original.apr) * 100).toFixed(2))}
-              onChange={(e) => setCardDraft((d) => ({ ...d, apr: Number(e.target.value) / 100 }))} />
+              defaultValue={Number(((cardDraft.current.apr ?? row.original.apr) * 100).toFixed(2))}
+              onChange={(e) => { cardDraft.current.apr = Number(e.target.value) / 100; }} />
           );
         }
         return `${(row.original.apr * 100).toFixed(0)}%`;
@@ -522,11 +506,11 @@ export function ProjectionAccounting({
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [cardEditId, cardDraft, state.creditCards, disabled]);
+  ], [cardEditId, disabled]);
 
   // ── Loans ─────────────────────────────────────────────────
   const [loanEditId, setLoanEditId] = useState<string | null>(null);
-  const [loanDraft, setLoanDraft] = useState<Partial<ProjectionLoanRow>>({});
+  const loanDraft = useRef<Partial<ProjectionLoanRow>>({});
   const [showAddLoan, setShowAddLoan] = useState(false);
   const [addLoanForm, setAddLoanForm] = useState({
     customLabel: '', lenderName: '', balance: 0, interestRate: 0, loanType: 'Mortgage',
@@ -534,19 +518,24 @@ export function ProjectionAccounting({
   const [addLoanKey, setAddLoanKey] = useState(0);
 
   function startLoanEdit(row: ProjectionLoanRow) {
-    setLoanEditId(row.id);
-    setLoanDraft({
+    loanDraft.current = {
       customLabel: row.customLabel,
       lenderName: row.lenderName,
       balance: row.balance,
       interestRate: row.interestRate,
       loanType: row.loanType,
-    });
+    };
+    setLoanEditId(row.id);
+  }
+
+  function applyLoanEdit(row: ProjectionLoanRow) {
+    updateRow('loans', row.id, { ...loanDraft.current });
+    cancelLoanEdit();
   }
 
   function cancelLoanEdit() {
+    loanDraft.current = {};
     setLoanEditId(null);
-    setLoanDraft({});
   }
 
   function handleAddLoan() {
@@ -564,8 +553,8 @@ export function ProjectionAccounting({
         if (loanEditId === row.original.id) {
           return (
             <input key={`${row.original.id}-loan-label`} className="lt__edit-input lt__edit-input--wide"
-              defaultValue={loanDraft.customLabel ?? row.original.customLabel}
-              onChange={(e) => setLoanDraft((d) => ({ ...d, customLabel: e.target.value }))} />
+              defaultValue={loanDraft.current.customLabel ?? row.original.customLabel}
+              onChange={(e) => { loanDraft.current.customLabel = e.target.value; }} />
           );
         }
         return row.original.customLabel;
@@ -577,8 +566,8 @@ export function ProjectionAccounting({
         if (loanEditId === row.original.id) {
           return (
             <input key={`${row.original.id}-loan-lender`} className="lt__edit-input lt__edit-input--wide"
-              defaultValue={loanDraft.lenderName ?? row.original.lenderName}
-              onChange={(e) => setLoanDraft((d) => ({ ...d, lenderName: e.target.value }))} />
+              defaultValue={loanDraft.current.lenderName ?? row.original.lenderName}
+              onChange={(e) => { loanDraft.current.lenderName = e.target.value; }} />
           );
         }
         return row.original.lenderName;
@@ -589,9 +578,9 @@ export function ProjectionAccounting({
       cell: ({ row }) => {
         if (loanEditId === row.original.id) {
           return (
-            <select className="lt__edit-select"
-              value={loanDraft.loanType ?? row.original.loanType}
-              onChange={(e) => setLoanDraft((d) => ({ ...d, loanType: e.target.value }))}>
+            <select key={`${row.original.id}-loan-type`} className="lt__edit-select"
+              defaultValue={loanDraft.current.loanType ?? row.original.loanType}
+              onChange={(e) => { loanDraft.current.loanType = e.target.value; }}>
               {LOAN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           );
@@ -607,8 +596,8 @@ export function ProjectionAccounting({
             <CurrencyInput
               key={`${row.original.id}-loan-balance`}
               className="lt__edit-input lt__edit-input--number"
-              defaultValue={loanDraft.balance ?? row.original.balance}
-              onChange={(v) => setLoanDraft((d) => ({ ...d, balance: v }))}
+              defaultValue={loanDraft.current.balance ?? row.original.balance}
+              onChange={(v) => { loanDraft.current.balance = v; }}
             />
           );
         }
@@ -622,8 +611,8 @@ export function ProjectionAccounting({
           return (
             <input key={`${row.original.id}-loan-rate`} className="lt__edit-input lt__edit-input--number"
               type="number" step="0.01" min="0" style={{ maxWidth: 72 }}
-              defaultValue={Number(((loanDraft.interestRate ?? row.original.interestRate) * 100).toFixed(3))}
-              onChange={(e) => setLoanDraft((d) => ({ ...d, interestRate: Number(e.target.value) / 100 }))} />
+              defaultValue={Number(((loanDraft.current.interestRate ?? row.original.interestRate) * 100).toFixed(3))}
+              onChange={(e) => { loanDraft.current.interestRate = Number(e.target.value) / 100; }} />
           );
         }
         return `${(row.original.interestRate * 100).toFixed(2)}%`;
@@ -633,14 +622,14 @@ export function ProjectionAccounting({
       id: '_actions', header: '', enableSorting: false, size: 130,
       cell: ({ row }) => rowActions(
         loanEditId === row.original.id,
-        () => { updateRow('loans', row.original.id, loanDraft); cancelLoanEdit(); },
+        () => applyLoanEdit(row.original),
         cancelLoanEdit,
         () => startLoanEdit(row.original),
         () => removeRow('loans', row.original.id),
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [loanEditId, loanDraft, state.loans, disabled]);
+  ], [loanEditId, disabled]);
 
   // ── Pending Items ─────────────────────────────────────────
   const [showAddPending, setShowAddPending] = useState(false);
@@ -708,7 +697,7 @@ export function ProjectionAccounting({
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [state.pendingItems, disabled]);
+  ], [disabled]);
 
   // ── Properties ────────────────────────────────────────────
   const [showAddProperty, setShowAddProperty] = useState(false);
