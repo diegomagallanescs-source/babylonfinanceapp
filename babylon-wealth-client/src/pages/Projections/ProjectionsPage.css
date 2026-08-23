@@ -1,0 +1,221 @@
+/* ── Page shell ─────────────────────────────────────────────── */
+.proj-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 32px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.proj-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.proj-page__error {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-negative-dim);
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+  font-size: 13px;
+}
+
+/* ── Create form ────────────────────────────────────────────── */
+.proj-create {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.proj-create__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 220px;
+}
+
+.proj-create__field--wide { flex: 2 1 320px; }
+
+.proj-create__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.proj-create .acc-add-input { max-width: none; width: 100%; }
+
+/* ── Cards grid ─────────────────────────────────────────────── */
+.proj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.proj-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.14s, transform 0.14s;
+}
+
+.proj-card:hover {
+  border-color: var(--color-border-glow);
+  transform: translateY(-2px);
+}
+
+.proj-card--skeleton {
+  min-height: 190px;
+  background: var(--color-bg-card);
+  opacity: 0.5;
+  animation: proj-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes proj-pulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.6; }
+}
+
+.proj-card__open {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  text-align: left;
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.proj-card__name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.proj-card__desc {
+  font-size: 13px;
+  color: var(--color-text-sub);
+  line-height: 1.45;
+}
+
+.proj-card__stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.proj-card__stat {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.proj-card__stat--projected {
+  background: var(--color-gold-dim);
+  color: var(--color-gold);
+}
+
+.proj-card__stat--realized {
+  background: var(--color-river-glow);
+  color: var(--color-river);
+}
+
+.proj-card__latest {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.proj-card__latest--empty {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.proj-card__latest-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.proj-card__latest-value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.proj-card__latest-date {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.proj-card__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.proj-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 32px;
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.proj-empty__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.proj-empty__body {
+  font-size: 14px;
+  color: var(--color-text-sub);
+  max-width: 460px;
+  line-height: 1.5;
+}
+
+.proj-empty .acc-btn { margin-top: 8px; }
+
+@media (max-width: 720px) {
+  .proj-page { padding: 20px 16px; }
+}

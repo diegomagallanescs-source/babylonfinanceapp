@@ -81,7 +81,11 @@ namespace Babylon.Api
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<BabylonDbContext>();
-                db.Database.Migrate();
+
+                // Migrate() is relational-only. Guarding it lets the integration tests boot the
+                // real app against an in-memory provider; against Postgres this is unchanged.
+                if (db.Database.IsRelational())
+                    db.Database.Migrate();
             }
 
             await BankSeeder.SeedAsync(app.Services);

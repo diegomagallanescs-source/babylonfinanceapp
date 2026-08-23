@@ -103,6 +103,8 @@ public static class InfrastructureExtensions
         services.AddScoped<IMonthlyBudgetSnapshotRepository, MonthlyBudgetSnapshotRepository>();
         services.AddScoped<IStatementImportRepository, StatementImportRepository>();
         services.AddScoped<ICheckingStatementImportRepository, CheckingStatementImportRepository>();
+        services.AddScoped<IProjectionRepository, ProjectionRepository>();
+        services.AddScoped<IProjectionSnapshotRepository, ProjectionSnapshotRepository>();
 
         return services;
     }

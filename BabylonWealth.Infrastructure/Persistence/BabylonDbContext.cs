@@ -9,33 +9,37 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
 {
     public BabylonDbContext(DbContextOptions<BabylonDbContext> options) : base(options) { }
 
-    // ── Reference data ────────────────────────────────────────────
+    // ââ Reference data ââââââââââââââââââââââââââââââââââââââââââââ
     public DbSet<Bank> Banks => Set<Bank>();
 
-    // ── Ledger entities ───────────────────────────────────────────
+    // ââ Ledger entities âââââââââââââââââââââââââââââââââââââââââââ
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<CreditCard> CreditCards => Set<CreditCard>();
     public DbSet<Loan> Loans => Set<Loan>();
     public DbSet<Investment> Investments => Set<Investment>();
     public DbSet<PendingItem> PendingItems => Set<PendingItem>();
 
-    // ── Income & spending ─────────────────────────────────────────
+    // ââ Income & spending âââââââââââââââââââââââââââââââââââââââââ
     public DbSet<IncomeSource> IncomeSources => Set<IncomeSource>();
     public DbSet<InvestmentIncome> InvestmentIncomes => Set<InvestmentIncome>();
     public DbSet<BudgetCategory> BudgetCategories => Set<BudgetCategory>();
     public DbSet<SpendingTransaction> SpendingTransactions => Set<SpendingTransaction>();
 
-    // ── Net worth history ─────────────────────────────────────────
+    // ââ Net worth history âââââââââââââââââââââââââââââââââââââââââ
     public DbSet<NetWorthSnapshot> NetWorthSnapshots => Set<NetWorthSnapshot>();
     public DbSet<NetWorthAnnotation> NetWorthAnnotations => Set<NetWorthAnnotation>();
     public DbSet<MonthlyBudgetSnapshot> MonthlyBudgetSnapshots => Set<MonthlyBudgetSnapshot>();
 
-    // ── Real estate ───────────────────────────────────────────────
+    // ââ Real estate âââââââââââââââââââââââââââââââââââââââââââââââ
     public DbSet<Property> Properties => Set<Property>();
 
-    // ── Statement imports ─────────────────────────────────────────
+    // ââ Statement imports âââââââââââââââââââââââââââââââââââââââââ
     public DbSet<StatementImport> StatementImports => Set<StatementImport>();
     public DbSet<CheckingStatementImport> CheckingStatementImports => Set<CheckingStatementImport>();
+
+    // ── Projections ──────────────────────────────────────
+    public DbSet<Projection> Projections => Set<Projection>();
+    public DbSet<ProjectionSnapshot> ProjectionSnapshots => Set<ProjectionSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,9 +47,9 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BabylonDbContext).Assembly);
 
-        // ── Global soft-delete query filters ──────────────────────
-        // AspNetUsers (ApplicationUser) is excluded — Identity manages its own lifecycle.
-        // Bank is excluded — seeded reference data is never soft-deleted.
+        // ââ Global soft-delete query filters ââââââââââââââââââââââ
+        // AspNetUsers (ApplicationUser) is excluded â Identity manages its own lifecycle.
+        // Bank is excluded â seeded reference data is never soft-deleted.
         modelBuilder.Entity<BankAccount>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<CreditCard>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Loan>().HasQueryFilter(e => !e.IsDeleted);
@@ -61,5 +65,7 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
         modelBuilder.Entity<Property>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<StatementImport>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<CheckingStatementImport>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Projection>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ProjectionSnapshot>().HasQueryFilter(e => !e.IsDeleted);
     }
 }

@@ -69,15 +69,20 @@ public static class BankSeeder
         // ── Rename legacy entries ────────────────────────────────────────────
         // "Marcus by Goldman Sachs" was too long; rename to "Goldman Sachs" in place
         // so existing linked accounts are preserved.
-        var renamed = await context.Banks
-            .Where(b => b.Name == "Marcus by Goldman Sachs")
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(b => b.Name, "Goldman Sachs")
-                .SetProperty(b => b.LogoUrl, $"{clearbit}/goldmansachs.com")
-                .SetProperty(b => b.SearchAliases, "marcus,goldman sachs savings,marcus by goldman sachs"));
+        // ExecuteUpdateAsync is relational-only, and there is nothing legacy to rename on a
+        // fresh non-relational store, so the integration tests skip straight past this.
+        if (context.Database.IsRelational())
+        {
+            var renamed = await context.Banks
+                .Where(b => b.Name == "Marcus by Goldman Sachs")
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(b => b.Name, "Goldman Sachs")
+                    .SetProperty(b => b.LogoUrl, $"{clearbit}/goldmansachs.com")
+                    .SetProperty(b => b.SearchAliases, "marcus,goldman sachs savings,marcus by goldman sachs"));
 
-        if (renamed > 0)
-            logger.LogInformation("Renamed 'Marcus by Goldman Sachs' → 'Goldman Sachs'.");
+            if (renamed > 0)
+                logger.LogInformation("Renamed 'Marcus by Goldman Sachs' → 'Goldman Sachs'.");
+        }
 
         // Upsert by name — only insert banks that don't already exist
         var existingNames = (await context.Banks

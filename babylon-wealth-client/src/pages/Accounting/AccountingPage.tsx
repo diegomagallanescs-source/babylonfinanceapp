@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -24,6 +24,12 @@ import {
 import { LedgerTable, type RowVariant } from '../../components/LedgerTable';
 import { BankSearchInput } from '../../components/BankSearchInput';
 import { PageInfoTooltip } from '../../components/PageInfoTooltip';
+import { CurrencyInput } from '../../components/accounting/CurrencyInput';
+import { BankCell, CategoryPill, UtilBadge, BatchSaveBar } from '../../components/accounting/AccountingBits';
+import {
+  ACCT_TYPES, LOAN_TYPES, INVESTMENT_TYPES, LOAN_PRODUCT_TYPES,
+  getDealSignal, SIGNAL_LABEL,
+} from '../../components/accounting/accountingOptions';
 
 import type {
   BankDto,
@@ -33,155 +39,10 @@ import type {
   InvestmentResponseDto, CreateInvestmentRequest, UpdateInvestmentRequest,
   PendingItemResponseDto, CreatePendingItemRequest,
   PropertyResponseDto, CreatePropertyRequest, UpdatePropertyRequest,
-  BudgetCategoryResponseDto,
 } from '../../types/ledger';
 
 import { formatCurrency } from '../../utils/format';
 import './AccountingPage.css';
-
-// ── Constants ─────────────────────────────────────────────────
-const ACCT_TYPES = ['Checking', 'Savings', 'Money Market', 'CD', 'Other'];
-const LOAN_TYPES = ['Mortgage', 'Auto', 'Student', 'Personal', 'HELOC', 'Business', 'Other'];
-const INVESTMENT_TYPES = ['Brokerage', 'Retirement401k', 'RothIRA', 'TraditionalIRA', 'HSA', 'Crypto', 'Other'];
-
-// ── CurrencyInput ─────────────────────────────────────────────
-function CurrencyInput({
-  defaultValue = 0,
-  onChange,
-  className,
-}: {
-  defaultValue?: number;
-  onChange: (v: number) => void;
-  className?: string;
-}) {
-  const [text, setText] = useState(
-    defaultValue > 0
-      ? defaultValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : '',
-  );
-  const inputRef  = useRef<HTMLInputElement>(null);
-  const cursorPos = useRef<number | null>(null);
-
-  // Restore cursor synchronously before the browser paints
-  useLayoutEffect(() => {
-    if (cursorPos.current !== null && inputRef.current) {
-      inputRef.current.setSelectionRange(cursorPos.current, cursorPos.current);
-      cursorPos.current = null;
-    }
-  });
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const el = e.target;
-    // Measure from the right so comma shifts don't throw off position
-    const distFromEnd = el.value.length - (el.selectionEnd ?? el.value.length);
-
-    const raw = el.value.replace(/[^0-9.]/g, '');
-    const parts = raw.split('.');
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    const formatted = parts.length > 1 ? `${intPart}.${parts[1].slice(0, 2)}` : intPart;
-
-    cursorPos.current = Math.max(0, formatted.length - distFromEnd);
-    setText(formatted);
-    const num = parseFloat(raw);
-    onChange(isNaN(num) ? 0 : num);
-  }
-
-  function handleBlur() {
-    const num = parseFloat(text.replace(/,/g, ''));
-    if (!isNaN(num) && num > 0) {
-      setText(num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    }
-  }
-
-  return (
-    <input
-      ref={inputRef}
-      className={className}
-      type="text"
-      inputMode="decimal"
-      value={text}
-      placeholder="0.00"
-      onChange={handleChange}
-      onBlur={handleBlur}
-    />
-  );
-}
-
-// ── Small display helpers ─────────────────────────────────────
-function resolveLogo(url: string | null): string | null {
-  if (!url) return null;
-  if (url.includes('logo.clearbit.com/')) {
-    const domain = url.split('logo.clearbit.com/')[1];
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-  }
-  return url;
-}
-
-function BankCell({ logoUrl, name }: { logoUrl: string | null; name: string | null }) {
-  const label = name ?? '—';
-  const src = resolveLogo(logoUrl);
-  return (
-    <div className="lt__bank-cell">
-      {src
-        ? <img className="lt__bank-logo" src={src} alt={label}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
-        : <span className="lt__bank-logo-placeholder">{label[0]?.toUpperCase() ?? '?'}</span>
-      }
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function CategoryPill({ cat }: { cat: BudgetCategoryResponseDto | undefined }) {
-  if (!cat) return <span className="acc-category-pill acc-category-pill--none">—</span>;
-  return (
-    <span
-      className="acc-category-pill"
-      style={{ background: cat.color + '22', color: cat.color, borderColor: cat.color + '55' }}
-    >
-      {cat.name} ({Math.round(cat.targetPercentage * 100)}%)
-    </span>
-  );
-}
-
-function UtilBadge({ balance, limit }: { balance: number; limit: number }) {
-  if (!limit)        return <span className="acc-util acc-util--none">—</span>;
-  if (balance === 0) return <span className="acc-util acc-util--none">0%</span>;
-  const pct = (balance / limit) * 100;
-  const cls = pct < 30 ? 'acc-util--low' : pct < 60 ? 'acc-util--mid' : 'acc-util--high';
-  return <span className={`acc-util ${cls}`}>{pct.toFixed(1)}%</span>;
-}
-
-// ── BatchSaveBar ──────────────────────────────────────────────
-function BatchSaveBar({
-  dirtyCount, saving, onSave, onDiscard,
-}: {
-  dirtyCount: number; saving: boolean; onSave: () => void; onDiscard: () => void;
-}) {
-  return (
-    <div className="acc-batch-bar">
-      <span className="acc-batch-info">⚠ {dirtyCount} unsaved change{dirtyCount !== 1 ? 's' : ''}</span>
-      <div className="acc-batch-actions">
-        <button className="acc-btn acc-btn--ghost" onClick={onDiscard} disabled={saving}>Discard</button>
-        <button className="acc-btn acc-btn--primary" onClick={onSave} disabled={saving}>
-          {saving ? 'Saving…' : 'Save All →'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Deal signal helper ────────────────────────────────────────
-function getDealSignal(p: PropertyResponseDto): 'green' | 'yellow' | 'red' {
-  const annualNOI = (p.monthlyRent - p.monthlyExpenses) * 12;
-  const capRate = p.purchasePrice > 0 ? (annualNOI / p.purchasePrice) * 100 : 0;
-  if (p.monthlyCashFlow > 0 && capRate >= 5) return 'green';
-  if (p.monthlyCashFlow > 0 || capRate >= 4) return 'yellow';
-  return 'red';
-}
-
-const SIGNAL_LABEL = { green: '🟢 Strong Deal', yellow: '🟡 Marginal', red: '🔴 Weak Deal' };
 
 // ── PropertyCard ──────────────────────────────────────────────
 function PropertyCard({
@@ -1274,7 +1135,6 @@ export function AccountingPage() {
   };
 
   // ── Properties add form ───────────────────────────────────
-  const LOAN_PRODUCT_TYPES = ['Conventional', 'FHA', 'VA', 'DSCR', 'Cash'];
   const [showAddProperty, setShowAddProperty] = useState(false);
   const [addPropertyForm, setAddPropertyForm] = useState<CreatePropertyRequest>({
     address: '', purchasePrice: 0, currentEstimatedValue: 0, loanBalance: 0,

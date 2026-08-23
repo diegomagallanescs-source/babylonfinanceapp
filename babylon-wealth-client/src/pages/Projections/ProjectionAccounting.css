@@ -1,0 +1,13 @@
+/* Layout for the projection's copy of the accounting tab.
+   Row and table styling comes from AccountingPage.css / LedgerTable.css. */
+.proj-acc {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Applied while a snapshot is being loaded — keeps rows visible but not editable. */
+.proj-acc--locked {
+  opacity: 0.75;
+  pointer-events: none;
+}

@@ -11,6 +11,8 @@ import { MoneyInPage } from './pages/MoneyIn/MoneyInPage';
 import { MoneyOutPage } from './pages/MoneyOut/MoneyOutPage';
 import { InvestingPage } from './pages/Investing/InvestingPage';
 import { RealEstatePage } from './pages/RealEstate/RealEstatePage';
+import { ProjectionsPage } from './pages/Projections/ProjectionsPage';
+import { ProjectionDetailPage } from './pages/Projections/ProjectionDetailPage';
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ function AppRoutes() {
         <Route path="money-out"  element={<MoneyOutPage />} />
         <Route path="investing"  element={<InvestingPage />} />
         <Route path="real-estate" element={<RealEstatePage />} />
+        <Route path="projections" element={<ProjectionsPage />} />
+        <Route path="projections/:id" element={<ProjectionDetailPage />} />
       </Route>
     </Routes>
   );

@@ -1,0 +1,138 @@
+.proj-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.proj-chart__legend {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.proj-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.proj-chart__swatch {
+  width: 18px;
+  height: 0;
+  border-top-width: 2px;
+  border-top-style: solid;
+}
+
+.proj-chart__swatch--projected {
+  border-top-style: dashed;
+  border-top-color: #F0B429;
+}
+
+.proj-chart__swatch--realized {
+  border-top-color: #00E5CC;
+}
+
+.proj-chart__legend-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ── Canvas ─────────────────────────────────────────────────── */
+.proj-chart__canvas {
+  position: relative;
+  width: 100%;
+}
+
+.proj-chart__empty {
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.proj-chart__empty small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* ── Hover popover ──────────────────────────────────────────── */
+.proj-chart__popover {
+  position: absolute;
+  z-index: 30;
+  min-width: 208px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-glow);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+}
+
+.proj-chart__popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.proj-chart__kind {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.proj-chart__kind--projected {
+  background: var(--color-gold-dim);
+  color: var(--color-gold);
+}
+
+.proj-chart__kind--realized {
+  background: var(--color-river-glow);
+  color: var(--color-river);
+}
+
+.proj-chart__popover-date {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.proj-chart__popover-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.proj-chart__popover-sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.proj-chart__popover-notes {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-sub);
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.proj-chart__popover-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}

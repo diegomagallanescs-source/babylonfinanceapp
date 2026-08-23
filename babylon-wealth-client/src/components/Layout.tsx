@@ -10,6 +10,7 @@ const NAV = [
   { to: '/money-out',   label: 'Money Out',   end: false },
   { to: '/investing',   label: 'Investing',   end: false },
   { to: '/real-estate', label: 'Real Estate', end: false },
+  { to: '/projections', label: 'Projections', end: false },
 ];
 
 function ProfileMenu() {

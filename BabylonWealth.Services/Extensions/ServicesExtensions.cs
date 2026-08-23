@@ -27,6 +27,7 @@ public static class ServicesExtensions
         services.AddScoped<ICheckingStatementAnalyzerService, CheckingStatementAnalyzerService>();
         services.AddScoped<IStatementImportService, StatementImportService>();
         services.AddScoped<ICheckingStatementImportService, CheckingStatementImportService>();
+        services.AddScoped<IProjectionService, ProjectionService>();
         return services;
     }
 }
