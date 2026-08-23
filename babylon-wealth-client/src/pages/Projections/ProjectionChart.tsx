@@ -39,8 +39,15 @@ function toTimestamp(iso: string): number {
   return new Date(`${iso.slice(0, 10)}T00:00:00`).getTime();
 }
 
-function formatAxisDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+/**
+ * Axis labels name the snapshot's actual day. The year is only added when the snapshots
+ * straddle more than one, since "Aug 31, 26" beside "Sep 15, 26" is just noise.
+ */
+function makeAxisDateFormatter(spansYears: boolean) {
+  const options: Intl.DateTimeFormatOptions = spansYears
+    ? { month: 'short', day: 'numeric', year: '2-digit' }
+    : { month: 'short', day: 'numeric' };
+  return (ts: number) => new Date(ts).toLocaleDateString('en-US', options);
 }
 
 function formatAxisMoney(val: number): string {
@@ -168,6 +175,14 @@ export function ProjectionChart({
     return [min, max];
   }, [points]);
 
+  // One tick per snapshot, so every label on the axis is a date the user actually saved.
+  const tickValues = useMemo(() => points.map((p) => p.ts), [points]);
+
+  const formatAxisDate = useMemo(() => {
+    const years = new Set(points.map((p) => new Date(p.ts).getFullYear()));
+    return makeAxisDateFormatter(years.size > 1);
+  }, [points]);
+
   if (points.length === 0) {
     return (
       <div className="proj-chart__empty">
@@ -205,6 +220,11 @@ export function ProjectionChart({
               type="number"
               scale="time"
               domain={[domainMin, domainMax]}
+              ticks={tickValues}
+              // Thins the labels when snapshots bunch up, but every one still shown
+              // sits on a real snapshot date.
+              interval="preserveStartEnd"
+              minTickGap={28}
               tickFormatter={formatAxisDate}
               tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
               tickLine={false}
