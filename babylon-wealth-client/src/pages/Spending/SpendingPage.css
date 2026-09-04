@@ -1,0 +1,505 @@
+/* ── Page shell ──────────────────────────────────────────────── */
+.sp-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sp-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Shared card shell ───────────────────────────────────────── */
+.sp-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sp-chart-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sp-chart-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+/* ── Quick-add form ──────────────────────────────────────────── */
+.sp-editing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(201, 168, 76, 0.1);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--color-gold);
+}
+
+.sp-editing-banner__cancel {
+  background: none;
+  border: none;
+  color: var(--color-gold);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sp-quick-add__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+.sp-field--amount { flex: 0 1 120px; }
+.sp-field--category { flex: 1 1 180px; }
+.sp-field--desc { flex: 2 1 220px; }
+.sp-field--date { flex: 0 1 160px; }
+
+.sp-field__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+}
+.sp-field__label span {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.sp-field input,
+.sp-field select {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 14px;
+  padding: 9px 10px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.sp-field input:focus,
+.sp-field select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+.sp-category-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+}
+.sp-category-select select {
+  border: none;
+  background: none;
+  padding: 9px 0;
+  flex: 1;
+}
+.sp-category-select select:focus {
+  outline: none;
+}
+
+.sp-cat-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.sp-quick-add__submit {
+  flex: 0 0 auto;
+  height: 38px;
+  align-self: flex-end;
+}
+
+/* ── New category affordance ─────────────────────────────────── */
+.sp-new-category {
+  display: flex;
+}
+
+.sp-new-category__form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sp-new-category__form input[type='text'] {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  padding: 6px 10px;
+  width: 180px;
+}
+.sp-new-category__form input[type='text']:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+.sp-new-category__color {
+  width: 32px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+}
+
+.sp-cat-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.sp-cat-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+.sp-cat-btn--add {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+.sp-cat-btn--add:hover {
+  background: rgba(201, 168, 76, 0.08);
+}
+.sp-cat-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Month section ───────────────────────────────────────────── */
+.sp-month-section {
+  gap: 14px;
+}
+
+.sp-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.sp-month-nav__btn {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-sub);
+  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  line-height: 1;
+}
+.sp-month-nav__btn:hover {
+  color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.sp-month-nav__label {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  min-width: 160px;
+  text-align: center;
+}
+
+.sp-month-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.sp-month-summary__amount {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-negative);
+  letter-spacing: -0.01em;
+}
+
+.sp-toggle-btn {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--color-gold);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.sp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.sp-empty-state span {
+  font-size: 28px;
+}
+.sp-empty-state p {
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* ── Purchases table ─────────────────────────────────────────── */
+.sp-purchases-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.sp-purchases-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  padding: 0 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.sp-purchases-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+  background: var(--color-bg-surface);
+}
+.sp-purchases-table tbody tr:nth-child(even) { background: var(--color-bg-card); }
+.sp-purchases-table tbody tr:last-child { border-bottom: none; }
+.sp-purchases-table tbody tr:hover { background: var(--color-bg-elevated) !important; }
+.sp-purchases-table td {
+  padding: 10px 8px;
+  color: var(--color-text);
+}
+.sp-purchases-table__date {
+  color: var(--color-text-sub) !important;
+  white-space: nowrap;
+  width: 80px;
+}
+.sp-purchases-table__desc {
+  color: var(--color-text-sub) !important;
+}
+.sp-purchases-table__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-negative) !important;
+}
+.sp-purchases-table__actions {
+  width: 64px;
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.sp-row-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.sp-row-btn:hover {
+  color: var(--color-gold);
+  background: var(--color-bg-elevated);
+}
+.sp-row-btn--danger:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-dim);
+}
+.sp-row-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────────── */
+.sp-tooltip {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  min-width: 160px;
+  box-shadow: var(--shadow-card);
+}
+.sp-tooltip__name {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.sp-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #b0a898;
+  padding: 2px 0;
+}
+.sp-tooltip__row span:first-child {
+  font-weight: 600;
+}
+.sp-tooltip__row span:last-child {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.sp-tooltip__row--total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 4px;
+  padding-top: 5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.sp-tooltip__row--total span:last-child {
+  color: var(--color-negative);
+}
+
+/* ── Month totals table (under chart) ────────────────────────── */
+.sp-month-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.sp-month-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  padding: 0 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.sp-month-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+.sp-month-table tbody tr:last-child { border-bottom: none; }
+.sp-month-table tbody tr:hover { background: var(--color-bg-elevated) !important; }
+.sp-month-table td {
+  padding: 8px;
+  color: var(--color-text);
+}
+.sp-month-table__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-negative) !important;
+}
+.sp-month-table__action {
+  width: 32px;
+  text-align: right !important;
+  padding-right: 4px !important;
+}
+.sp-month-table__del {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.sp-month-table tbody tr:hover .sp-month-table__del {
+  opacity: 1;
+}
+.sp-month-table__del:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-dim);
+}
+.sp-month-table__del:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Toast notification ──────────────────────────────────────── */
+.sp-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1000;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+  animation: spToastIn 0.2s ease;
+}
+.sp-toast--success {
+  background: var(--color-positive-dim);
+  border: 1px solid var(--color-positive);
+  color: var(--color-positive);
+}
+.sp-toast--error {
+  background: var(--color-negative-dim);
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+}
+@keyframes spToastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

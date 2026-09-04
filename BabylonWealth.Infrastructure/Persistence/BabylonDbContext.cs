@@ -24,6 +24,8 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
     public DbSet<InvestmentIncome> InvestmentIncomes => Set<InvestmentIncome>();
     public DbSet<BudgetCategory> BudgetCategories => Set<BudgetCategory>();
     public DbSet<SpendingTransaction> SpendingTransactions => Set<SpendingTransaction>();
+    public DbSet<SpendingCategory> SpendingCategories => Set<SpendingCategory>();
+    public DbSet<Purchase> Purchases => Set<Purchase>();
 
     // ââ Net worth history âââââââââââââââââââââââââââââââââââââââââ
     public DbSet<NetWorthSnapshot> NetWorthSnapshots => Set<NetWorthSnapshot>();
@@ -59,6 +61,8 @@ public class BabylonDbContext : IdentityDbContext<ApplicationUser, Microsoft.Asp
         modelBuilder.Entity<InvestmentIncome>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<BudgetCategory>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<SpendingTransaction>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<SpendingCategory>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Purchase>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<NetWorthSnapshot>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<NetWorthAnnotation>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<MonthlyBudgetSnapshot>().HasQueryFilter(e => !e.IsDeleted);

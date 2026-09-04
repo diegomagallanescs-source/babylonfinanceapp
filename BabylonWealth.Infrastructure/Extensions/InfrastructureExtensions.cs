@@ -100,6 +100,8 @@ public static class InfrastructureExtensions
         services.AddScoped<IPendingItemRepository, PendingItemRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<ISpendingRepository, SpendingRepository>();
+        services.AddScoped<ISpendingCategoryRepository, SpendingCategoryRepository>();
+        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
         services.AddScoped<IMonthlyBudgetSnapshotRepository, MonthlyBudgetSnapshotRepository>();
         services.AddScoped<IStatementImportRepository, StatementImportRepository>();
         services.AddScoped<ICheckingStatementImportRepository, CheckingStatementImportRepository>();

@@ -18,6 +18,12 @@ export interface SpendingTrendPointDto {
   label: string;
 }
 
+export type {
+  SpendingCategoryResponseDto, CreateSpendingCategoryRequest,
+  PurchaseResponseDto, CreatePurchaseRequest,
+  PurchaseCategoryAmountDto, PurchaseTrendPointDto,
+} from './spending';
+
 export interface IncomeResponseDto {
   id: string;
   name: string;
