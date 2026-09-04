@@ -898,92 +898,6 @@ namespace BabylonWealth.Infrastructure.Migrations
                     b.ToTable("Properties");
                 });
 
-            modelBuilder.Entity("BabylonWealth.Core.Entities.Purchase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("PurchaseDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("SpendingCategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SpendingCategoryId");
-
-                    b.HasIndex("UserId", "PurchaseDate");
-
-                    b.ToTable("Purchases");
-                });
-
-            modelBuilder.Entity("BabylonWealth.Core.Entities.SpendingCategory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "Name")
-                        .IsUnique();
-
-                    b.ToTable("SpendingCategories");
-                });
-
             modelBuilder.Entity("BabylonWealth.Core.Entities.SpendingTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1492,32 +1406,6 @@ namespace BabylonWealth.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("BabylonWealth.Core.Entities.Property", b =>
-                {
-                    b.HasOne("BabylonWealth.Infrastructure.Identity.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BabylonWealth.Core.Entities.Purchase", b =>
-                {
-                    b.HasOne("BabylonWealth.Core.Entities.SpendingCategory", "SpendingCategory")
-                        .WithMany()
-                        .HasForeignKey("SpendingCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("BabylonWealth.Infrastructure.Identity.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SpendingCategory");
-                });
-
-            modelBuilder.Entity("BabylonWealth.Core.Entities.SpendingCategory", b =>
                 {
                     b.HasOne("BabylonWealth.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()

@@ -9,7 +9,6 @@ import { RiverPage } from './pages/River/RiverPage';
 import { AccountingPage } from './pages/Accounting/AccountingPage';
 import { MoneyInPage } from './pages/MoneyIn/MoneyInPage';
 import { MoneyOutPage } from './pages/MoneyOut/MoneyOutPage';
-import { SpendingPage } from './pages/Spending/SpendingPage';
 import { InvestingPage } from './pages/Investing/InvestingPage';
 import { RealEstatePage } from './pages/RealEstate/RealEstatePage';
 import { ProjectionsPage } from './pages/Projections/ProjectionsPage';
@@ -40,7 +39,6 @@ function AppRoutes() {
         <Route path="accounting" element={<AccountingPage />} />
         <Route path="money-in"   element={<MoneyInPage />} />
         <Route path="money-out"  element={<MoneyOutPage />} />
-        <Route path="spending"   element={<SpendingPage />} />
         <Route path="investing"  element={<InvestingPage />} />
         <Route path="real-estate" element={<RealEstatePage />} />
         <Route path="projections" element={<ProjectionsPage />} />
